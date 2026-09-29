@@ -84,6 +84,14 @@ h1 .crown{color:var(--gold)}
 .co.rk{top:3px;left:3px}.co.fl{bottom:3px;right:4px}
 .sq.lt .co{color:var(--coord-l)}.sq.dk .co{color:var(--coord-d)}
 
+.evalbar{position:relative;display:flex;height:18px;margin-top:8px;border-radius:5px;overflow:hidden;background:#1d1712;border:1px solid var(--line)}
+.evalbar[hidden]{display:none}
+.evalbar.flip{flex-direction:row-reverse}
+.evalbar.busy .ev-fill{opacity:.85}
+.ev-fill{background:#f4efe4;width:50%;transition:width .45s ease}
+.ev-txt{position:absolute;top:0;bottom:0;display:flex;align-items:center;font-size:.72rem;font-weight:700;font-variant-numeric:tabular-nums;padding:0 7px;pointer-events:none}
+.ev-txt.l{left:0}.ev-txt.r{right:0}
+.ev-txt.onw{color:#1d1712}.ev-txt.onb{color:#f4efe4}
 .status{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 2px 8px;min-height:36px}
 #statusText{font-weight:600}
 #statusText.over{font-family:Spectral,Georgia,serif;font-size:1.15rem;font-weight:700}
@@ -162,7 +170,9 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
   </header>
 
   <div id="barTop" class="bar"></div>
-  <div class="boardbox"><div id="board" role="grid" aria-label="Tabuleiro"></div></div>
+  <div class="boardbox"><div id="board" role="grid" aria-label="Tabuleiro"></div>
+    <div id="evalBar" class="evalbar" hidden aria-label="Barra de avaliação"><div class="ev-fill" id="evFill"></div><span class="ev-txt" id="evTxt"></span></div>
+  </div>
   <div id="barBottom" class="bar"></div>
 
   <div class="status">
@@ -191,7 +201,8 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
   </div>
 
   <div class="panel">
-    <label class="optlbl" for="mode">Jogar contra um amigo</label>
+    <label class="opt" id="evOptRow"><input type="checkbox" id="evOpt"> Barra de avaliação (contra o bot)</label>
+    <label class="optlbl" for="mode" style="margin-top:12px">Jogar contra um amigo</label>
     <div class="opt"><select id="mode">
       <option value="normal">Tabuleiro fixo</option>
       <option value="auto">Girar o tabuleiro a cada lance</option>
@@ -207,7 +218,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
     </div>
     <div id="sndInfo" class="sndinfo"></div>
     <div id="sndErr" class="snderr"></div>
-    <div class="ver">Versão 1.8</div>
+    <div class="ver">Versão 1.9</div>
   </div>
 
   <div class="panel">
@@ -230,7 +241,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
         <li>Empate por 3 repetições ou por 50 lances de cada lado sem captura nem movimento de peão só por reivindicação, como no tabuleiro físico: o app não avisa. Na sua vez, toque em Empate → Reivindicar e diga se a posição já está no tabuleiro ou se vai acontecer com o seu próximo lance. O app confere: se estiver certo, é empate; se não, a partida segue, o lance declarado fica valendo e, com relógio, o adversário ganha 2 minutos.</li>
         <li>Com relógio: quem zera o tempo perde, a menos que o adversário não tenha material para dar mate.</li>
       </ul>
-      <p><strong>Contra o bot:</strong> escolha em Nova partida, com 5 níveis. O bot conhece a regra do Rei Tirano, nunca propõe empate, recusa as suas propostas e joga até o fim. Voltar desfaz o seu lance e o dele. Você pode reivindicar empate normalmente.</p>
+      <p><strong>Contra o bot:</strong> escolha em Nova partida, com 5 níveis. O bot conhece a regra do Rei Tirano, nunca propõe empate, recusa as suas propostas e joga até o fim. Voltar desfaz o seu lance e o dele. Você pode reivindicar empate normalmente. A barra de avaliação, abaixo do tabuleiro, mostra quem está melhor segundo uma análise própria, sempre no nível máximo, independente do nível do bot: o número é a vantagem em peões e M3 significa mate em 3 lances.</p>
       <p>Notação em português: R rei, D dama, T torre, B bispo, C cavalo.</p>
     </details>
   </div>
@@ -611,6 +622,7 @@ const countKey=k=>G.keys.filter(x=>x===k).length;
 
 function newGame(baseMin=0,incSec=0,bot=null){
   if(G)cancelBot();
+  EVCACHE.clear();evKey=null;evShown=null;
   const prev=G,s0=initState(),lg=allLegal(s0);
   G={states:[s0],keys:[posKey(s0,lg)],moves:[],result:null,
      clock:{base:baseMin*60000,inc:incSec*1000,w:baseMin*60000,b:baseMin*60000,running:false,last:0},
@@ -693,12 +705,17 @@ const BOT_NIV=[null,
   {nome:'Máximo',maxDepth:12,noise:0,timeMs:3500}];
 let worker=null,workerOk=true,botToken=0,botBusy=false,localE=null,pendingReq=null;
 const botTurn=()=>!!G.bot&&!G.result&&cur().turn===G.bot.color;
+let WURL=null;
+function workerURL(){
+  if(!WURL){const src=`const R=(${RULES.toString()})();const E=(${ENGINE.toString()})(R);
+onmessage=e=>{let r=null;try{r=E.think(e.data.s,e.data.o);}catch(err){r={err:String(err)};}postMessage({id:e.data.id,r});};`;
+    WURL=URL.createObjectURL(new Blob([src],{type:'text/javascript'}));}
+  return WURL;
+}
 function getWorker(){
   if(!workerOk)return null;if(worker)return worker;
   try{
-    const src=`const R=(${RULES.toString()})();const E=(${ENGINE.toString()})(R);
-onmessage=e=>{let r=null;try{r=E.think(e.data.s,e.data.o);}catch(err){r={err:String(err)};}postMessage({id:e.data.id,r});};`;
-    worker=new Worker(URL.createObjectURL(new Blob([src],{type:'text/javascript'})));
+    worker=new Worker(workerURL());
     worker.onmessage=e=>botResult(e.data.id,e.data.r);
     worker.onerror=ev=>{if(ev.preventDefault)ev.preventDefault();workerOk=false;worker=null;
       if(botBusy&&pendingReq)setTimeout(()=>runLocal(pendingReq),30);}; // sem Worker: pensa na própria página
@@ -734,6 +751,57 @@ function botResult(id,r){
     if(m){selected=-1;targets=[];doMove(m);}
   },wait);
 }
+// ---------- Barra de avaliação (análise independente do nível do bot) ----------
+const MATE_V=100000,EVAL_MS=900;
+let evWorker=null,evOk=true,evToken=0,evBusy=false,evKey=null,evShown=null;
+const EVCACHE=new Map();
+const evOn=()=>!!(G&&G.bot&&G.bot.evalBar);
+const posK=st=>st.b.map(x=>x||'.').join('')+st.turn+(st.cr.K?'K':'')+(st.cr.Q?'Q':'')+(st.cr.k?'k':'')+(st.cr.q?'q':'')+st.ep;
+function evResult(id,r,s){
+  if(id!==evToken)return;evBusy=false;
+  let v;
+  if(!r||!r.m){v=inCheck(s,s.turn)?{mate:s.turn==='w'?-0:0,winner:other(s.turn)}:{cp:0};} // sem lances: mate ou afogamento
+  else{const sc=s.turn==='w'?r.score:-r.score;
+    if(Math.abs(r.score)>MATE_V-1000){const plies=MATE_V-Math.abs(r.score);v={mate:Math.ceil(plies/2),winner:sc>0?'w':'b'};}
+    else v={cp:sc};}
+  EVCACHE.set(evKey,v);evShown=v;renderEval();
+}
+function killEvWorker(){if(evWorker){evWorker.terminate();evWorker=null;}}
+function requestEval(){
+  if(!evOn())return;
+  const P=ply(),s=G.states[P],k=posK(s)+'|'+P;
+  if(k===evKey)return;
+  evKey=k;
+  if(EVCACHE.has(k)){evBusy=false;evShown=EVCACHE.get(k);renderEval();return;}
+  const id=++evToken;
+  if(evBusy)killEvWorker(); // posição mudou no meio da análise: descarta a antiga
+  evBusy=true;renderEval();
+  const o={maxDepth:14,noise:0,timeMs:EVAL_MS,history:G.states.slice(0,P+1).map(st=>st.b.map(x=>x||'.').join('')+st.turn)};
+  if(evOk&&!evWorker){try{evWorker=new Worker(workerURL());evWorker.onmessage=e=>evResult(e.data.id,e.data.r,evWorker&&evWorker._s);
+      evWorker.onerror=ev=>{if(ev.preventDefault)ev.preventDefault();evOk=false;evWorker=null;evKey=null;if(evBusy)setTimeout(requestEval,30);};}
+    catch(e){evOk=false;evWorker=null;}}
+  if(evWorker){evWorker._s=s;evWorker.postMessage({id,s,o});}
+  else setTimeout(()=>{if(id!==evToken)return;if(!localE)localE=ENGINE(RULES());let r=null;try{r=localE.think(s,{...o,timeMs:300});}catch(e){}evResult(id,r,s);},60);
+}
+function renderEval(){
+  const bar=$('evalBar');if(!bar)return;
+  bar.hidden=!evOn();if(!evOn())return;
+  bar.classList.toggle('flip',G.orient==='b');bar.classList.toggle('busy',evBusy);
+  const P=ply();let v=evShown;
+  // partida encerrada, olhando a posição final: a barra mostra o resultado
+  if(G.result&&P===G.states.length-1)v=G.result.winner?{mate:0,winner:G.result.winner,over:true}:{cp:0,over:true};
+  if(!v){$('evFill').style.width='50%';$('evTxt').textContent='';return;}
+  let frac,txt;
+  if(v.mate!==undefined){frac=v.winner==='w'?1:0;txt=v.over?(v.winner==='w'?'1–0':'0–1'):'M'+v.mate;}
+  else{frac=1/(1+Math.exp(-v.cp/300));frac=Math.min(.97,Math.max(.03,frac));
+    txt=v.over?'½–½':(v.cp>=0?'+':'−')+(Math.abs(v.cp)/100).toFixed(1);}
+  $('evFill').style.width=(frac*100).toFixed(1)+'%';
+  const wLead=frac>=.5,t=$('evTxt');t.textContent=txt;
+  // o número fica na ponta de quem está melhor
+  const leftIsWhite=G.orient==='w',onLeft=wLead===leftIsWhite;
+  t.className='ev-txt '+(onLeft?'l':'r')+' '+(wLead?'onw':'onb');
+}
+
 function cancelBot(){botToken++;botBusy=false;pendingReq=null;}
 
 // ---------- Interação ----------
@@ -825,6 +893,8 @@ function render(){
   $('bSound').textContent=muted?'🔇':'🔊';
   $('bLock').textContent=G.lock?'🔒':'🔓';$('bLock').classList.toggle('on',!!G.lock);
   renderMoves();renderClocks();
+  const eo=$('evOpt');eo.checked=evOn();eo.disabled=!G.bot;$('evOptRow').style.opacity=G.bot?1:.5;
+  requestEval();renderEval();
 }
 function renderBar(el,c){
   const s=cur();
@@ -894,6 +964,7 @@ $('bSound').onclick=()=>{muted=!muted;try{localStorage.setItem(STORE+'-mute',mut
 $('sndTest').addEventListener('click',e=>{const b=e.target.closest('[data-snd]');if(!b)return;
   if(muted){$('sndErr').textContent='O som está desligado no botão 🔇.';return;}
   $('sndErr').textContent='';sfx(b.dataset.snd);});
+$('evOpt').onchange=e=>{if(!G.bot)return;G.bot.evalBar=e.target.checked;evKey=null;save();render();};
 $('bUndo').onclick=undo;
 $('bFlip').onclick=()=>{G.orient=other(G.orient);save();render();};
 $('mode').onchange=e=>{G.mode=e.target.value;if(G.mode==='auto'&&!G.result)G.orient=cur().turn;save();render();};
@@ -928,6 +999,7 @@ $('bNew').onclick=()=>{
       <select id="lvl">${BOT_NIV.slice(1).map((l,i)=>`<option value="${i+1}">${i+1} · ${l.nome}</option>`).join('')}</select>
       <label for="myc" class="flbl">Você joga com</label>
       <select id="myc"><option value="w">Brancas</option><option value="b">Pretas</option><option value="r">Sorteio</option></select>
+      <label class="opt" style="margin-top:12px"><input type="checkbox" id="evNew"> Mostrar barra de avaliação</label>
     </div>
     <label for="tc" class="flbl">Relógio</label>
     <select id="tc">
@@ -940,10 +1012,10 @@ $('bNew').onclick=()=>{
     </select>`,
     [{label:'Cancelar'},{label:'Começar',primary:true,fn:()=>{const[a,b]=$('tc').value.split(',').map(Number);
       let bot=null;
-      if($('opp').value==='bot'){let me=$('myc').value;if(me==='r')me=Math.random()<.5?'w':'b';bot={color:other(me),level:+$('lvl').value,myPick:$('myc').value};}
+      if($('opp').value==='bot'){let me=$('myc').value;if(me==='r')me=Math.random()<.5?'w':'b';bot={color:other(me),level:+$('lvl').value,myPick:$('myc').value,evalBar:$('evNew').checked};}
       newGame(a,b,bot);}}]);
   const lastBot=G.bot||G.lastBot;
-  if(lastBot){$('opp').value=G.bot?'bot':'friend';$('lvl').value=lastBot.level;$('myc').value=lastBot.myPick||other(lastBot.color);}
+  if(lastBot){$('opp').value=G.bot?'bot':'friend';$('lvl').value=lastBot.level;$('myc').value=lastBot.myPick||other(lastBot.color);$('evNew').checked=!!lastBot.evalBar;}
   else{$('lvl').value='3';}
   const sync=()=>{$('botOpts').hidden=$('opp').value!=='bot';};$('opp').onchange=sync;sync();
   const cb=G.clock.base/60000,ci=G.clock.inc/1000,v=cb+','+ci,sel=$('tc');
