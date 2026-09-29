@@ -1,4 +1,5 @@
 // Service worker do Xadrez do Rei Tirano
+// Teste
 // Ao publicar uma versão nova, basta trocar o index.html no GitHub:
 // a página é buscada na rede primeiro, e o cache só é usado offline.
 // Se mudar ícones ou este arquivo, aumente o número da VERSAO.
