@@ -54,7 +54,8 @@ h1 .crown{color:var(--gold)}
 .bar.turn{border-color:var(--ink)}
 .sw{width:18px;height:18px;border-radius:50%;flex:none;border:1.5px solid var(--ink)}
 .sw.w{background:#f7f3ea}.sw.b{background:#1d1712}
-.who{font-weight:700;white-space:nowrap}
+.who{font-weight:700;white-space:nowrap;display:flex;flex-direction:column;line-height:1.15}
+.who .tag{font-weight:600;font-size:.72rem;color:var(--muted)}
 .caps{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:0 1px;font-family:"Noto Sans Symbols 2","Segoe UI Symbol","DejaVu Sans",serif;font-size:1.05rem;line-height:1.2}
 .caps .w{color:#f7f3ea;text-shadow:0 0 1px #222,1px 0 0 #222,-1px 0 0 #222,0 1px 0 #222,0 -1px 0 #222}
 .caps .b{color:#1d1712}
@@ -128,6 +129,8 @@ details ul{padding-left:1.1em;margin:6px 0}
 .card .btns.stack{flex-direction:column;align-items:stretch}
 .card .btns.stack .btn{text-align:left;padding:11px 12px}
 .card .btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:14px}
+.flbl{display:block;font-weight:600;margin:12px 0 6px}
+#botOpts[hidden]{display:none}
 .card select{font:inherit;width:100%;padding:10px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
 .promo{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .promo button{aspect-ratio:1;border-radius:10px;border:1px solid var(--line);background:var(--light);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
@@ -204,7 +207,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
     </div>
     <div id="sndInfo" class="sndinfo"></div>
     <div id="sndErr" class="snderr"></div>
-    <div class="ver">Versão 1.7</div>
+    <div class="ver">Versão 1.8</div>
   </div>
 
   <div class="panel">
@@ -227,6 +230,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
         <li>Empate por 3 repetições ou por 50 lances de cada lado sem captura nem movimento de peão só por reivindicação, como no tabuleiro físico: o app não avisa. Na sua vez, toque em Empate → Reivindicar e diga se a posição já está no tabuleiro ou se vai acontecer com o seu próximo lance. O app confere: se estiver certo, é empate; se não, a partida segue, o lance declarado fica valendo e, com relógio, o adversário ganha 2 minutos.</li>
         <li>Com relógio: quem zera o tempo perde, a menos que o adversário não tenha material para dar mate.</li>
       </ul>
+      <p><strong>Contra o bot:</strong> escolha em Nova partida, com 5 níveis. O bot conhece a regra do Rei Tirano, nunca propõe empate, recusa as suas propostas e joga até o fim. Voltar desfaz o seu lance e o dele. Você pode reivindicar empate normalmente.</p>
       <p>Notação em português: R rei, D dama, T torre, B bispo, C cavalo.</p>
     </details>
   </div>
@@ -248,21 +252,20 @@ const GLYPH={k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'};
 const PT={k:'R',q:'D',r:'T',b:'B',n:'C'};
 const OWN={q:'a própria Dama',r:'a própria Torre',b:'o próprio Bispo',n:'o próprio Cavalo',p:'o próprio Peão'};
 const VAL={p:1,n:3,b:3,r:5,q:9,k:0};
-const N_OFF=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
-const K_OFF=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
-const DIAG=[[-1,-1],[-1,1],[1,-1],[1,1]], ORTH=[[-1,0],[1,0],[0,-1],[0,1]];
 const STORE='xadrez-rei-tirano-v1';
 const $=id=>document.getElementById(id);
 
+// Regras do jogo num bloco só: usado pela página e pelo bot (que roda num Worker separado)
+function RULES(){
+const N_OFF=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+const K_OFF=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+const DIAG=[[-1,-1],[-1,1],[1,-1],[1,1]], ORTH=[[-1,0],[1,0],[0,-1],[0,1]];
 const col=p=>p?(p===p.toUpperCase()?'w':'b'):null;
 const typ=p=>p.toLowerCase();
 const other=c=>c==='w'?'b':'w';
 const rc=i=>[i>>3,i&7];
 const idx=(r,f)=>r*8+f;
 const inB=(r,f)=>r>=0&&r<8&&f>=0&&f<8;
-const sqName=i=>FILES[i&7]+(8-(i>>3));
-const glyph=(p,up)=>`<span class="pc ${col(p)}${up?' up':''}">${GLYPH[typ(p)]}\uFE0E</span>`;
-
 function initState(){
   const s='rnbqkbnrpppppppp'+'.'.repeat(32)+'PPPPPPPPRNBQKBNR';
   return {b:s.split('').map(c=>c==='.'?'':c),turn:'w',cr:{K:true,Q:true,k:true,q:true},ep:-1,half:0,full:1};
@@ -332,6 +335,115 @@ function legalFrom(s,from){
   });
 }
 function allLegal(s){const out=[];for(let i=0;i<64;i++)if(s.b[i]&&col(s.b[i])===s.turn)out.push(...legalFrom(s,i));return out;}
+
+return {N_OFF,K_OFF,DIAG,ORTH,col,typ,other,rc,idx,inB,initState,attacked,kingSq,inCheck,pseudo,apply,legalFrom,allLegal};
+}
+const {N_OFF,K_OFF,DIAG,ORTH,col,typ,other,rc,idx,inB,initState,attacked,kingSq,inCheck,pseudo,apply,legalFrom,allLegal}=RULES();
+// Motor do bot: busca alfa-beta com aprofundamento iterativo e quiescência
+function ENGINE(R){
+  const {pseudo,apply,attacked,kingSq,col,typ,other}=R;
+  const V={p:100,n:320,b:330,r:500,q:900,k:0};
+  const T={
+    p:[0,0,0,0,0,0,0,0,50,50,50,50,50,50,50,50,10,10,20,30,30,20,10,10,5,5,10,25,25,10,5,5,0,0,0,20,20,0,0,0,5,-5,-10,0,0,-10,-5,5,5,10,10,-20,-20,10,10,5,0,0,0,0,0,0,0,0],
+    n:[-50,-40,-30,-30,-30,-30,-40,-50,-40,-20,0,0,0,0,-20,-40,-30,0,10,15,15,10,0,-30,-30,5,15,20,20,15,5,-30,-30,0,15,20,20,15,0,-30,-30,5,10,15,15,10,5,-30,-40,-20,0,5,5,0,-20,-40,-50,-40,-30,-30,-30,-30,-40,-50],
+    b:[-20,-10,-10,-10,-10,-10,-10,-20,-10,0,0,0,0,0,0,-10,-10,0,5,10,10,5,0,-10,-10,5,5,10,10,5,5,-10,-10,0,10,10,10,10,0,-10,-10,10,10,10,10,10,10,-10,-10,5,0,0,0,0,5,-10,-20,-10,-10,-10,-10,-10,-10,-20],
+    r:[0,0,0,0,0,0,0,0,5,10,10,10,10,10,10,5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,0,0,0,5,5,0,0,0],
+    q:[-20,-10,-10,-5,-5,-10,-10,-20,-10,0,0,0,0,0,0,-10,-10,0,5,5,5,5,0,-10,-5,0,5,5,5,5,0,-5,0,0,5,5,5,5,0,-5,-10,5,5,5,5,5,0,-10,-10,0,5,0,0,0,0,-10,-20,-10,-10,-5,-5,-10,-10,-20],
+    k:[-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-20,-30,-30,-40,-40,-30,-30,-20,-10,-20,-20,-20,-20,-20,-20,-10,20,20,0,0,0,0,20,20,20,30,10,0,0,10,30,20],
+    e:[-50,-40,-30,-20,-20,-30,-40,-50,-30,-20,-10,0,0,-10,-20,-30,-30,-10,20,30,30,20,-10,-30,-30,-10,30,40,40,30,-10,-30,-30,-10,30,40,40,30,-10,-30,-30,-10,20,30,30,20,-10,-30,-30,-30,0,0,0,0,-30,-30,-50,-30,-30,-30,-30,-30,-30,-50]
+  };
+  const MATE=100000;
+  let nodes=0,deadline=0,stopped=false,canStop=false,killers=[],path=[],hist=null;
+  const cdist=i=>{const r=i>>3,f=i&7;return Math.max(3-r,r-4)+Math.max(3-f,f-4);};
+
+  function evaluate(s){
+    const b=s.b;let mg=0,eg=0,npm=0,mat={w:0,b:0},bish={w:0,b:0},kw=-1,kb=-1;
+    for(let i=0;i<64;i++){const p=b[i];if(!p)continue;const c=col(p),t=typ(p),j=c==='w'?i:i^56,sg=c==='w'?1:-1;
+      if(t==='k'){if(c==='w')kw=i;else kb=i;mg+=sg*T.k[j];eg+=sg*T.e[j];continue;}
+      const v=V[t]+T[t][j];mg+=sg*v;eg+=sg*v;mat[c]+=V[t];
+      if(t!=='p')npm+=V[t];if(t==='b')bish[c]++;}
+    const ph=Math.min(1,npm/6200);
+    let sc=mg*ph+eg*(1-ph);
+    if(bish.w>=2)sc+=30;if(bish.b>=2)sc-=30;
+    // fim de jogo com vantagem: empurra o rei perdedor para a borda e aproxima o próprio rei (para conseguir dar mate)
+    const diff=mat.w-mat.b;
+    if(ph<.35&&Math.abs(diff)>=300){
+      const win=diff>0?'w':'b',lk=win==='w'?kb:kw,wk=win==='w'?kw:kb;
+      const kd=Math.max(Math.abs((lk>>3)-(wk>>3)),Math.abs((lk&7)-(wk&7)));
+      const bonus=cdist(lk)*12+(14-kd)*5;sc+=win==='w'?bonus:-bonus;
+    }
+    return s.turn==='w'?sc:-sc;
+  }
+  function gen(s){const out=[];for(let i=0;i<64;i++){const p=s.b[i];if(p&&col(p)===s.turn){const ms=pseudo(s,i);for(let k=0;k<ms.length;k++)out.push(ms[k]);}}return out;}
+  function child(s,m){const c=s.turn,en=other(c);if(m.self&&attacked(s.b,m.to,en))return null;const n=apply(s,m);return attacked(n.b,kingSq(n.b,c),en)?null:n;}
+  function mscore(s,m,ply){
+    if(m.promo)return 90000+V[m.promo];
+    if(m.self)return -5000;
+    if(m.cap)return 50000+(m.ep?100:V[typ(s.b[m.to])])*10-V[typ(s.b[m.from])]/10;
+    const k=killers[ply];if(k&&k[0]===m.from&&k[1]===m.to)return 40000;
+    return 0;
+  }
+  function order(s,ms,ply){for(const m of ms)m._o=mscore(s,m,ply);ms.sort((a,b)=>b._o-a._o);return ms;}
+  function tick(){nodes++;if(canStop&&(nodes&511)===0&&Date.now()>deadline)stopped=true;}
+  const key=s=>s.b.map(x=>x||'.').join('')+s.turn;
+
+  function qs(s,alpha,beta,ply){
+    tick();if(stopped)return 0;
+    const stand=evaluate(s);if(stand>=beta)return stand;if(stand>alpha)alpha=stand;
+    if(ply>40)return stand;
+    const ms=order(s,gen(s).filter(m=>(m.cap&&!m.self)||m.promo),ply);
+    for(const m of ms){const n=child(s,m);if(!n)continue;
+      const sc=-qs(n,-beta,-alpha,ply+1);if(stopped)return 0;
+      if(sc>=beta)return sc;if(sc>alpha)alpha=sc;}
+    return alpha;
+  }
+  function search(s,depth,alpha,beta,ply){
+    if(ply>0){ if(s.half>=150)return 0;
+      const k=key(s);if(path.includes(k)||hist.has(k))return 0; }
+    const chk=attacked(s.b,kingSq(s.b,s.turn),other(s.turn));
+    if(chk&&ply<30)depth++;
+    if(depth<=0)return qs(s,alpha,beta,ply);
+    tick();if(stopped)return 0;
+    path.push(key(s));
+    let best=-Infinity,legal=0;
+    for(const m of order(s,gen(s),ply)){const n=child(s,m);if(!n)continue;legal++;
+      const sc=-search(n,depth-1,-beta,-alpha,ply+1);if(stopped){path.pop();return 0;}
+      if(sc>best)best=sc;if(sc>alpha)alpha=sc;
+      if(alpha>=beta){if(!m.cap&&!m.promo)killers[ply]=[m.from,m.to];break;}}
+    path.pop();
+    if(!legal)return chk?-MATE+ply:0;
+    return best;
+  }
+  // o: {maxDepth, timeMs, noise, randomPct, history:[chaves já vistas na partida]}
+  function think(s,o){
+    nodes=0;stopped=false;canStop=false;killers=[];path=[];hist=new Set(o.history||[]);
+    deadline=Date.now()+o.timeMs;
+    let root=gen(s).map(m=>({m,n:child(s,m)})).filter(x=>x.n);
+    if(!root.length)return null;
+    if(o.randomPct&&Math.random()<o.randomPct){const x=root[Math.random()*root.length|0];return{m:x.m,score:0,depth:0,nodes};}
+    const exact=o.noise>0; // com ruído, cada lance da raiz recebe nota exata para poder sortear entre eles
+    for(const x of root)x.o=mscore(s,x.m,0);root.sort((a,b)=>b.o-a.o);
+    let done=null,depthDone=0;
+    for(let d=1;d<=o.maxDepth;d++){
+      let alpha=-Infinity;
+      for(const x of root){
+        const sc=-search(x.n,d-1,-Infinity,exact?Infinity:-alpha,1);
+        if(stopped)break;x.s=sc;if(sc>alpha)alpha=sc;}
+      if(stopped)break;
+      root.sort((a,b)=>b.s-a.s);done=root.map(x=>({m:x.m,s:x.s}));depthDone=d;
+      canStop=true;
+      if(Math.abs(root[0].s)>MATE-1000)break; // mate encontrado
+      if(Date.now()>deadline)break;
+    }
+    let pick=done[0];
+    if(o.noise>0){let bestV=-Infinity;for(const x of done){if(Math.abs(x.s)>MATE-1000){ if(x.s>0){pick=x;break;} else continue;}
+        const v=x.s+(Math.random()*2-1)*o.noise;if(v>bestV){bestV=v;pick=x;}}}
+    return {m:pick.m,score:pick.s,depth:depthDone,nodes};
+  }
+  return {think,evaluate};
+}
+const sqName=i=>FILES[i&7]+(8-(i>>3));
+const glyph=(p,up)=>`<span class="pc ${col(p)}${up?' up':''}">${GLYPH[typ(p)]}\uFE0E</span>`;
 
 function san(s,m,legal){
   const p=s.b[m.from],t=typ(p);let str;
@@ -490,21 +602,23 @@ function sfxRaw(kind){
 
 // ---------- Estado da partida ----------
 let G=null,selected=-1,targets=[],legalNow=[],modalOpen=false,view=null;
-const passUp=()=>G.mode==='pass'&&!G.result&&cur().turn!==G.orient;
+const modo=()=>G.bot?'normal':G.mode;
+const passUp=()=>modo()==='pass'&&!G.result&&cur().turn!==G.orient;
 const ply=()=>view===null?G.states.length-1:view;
 const cur=()=>G.states[G.states.length-1];
 const refresh=()=>{legalNow=allLegal(cur());};
 const countKey=k=>G.keys.filter(x=>x===k).length;
 
-function newGame(baseMin=0,incSec=0){
+function newGame(baseMin=0,incSec=0,bot=null){
+  if(G)cancelBot();
   const prev=G,s0=initState(),lg=allLegal(s0);
   G={states:[s0],keys:[posKey(s0,lg)],moves:[],result:null,
      clock:{base:baseMin*60000,inc:incSec*1000,w:baseMin*60000,b:baseMin*60000,running:false,last:0},
-     orient:'w',mode:prev?prev.mode:'normal',lock:prev?prev.lock:false};
-  selected=-1;targets=[];view=null;legalNow=lg;save();render();
+     orient:bot?other(bot.color):'w',mode:prev?prev.mode:'normal',lock:prev?prev.lock:false,bot,lastBot:bot||(prev&&(prev.bot||prev.lastBot))||null};
+  selected=-1;targets=[];view=null;legalNow=lg;save();render();setTimeout(maybeBot,300);
 }
 function stopClock(){const c=G.clock;if(c.base&&c.running){const t=cur().turn;c[t]=Math.max(0,c[t]-(Date.now()-c.last));c.running=false;}}
-function end(w,text,snd='end'){stopClock();G.result={winner:w,text};if(G.moves.length&&!endQuiet)setTimeout(()=>sfx(snd),180);}
+function end(w,text,snd='end'){cancelBot();stopClock();G.result={winner:w,text};if(G.moves.length&&!endQuiet)setTimeout(()=>sfx(snd),180);}
 let endQuiet=false;
 
 function evaluate(){
@@ -553,23 +667,81 @@ function doMove(m){
   { const n=cur(),chk=inCheck(n,n.turn);
     sfx(m.self?'self':m.promo?'promote':m.castle?'castle':captured?'capture':'move');
     if(!G.result&&chk)setTimeout(()=>sfx('check'),110); }
-  if(G.mode==='auto'&&!G.result)G.orient=cur().turn;
+  if(modo()==='auto'&&!G.result)G.orient=cur().turn;
   save();render();
   if(G.claim){const cl=G.claim;G.claim=null;save();if(!G.result&&cl.by===s.turn)resolveClaim(cl.by,cl.kind,true);else render();}
+  setTimeout(maybeBot,30);
 }
 function undo(){
   if(!G.moves.length)return;
-  G.states.pop();G.keys.pop();G.moves.pop();G.result=null;G.claim=null;refresh();
+  cancelBot();
+  const pop=()=>{G.states.pop();G.keys.pop();G.moves.pop();};
+  pop();
+  // contra o bot, volta também o lance dele, devolvendo a vez para você
+  if(G.bot)while(G.moves.length&&cur().turn===G.bot.color)pop();
+  G.result=null;G.claim=null;refresh();
   const c=G.clock;if(c.base){c.running=G.moves.length>0;c.last=Date.now();}
-  selected=-1;targets=[];view=null;if(G.mode==='auto')G.orient=cur().turn;save();render();
+  selected=-1;targets=[];view=null;if(modo()==='auto')G.orient=cur().turn;save();render();maybeBot();
 }
+
+// ---------- Bot ----------
+const BOT_NIV=[null,
+  {nome:'Iniciante',maxDepth:1,noise:220,randomPct:.2,timeMs:400},
+  {nome:'Fácil',maxDepth:2,noise:100,randomPct:.05,timeMs:700},
+  {nome:'Médio',maxDepth:3,noise:40,timeMs:1200},
+  {nome:'Difícil',maxDepth:5,noise:0,timeMs:1800},
+  {nome:'Máximo',maxDepth:12,noise:0,timeMs:3500}];
+let worker=null,workerOk=true,botToken=0,botBusy=false,localE=null,pendingReq=null;
+const botTurn=()=>!!G.bot&&!G.result&&cur().turn===G.bot.color;
+function getWorker(){
+  if(!workerOk)return null;if(worker)return worker;
+  try{
+    const src=`const R=(${RULES.toString()})();const E=(${ENGINE.toString()})(R);
+onmessage=e=>{let r=null;try{r=E.think(e.data.s,e.data.o);}catch(err){r={err:String(err)};}postMessage({id:e.data.id,r});};`;
+    worker=new Worker(URL.createObjectURL(new Blob([src],{type:'text/javascript'})));
+    worker.onmessage=e=>botResult(e.data.id,e.data.r);
+    worker.onerror=ev=>{if(ev.preventDefault)ev.preventDefault();workerOk=false;worker=null;
+      if(botBusy&&pendingReq)setTimeout(()=>runLocal(pendingReq),30);}; // sem Worker: pensa na própria página
+    return worker;
+  }catch(e){workerOk=false;return null;}
+}
+function maybeBot(){
+  if(!G||!botTurn()||botBusy)return;
+  botBusy=true;const id=++botToken,lv=BOT_NIV[G.bot.level];
+  let timeMs=lv.timeMs;
+  if(G.clock.base)timeMs=Math.min(timeMs,Math.max(150,liveTime(G.bot.color)/30+G.clock.inc*.5));
+  pendingReq={id,t0:Date.now(),s:cur(),o:{maxDepth:lv.maxDepth,noise:lv.noise,randomPct:lv.randomPct||0,timeMs,
+    history:G.states.map(st=>st.b.map(x=>x||'.').join('')+st.turn)}};
+  render();
+  const w=getWorker();
+  if(w)w.postMessage({id,s:pendingReq.s,o:pendingReq.o});else setTimeout(()=>runLocal(pendingReq),60);
+}
+function runLocal(req){
+  if(!req||req.id!==botToken)return;
+  if(!localE)localE=ENGINE(RULES());
+  let r;try{r=localE.think(req.s,req.o);}catch(e){r={err:String(e)};}
+  botResult(req.id,r);
+}
+function botResult(id,r){
+  if(id!==botToken||!pendingReq)return; // pedido cancelado (voltar, nova partida, fim)
+  const wait=Math.max(0,450-(Date.now()-pendingReq.t0)); // nunca responde instantâneo demais
+  setTimeout(()=>{
+    if(id!==botToken)return;
+    botBusy=false;pendingReq=null;
+    if(!botTurn())return render();
+    let m=r&&r.m?legalNow.find(x=>x.from===r.m.from&&x.to===r.m.to&&(x.promo||'')===(r.m.promo||'')):null;
+    if(!m)m=legalNow[0]; // salvaguarda: nunca trava a partida
+    if(m){selected=-1;targets=[];doMove(m);}
+  },wait);
+}
+function cancelBot(){botToken++;botBusy=false;pendingReq=null;}
 
 // ---------- Interação ----------
 function select(sq){selected=sq;targets=legalNow.filter(m=>m.from===sq);}
 function onSquare(sq){
   if(modalOpen)return;
   if(view!==null){view=null;selected=-1;targets=[];return render();}
-  if(G.result)return;
+  if(G.result||botTurn())return;
   const s=cur(),p=s.b[sq];
   if(selected>=0){
     const ms=targets.filter(m=>m.to===sq);
@@ -599,7 +771,7 @@ function askPromo(ms){
   $('mBody').querySelectorAll('button[data-p]').forEach(b=>b.onclick=()=>{closeModal();doMove(ms.find(m=>m.promo===b.dataset.p));});
 }
 function modal(title,body,buttons,who,stack){
-  document.querySelector('#modal .card').classList.toggle('up',(G.mode==='face'&&who===other(G.orient))||passUp());
+  document.querySelector('#modal .card').classList.toggle('up',(modo()==='face'&&who===other(G.orient))||passUp());
   $('mTitle').textContent=title;$('mBody').innerHTML=body;
   const bx=$('mBtns');bx.innerHTML='';bx.classList.toggle('stack',!!stack);
   buttons.forEach(b=>{const el=document.createElement('button');el.className='btn'+(b.primary?' primary':'');el.textContent=b.label;
@@ -628,7 +800,7 @@ function render(){
     if(sq===chk)cls+=' check';
     const t=tset.get(sq);if(t)cls+=t.self?' self':(s.b[sq]?' cap':' dot');
     el.className=cls;el.dataset.sq=sq;
-    const p=s.b[sq];let h=p?glyph(p,G.mode==='face'?col(p)!==G.orient:passUp()):'';
+    const p=s.b[sq];let h=p?glyph(p,modo()==='face'?col(p)!==G.orient:passUp()):'';
     if((d&7)===0)h+=`<span class="co rk">${8-r}</span>`;
     if((d>>3)===7)h+=`<span class="co fl">${FILES[f]}</span>`;
     el.innerHTML=h;
@@ -637,6 +809,7 @@ function render(){
   const st=$('statusText');
   if(view!==null){st.className='review';st.textContent=P===0?'Revendo: posição inicial':`Revendo o lance ${Math.ceil(P/2)}${P%2?'.':'...'} ${G.moves[P-1].san}`;}
   else if(G.result){st.className='over';st.textContent=G.result.text;}
+  else if(botTurn()){st.className='';st.innerHTML=`Bot pensando…`+(chk>=0?' · <b>Xeque!</b>':'');}
   else{st.className='';st.innerHTML=`Vez das ${NAME[s.turn]}`+(chk>=0?' · <b>Xeque!</b>':'')+(G.claim?' · <span style="color:var(--gold)">reivindicação declarada, faça o lance</span>':'');}
   const n=G.states.length-1;
   $('nFirst').disabled=$('nPrev').disabled=P===0;
@@ -645,7 +818,8 @@ function render(){
   $('bUndo').disabled=!G.moves.length;
   $('bDraw').disabled=$('bResign').disabled=!!G.result;
   $('mode').value=G.mode;
-  const face=G.mode==='face';
+  const face=modo()==='face';
+  $('mode').disabled=!!G.bot;
   $('barTop').classList.toggle('up',face||passUp());
   document.documentElement.classList.toggle('locked',!!G.lock);
   $('bSound').textContent=muted?'🔇':'🔊';
@@ -663,7 +837,7 @@ function renderBar(el,c){
   if(diff>0)caps+=`<span class="adv">+${diff}</span>`;
   if(lost.length)caps+=`<span class="sep" title="Peças capturadas pelo próprio rei">⊗</span>`+lost.map(t=>`<span class="lost">${GLYPH[t]}\uFE0E</span>`).join('');
   el.className='bar'+(!G.result&&s.turn===c?' turn':'');
-  el.innerHTML=`<span class="sw ${c}"></span><span class="who">${NAME[c]}</span><span class="caps">${caps}</span>`+
+  el.innerHTML=`<span class="sw ${c}"></span><span class="who">${NAME[c]}${G.bot?`<span class="tag">${c===G.bot.color?'Bot · '+BOT_NIV[G.bot.level].nome:'Você'}</span>`:''}</span><span class="caps">${caps}</span>`+
     (G.clock.base?`<span class="clock" id="clk-${c}"></span>`:'');
 }
 function fmt(ms){
@@ -727,6 +901,7 @@ $('bLock').onclick=()=>{G.lock=!G.lock;if(G.lock)$('barTop').scrollIntoView({blo
 document.addEventListener('touchmove',e=>{if(!G||!G.lock)return;if(e.target.closest('#moves,.card'))return;e.preventDefault();},{passive:false});
 $('board').addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
 $('bDraw').onclick=()=>{
+  if(botTurn()){modal('Aguarde','<p>O bot está pensando. Você pode propor ou reivindicar empate na sua vez.</p>',[{label:'OK',primary:true}]);return;}
   const t=cur().turn;
   if(G.claim){modal('Reivindicação declarada',`<p>As ${NAME[t]} já declararam uma reivindicação. Faça o lance para o app conferir.</p>`,[{label:'OK',primary:true}],t);return;}
   modal('Empate',`<p>Vez das ${NAME[t]}.</p>`,[
@@ -735,17 +910,26 @@ $('bDraw').onclick=()=>{
     {label:'Cancelar'}],t,true);
 };
 function offerDraw(t){
+  if(G.bot){modal('Proposta de empate','<p>O bot recusou. Ele joga até o fim.</p>',[{label:'OK',primary:true}]);return;}
   modal('Proposta de empate',`<p>As ${NAME[t]} propõem empate. As ${NAME[other(t)]} aceitam?</p>`,
     [{label:'Recusar'},{label:'Aceitar empate',primary:true,fn:()=>{end(null,'Empate por acordo');save();render();}}],other(t));
 }
 $('bResign').onclick=()=>{
-  const t=cur().turn;
+  const t=G.bot?other(G.bot.color):cur().turn;
   modal('Resignar',`<p>As ${NAME[t]} resignam?</p>`,
     [{label:'Continuar jogando'},{label:'Resignar',primary:true,fn:()=>{end(other(t),`${NAME[t]} resignaram. ${NAME[other(t)]} vencem`,'resign');save();render();}}],t);
 };
 $('bNew').onclick=()=>{
   modal('Nova partida',`<p>A partida atual será descartada.</p>
-    <label for="tc" style="display:block;font-weight:600;margin-bottom:6px">Relógio</label>
+    <label for="opp" class="flbl">Adversário</label>
+    <select id="opp"><option value="friend">Um amigo, no mesmo aparelho</option><option value="bot">Bot</option></select>
+    <div id="botOpts">
+      <label for="lvl" class="flbl">Nível do bot</label>
+      <select id="lvl">${BOT_NIV.slice(1).map((l,i)=>`<option value="${i+1}">${i+1} · ${l.nome}</option>`).join('')}</select>
+      <label for="myc" class="flbl">Você joga com</label>
+      <select id="myc"><option value="w">Brancas</option><option value="b">Pretas</option><option value="r">Sorteio</option></select>
+    </div>
+    <label for="tc" class="flbl">Relógio</label>
     <select id="tc">
       <option value="0,0">Sem relógio</option>
       <option value="3,2">3 min + 2 s</option>
@@ -754,7 +938,14 @@ $('bNew').onclick=()=>{
       <option value="15,10">15 min + 10 s</option>
       <option value="30,0">30 min</option>
     </select>`,
-    [{label:'Cancelar'},{label:'Começar',primary:true,fn:()=>{const[a,b]=$('tc').value.split(',').map(Number);newGame(a,b);}}]);
+    [{label:'Cancelar'},{label:'Começar',primary:true,fn:()=>{const[a,b]=$('tc').value.split(',').map(Number);
+      let bot=null;
+      if($('opp').value==='bot'){let me=$('myc').value;if(me==='r')me=Math.random()<.5?'w':'b';bot={color:other(me),level:+$('lvl').value,myPick:$('myc').value};}
+      newGame(a,b,bot);}}]);
+  const lastBot=G.bot||G.lastBot;
+  if(lastBot){$('opp').value=G.bot?'bot':'friend';$('lvl').value=lastBot.level;$('myc').value=lastBot.myPick||other(lastBot.color);}
+  else{$('lvl').value='3';}
+  const sync=()=>{$('botOpts').hidden=$('opp').value!=='bot';};$('opp').onchange=sync;sync();
   const cb=G.clock.base/60000,ci=G.clock.inc/1000,v=cb+','+ci,sel=$('tc');
   if([...sel.options].some(o=>o.value===v))sel.value=v;
 };
@@ -767,7 +958,7 @@ function load(){
     if(!g.mode)g.mode=g.autoflip?'auto':'normal';G=g;G.clock.last=Date.now();refresh();return true;
   }catch(e){return false;}
 }
-if(load())render();else newGame(0,0);
+if(load()){render();setTimeout(maybeBot,300);}else newGame(0,0);
 })();
 </script>
 <script>
