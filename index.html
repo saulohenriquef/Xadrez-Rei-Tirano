@@ -139,6 +139,11 @@ details ul{padding-left:1.1em;margin:6px 0}
 .nav .btn.on{background:var(--gold);border-color:var(--gold);color:#1a1307}
 html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100%}
 .opt select{font:inherit;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);flex:1}
+.sndtest{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.sndtest .btn{padding:8px 4px;font-size:.82rem}
+.snderr{color:rgb(var(--check));font-size:.85rem;margin-top:6px}
+.snderr:empty{display:none}
+.ver{color:var(--muted);font-size:.78rem;margin-top:10px;text-align:right}
 .optlbl{font-weight:600;font-size:.93rem;display:block;margin-bottom:6px}
 .opt+.opt{margin-top:10px}
 @media (prefers-reduced-motion:no-preference){.card{animation:pop .16s ease-out}@keyframes pop{from{transform:scale(.96);opacity:0}}}
@@ -188,6 +193,15 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <option value="face">Frente a frente: peças de cima invertidas</option>
       <option value="pass">Passar para o amigo: só as peças giram</option>
     </select></div>
+    <span class="optlbl" style="margin-top:12px">Testar sons</span>
+    <div class="sndtest" id="sndTest">
+      <button class="btn" data-snd="move">Lance</button><button class="btn" data-snd="capture">Captura</button>
+      <button class="btn" data-snd="castle">Roque</button><button class="btn" data-snd="promote">Promoção</button>
+      <button class="btn" data-snd="check">Xeque</button><button class="btn" data-snd="mate">Mate</button>
+      <button class="btn" data-snd="resign">Resignar</button><button class="btn" data-snd="end">Empate</button>
+    </div>
+    <div id="sndErr" class="snderr"></div>
+    <div class="ver">Versão 1.6</div>
   </div>
 
   <div class="panel">
@@ -369,8 +383,7 @@ function tone(t,f,dur,gain=.12,type='sine',out){
 }
 let BUS=null;
 function bus(){ // limitador só para os sons novos, evita estourar quando várias camadas somam
-  if(!BUS){const c=AC.createDynamicsCompressor();c.threshold.value=-10;c.knee.value=6;c.ratio.value=8;c.attack.value=.001;c.release.value=.2;
-    const g=AC.createGain();g.gain.value=.9;c.connect(g).connect(AC.destination);BUS=c;}
+  if(!BUS||BUS.context!==AC){BUS=AC.createGain();BUS.gain.value=.85;BUS.connect(AC.destination);}
   return BUS;
 }
 function thump(t,f0,f1,dur,gain){ // baque grave com queda de afinação
@@ -394,7 +407,14 @@ function bell(t,f,dur,gain){ // sino: parciais inarmônicos, os agudos morrem an
     o.connect(g).connect(bus());o.start(t);o.stop(t+d+.02);});
 }
 function sfx(kind){
-  if(muted||!ac())return;const t=AC.currentTime+.01;
+  try{sfxRaw(kind);}
+  catch(e){
+    const el=document.getElementById('sndErr');if(el)el.textContent=`Falha no som "${kind}": ${e&&e.message||e}`;
+    try{if(kind!=='move'&&kind!=='check')sfxRaw(kind==='capture'||kind==='castle'||kind==='promote'?'move':'end');}catch(_){}
+  }
+}
+function sfxRaw(kind){
+  if(muted||!ac())return;const t=AC.currentTime+.03;
   switch(kind){
     case'move':knock(t,.9,1700);break;
     case'capture': // peça cai sobre a outra: estalo seco, choque das duas e um baque de corpo
@@ -650,6 +670,9 @@ document.addEventListener('keydown',e=>{if(modalOpen||e.target.closest('input,se
   const k={ArrowLeft:()=>goTo(ply()-1),ArrowRight:()=>goTo(ply()+1),Home:()=>goTo(0),End:()=>goTo(G.states.length-1)}[e.key];
   if(k){e.preventDefault();k();}});
 $('bSound').onclick=()=>{muted=!muted;try{localStorage.setItem(STORE+'-mute',muted?'1':'0');}catch(e){}if(!muted)sfx('move');render();};
+$('sndTest').addEventListener('click',e=>{const b=e.target.closest('[data-snd]');if(!b)return;
+  if(muted){$('sndErr').textContent='O som está desligado no botão 🔇.';return;}
+  $('sndErr').textContent='';sfx(b.dataset.snd);});
 $('bUndo').onclick=undo;
 $('bFlip').onclick=()=>{G.orient=other(G.orient);save();render();};
 $('mode').onchange=e=>{G.mode=e.target.value;if(G.mode==='auto'&&!G.result)G.orient=cur().turn;save();render();};
