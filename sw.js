@@ -2,8 +2,9 @@
 // Ao publicar uma versão nova, basta trocar o index.html no GitHub:
 // a página é buscada na rede primeiro, e o cache só é usado offline.
 // Se mudar ícones ou este arquivo, aumente o número da VERSAO.
-const VERSAO = 'rei-tirano-v1';
+const VERSAO = 'rei-tirano-v2';
 const FONTES = 'rei-tirano-fontes';
+const SONS = 'rei-tirano-sons';
 const ARQUIVOS = [
   './', './index.html', './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './icon-maskable-512.png',
@@ -17,7 +18,7 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
-      .then(ks => Promise.all(ks.filter(k => k !== VERSAO && k !== FONTES).map(k => caches.delete(k))))
+      .then(ks => Promise.all(ks.filter(k => k !== VERSAO && k !== FONTES && k !== SONS).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -38,6 +39,21 @@ self.addEventListener('fetch', e => {
   }
 
   if (url.origin !== location.origin) return;
+
+  // Sons da pasta sons/: toca o que está guardado e atualiza em segundo plano.
+  // Arquivo trocado no GitHub vale na próxima abertura; arquivo apagado volta ao som sintetizado.
+  if (url.pathname.includes('/sons/')) {
+    const rede = caches.open(SONS).then(c => fetch(req).then(r => {
+      if (r.ok) c.put(req, r.clone()); else if (r.status === 404) c.delete(req);
+      return r;
+    }));
+    e.respondWith(caches.open(SONS).then(async c => {
+      const hit = await c.match(req, { ignoreSearch: true });
+      if (hit) { e.waitUntil(rede.catch(() => {})); return hit; }
+      return rede.catch(() => Response.error());
+    }));
+    return;
+  }
 
   // Página: rede primeiro (pega a versão nova), cache se estiver offline ou lento
   if (req.mode === 'navigate') {
