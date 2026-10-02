@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez do Rei Tirano · versão 2.0 -->
+<!-- index.html · Xadrez do Rei Tirano · versão 3.1 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -70,7 +70,7 @@ h1 .crown{color:var(--gold)}
 
 .boardbox{margin:10px auto;width:100%;max-width:max(300px,min(560px,calc(100vh - 290px)))}
 #board{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));aspect-ratio:1/1;width:100%;border-radius:6px;overflow:hidden;container-type:inline-size;box-shadow:0 1px 0 var(--line),0 10px 28px -14px rgba(10,20,35,.55);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-.sq{position:relative;min-width:0;min-height:0;overflow:hidden;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;cursor:pointer;background-color:var(--light)}
+.sq{position:relative;min-width:0;min-height:0;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;cursor:pointer;background-color:var(--light)}
 .sq.dk{background-color:var(--dark)}
 .sq.last{background-image:linear-gradient(var(--last),var(--last))}
 .sq.sel{background-image:linear-gradient(var(--sel),var(--sel))}
@@ -78,7 +78,7 @@ h1 .crown{color:var(--gold)}
 .sq.dot::after{content:"";position:absolute;width:28%;height:28%;border-radius:50%;background:var(--dot);pointer-events:none}
 .sq.cap::after{content:"";position:absolute;inset:3%;border-radius:50%;border:max(3px,.85cqw) solid var(--dot);pointer-events:none}
 .sq.self::after{content:"";position:absolute;inset:5%;border-radius:50%;border:max(3px,.8cqw) dashed var(--gold);background:var(--gold-soft);pointer-events:none;z-index:2}
-.pc{position:relative;z-index:1;font-family:"Noto Sans Symbols 2","Segoe UI Symbol","DejaVu Sans",serif;font-size:min(10vw,56px);font-size:10.4cqw;line-height:1;transform:translateY(-3%);pointer-events:none}
+.pc{position:relative;z-index:1;font-family:"Noto Sans Symbols 2","Segoe UI Symbol","DejaVu Sans",serif;font-size:min(10vw,56px);font-size:10.4cqw;line-height:1;--base:translateY(-3%);transform:var(--base);pointer-events:none}
 .pc.w{color:#fbf7ee;text-shadow:1px 0 0 #1e1812,-1px 0 0 #1e1812,0 1px 0 #1e1812,0 -1px 0 #1e1812,1px 1px 0 #1e1812,-1px -1px 0 #1e1812,1px -1px 0 #1e1812,-1px 1px 0 #1e1812,0 3px 4px rgba(0,0,0,.3)}
 .pc.b{color:#1d1712;text-shadow:0 0 1px rgba(255,250,240,.45),0 3px 4px rgba(0,0,0,.3)}
 .co{position:absolute;font-size:max(9px,2.1cqw);font-weight:700;line-height:1;pointer-events:none;z-index:1}
@@ -153,7 +153,7 @@ details ul{padding-left:1.1em;margin:6px 0}
 .card select{font:inherit;width:100%;padding:10px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
 .promo{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .promo button{aspect-ratio:1;border-radius:10px;border:1px solid var(--line);background:var(--light);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
-.promo .pc{font-size:2.2rem;transform:none}
+.promo .pc{font-size:2.2rem;--base:none;transform:none}
 .palg{position:relative;display:inline-block;line-height:1;transform:translate(-.17em,.12em) scale(.86)}
 .wing{position:absolute;left:.48em;top:-.3em;width:.78em;height:.78em;z-index:-1;overflow:visible}
 .wing .wf{fill:currentColor;stroke-width:1.2;stroke-linejoin:round;vector-effect:non-scaling-stroke}
@@ -163,7 +163,48 @@ details ul{padding-left:1.1em;margin:6px 0}
 .caps .b .wing path{stroke:#9aa8b6}
 .caps .lost .wing .wf{stroke:none}.caps .lost .wing .wl{stroke:rgba(0,0,0,.35)}
 .caps>span{position:relative}
-.pc.up{transform:rotate(180deg) translateY(-3%)}
+.pc.up{--base:rotate(180deg) translateY(-3%)}
+/* ---- animações de lance e captura ---- */
+.pc.arrive{z-index:5;animation:arrive .17s cubic-bezier(.25,.7,.35,1) both}
+.pc.arrive.hit{animation:arriveHit .3s cubic-bezier(.25,.7,.35,1) both}
+@keyframes arrive{from{transform:translate(calc(var(--dx)*12.5cqw),calc(var(--dy)*12.5cqw)) var(--base)}to{transform:translate(0,0) var(--base)}}
+@keyframes arriveHit{0%{transform:translate(calc(var(--dx)*12.5cqw),calc(var(--dy)*12.5cqw)) scale(1) var(--base)}
+  55%{transform:translate(0,0) scale(1.1) var(--base)}100%{transform:translate(0,0) scale(1) var(--base)}}
+/* peça capturada: fica pequena e tombada no canto da casa até o próximo lance */
+.capt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:3;pointer-events:none;
+  transform:translate(var(--tx),var(--ty)) rotate(var(--rot)) scale(.33);opacity:.92}
+.capt .pc{z-index:auto}
+.capt.knock{animation:knock .72s cubic-bezier(.3,.6,.3,1) both}
+@keyframes knock{
+  0%,22%{transform:none;opacity:1}
+  36%{transform:translate(calc(var(--tx)*.15),calc(var(--ty)*-.2)) rotate(calc(var(--rot)*.25)) scale(.96);opacity:1}
+  70%{transform:translate(var(--tx),var(--ty)) rotate(calc(var(--rot) + 10deg)) scale(.36)}
+  85%{transform:translate(var(--tx),var(--ty)) rotate(calc(var(--rot) - 6deg)) scale(.32)}
+  100%{transform:translate(var(--tx),var(--ty)) rotate(var(--rot)) scale(.33);opacity:.92}}
+.burst{position:absolute;inset:14%;border-radius:50%;border:max(2px,.5cqw) solid rgba(255,255,255,.9);z-index:2;pointer-events:none;opacity:0;
+  animation:burst .45s ease-out .15s both}
+.burst.gold{border-color:var(--gold)}
+@keyframes burst{0%{transform:scale(.35);opacity:.95}100%{transform:scale(1.3);opacity:0}}
+@media (prefers-reduced-motion:reduce){.pc.arrive,.pc.arrive.hit,.capt.knock{animation:none}.burst{display:none}}
+/* peça capturada no último lance, marcada na lista de capturas */
+.clb{position:absolute;top:-1cqw;right:-1cqw;width:4.8cqw;height:4.8cqw;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font:700 2.5cqw/1 Figtree,system-ui,sans-serif;letter-spacing:-.04em;color:#fff;z-index:6;pointer-events:none;
+  box-shadow:0 1px 3px rgba(0,0,0,.45),0 0 0 1.5px rgba(255,255,255,.9);animation:clpop .28s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes clpop{from{transform:scale(0)}to{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.clb{animation:none}}
+.clb-s{display:inline-flex;align-items:center;justify-content:center;min-width:1.25em;height:1.25em;padding:0 .2em;border-radius:.7em;
+  font:700 .68rem/1 Figtree,system-ui,sans-serif;letter-spacing:-.04em;color:#fff;margin-left:4px;vertical-align:1px}
+.c-best{background:#2e9a55}.c-good{background:#69ad48}.c-ok{background:#8fb06a}
+.thumb{width:.95em;height:.95em;fill:currentColor;display:block}
+.c-inacc{background:#e0b030;color:#2a1f05}.c-mist{background:#e2772a}.c-blund{background:#d1382a}
+.clsum{margin-top:10px;padding-top:8px;border-top:1px solid var(--line);display:grid;gap:6px}
+.clsum[hidden]{display:none}
+.clrow{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;font-variant-numeric:tabular-nums;font-size:.88rem}
+.clwho{font-weight:700;min-width:3.2em}
+.clchip{display:inline-flex;align-items:center;gap:3px}
+.clchip .clb-s{margin-left:0}
+.clnote{color:var(--muted);font-size:.8rem}
+.caps .lastcap{outline:1.5px solid var(--gold);outline-offset:1px;border-radius:2px;margin:0 3px}
 .bar.up{transform:rotate(180deg)}
 .card.up{transform:rotate(180deg)}
 @media (prefers-reduced-motion:no-preference){.card.up{animation:none}}
@@ -218,6 +259,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
   <div class="panel">
     <h2>Lances</h2>
     <ol id="moves"></ol>
+    <div id="clsum" class="clsum" hidden></div>
   </div>
 
   <div class="panel">
@@ -227,6 +269,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
 
   <div class="panel">
     <label class="opt" id="evOptRow"><input type="checkbox" id="evOpt"> Barra de avaliação (contra o bot)</label>
+    <label class="opt" id="clsOptRow"><input type="checkbox" id="clsOpt"> Avaliação dos lances (contra o bot)</label>
     <label class="optlbl" for="mode" style="margin-top:12px">Jogar contra um amigo</label>
     <div class="opt"><select id="mode">
       <option value="normal">Tabuleiro fixo</option>
@@ -243,7 +286,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
     </div>
     <div id="sndInfo" class="sndinfo"></div>
     <div id="sndErr" class="snderr"></div>
-    <div class="ver">Versão 2.0</div>
+    <div class="ver">Versão 3.1</div>
   </div>
 
   <div class="panel">
@@ -267,6 +310,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
         <li>Com relógio: quem zera o tempo perde, a menos que o adversário não tenha material para dar mate.</li>
       </ul>
       <p><strong>Contra o bot:</strong> escolha em Nova partida, com 5 níveis. O bot conhece a regra do Rei Tirano, nunca propõe empate, recusa as suas propostas e joga até o fim. Voltar desfaz o seu lance e o dele. Você pode reivindicar empate normalmente. A barra de avaliação, abaixo do tabuleiro, mostra quem está melhor segundo uma análise própria, sempre no nível máximo, independente do nível do bot: o número é a vantagem em peões e M3 significa mate em 3 lances.</p>
+      <p><strong>Avaliação dos lances</strong> (contra o bot): cada lance é comparado com a posição antes dele, pela chance de vitória de quem jogou, na mesma conta da barra. <span class="clb-s c-best">★</span> Melhor lance: o mesmo do motor, ou tão bom quanto. <span class="clb-s c-good"><svg class="thumb" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="10" width="4.5" height="11" rx="1"/><path d="M8.5 20.5V10.5L13 3.6C13.6 2.7 15.2 3 15.2 4.4V8.6H20C21.4 8.6 22.3 9.9 21.9 11.2L19.8 18.9C19.5 19.9 18.6 20.5 17.6 20.5Z"/></svg></span> Excelente: perde até 2%. <span class="clb-s c-ok">✓</span> Bom lance: até 5%. <span class="clb-s c-inacc">?!</span> Imprecisão: até 10%. <span class="clb-s c-mist">?</span> Erro: até 20%. <span class="clb-s c-blund">??</span> Capivarada: mais de 20%. Perder um peão numa partida já ganha pesa menos que perder o mesmo peão numa posição igual. No tabuleiro, o selo do seu último lance fica até você jogar de novo; os lances do bot aparecem avaliados na lista.</p>
       <p><strong>Paladino</strong> (cavalo alado): peça extra, que só aparece por promoção. Em cada lance ele escolhe entre andar como torre ou saltar como cavalo. Como torre, não pula ninguém; só pula peças quando salta como cavalo. Vale 8, entre a dama e a torre.</p>
       <p>Notação em português: R rei, D dama, P paladino, T torre, B bispo, C cavalo.</p>
     </details>
@@ -490,7 +534,7 @@ function ENGINE(R){
 const sqName=i=>FILES[i&7]+(8-(i>>3));
 const WING=`<svg class="wing" viewBox="0 0 100 100" aria-hidden="true"><path class="wf" d="M14,88 C8,60 18,28 46,12 C62,4 82,2 98,8 C88,14 80,18 72,20 C84,22 92,26 96,32 C86,36 76,38 66,38 C78,42 86,48 88,54 C76,56 64,56 56,54 C64,60 70,66 70,72 C58,74 44,72 36,70 C38,76 34,84 14,88 Z"/><path class="wl" d="M28,66 C40,46 56,28 84,14 M34,68 C48,54 62,44 82,34 M40,70 C50,62 60,58 74,52"/></svg>`;
 const fig=t=>t==='l'?`<span class="palg">${GLYPH.l}\uFE0E${WING}</span>`:`${GLYPH[t]}\uFE0E`;
-const glyph=(p,up)=>`<span class="pc ${col(p)}${up?' up':''}">${fig(typ(p))}</span>`;
+const glyph=(p,up,extra='',style='')=>`<span class="pc ${col(p)}${up?' up':''}${extra}"${style?` style="${style}"`:''}>${fig(typ(p))}</span>`;
 
 function san(s,m,legal){
   const p=s.b[m.from],t=typ(p);let str;
@@ -648,7 +692,8 @@ function sfxRaw(kind){
 }
 
 // ---------- Estado da partida ----------
-let G=null,selected=-1,targets=[],legalNow=[],modalOpen=false,view=null;
+let G=null,selected=-1,targets=[],legalNow=[],modalOpen=false,view=null,ANIM=null;
+const ANIM_MS=900;const cellHTML=[],cellBadge=[];
 const modo=()=>G.bot?'normal':G.mode;
 const passUp=()=>modo()==='pass'&&!G.result&&cur().turn!==G.orient;
 const ply=()=>view===null?G.states.length-1:view;
@@ -658,7 +703,7 @@ const countKey=k=>G.keys.filter(x=>x===k).length;
 
 function newGame(baseMin=0,incSec=0,bot=null){
   if(G)cancelBot();
-  EVCACHE.clear();evKey=null;evShown=null;
+  EVCACHE.clear();CLSCACHE.clear();evShown=null;
   const prev=G,s0=initState(),lg=allLegal(s0);
   G={states:[s0],keys:[posKey(s0,lg)],moves:[],result:null,
      clock:{base:baseMin*60000,inc:incSec*1000,w:baseMin*60000,b:baseMin*60000,running:false,last:0},
@@ -709,7 +754,10 @@ function doMove(m){
   const c=G.clock;
   if(c.base){const now=Date.now();if(c.running)c[s.turn]-=now-c.last;c[s.turn]+=c.inc;c.running=true;c.last=now;}
   G.states.push(apply(s,m));
-  G.moves.push({san:sanStr,self:!!m.self,from:m.from,to:m.to,captured,by:s.turn});
+  const capSq=m.ep?m.to+(s.turn==='w'?8:-8):m.to; // no en passant, o peão capturado estava em outra casa
+  G.moves.push({san:sanStr,self:!!m.self,from:m.from,to:m.to,promo:m.promo||'',captured,capSq,by:s.turn});
+  ANIM={ply:G.states.length-1,t0:Date.now(),from:m.from,to:m.to,cap:!!captured,
+    rook:m.castle?{K:[63,61],Q:[56,59],k:[7,5],q:[0,3]}[m.castle]:null};
   selected=-1;targets=[];view=null;
   evaluate();
   { const n=cur(),chk=inCheck(n,n.turn);
@@ -807,43 +855,91 @@ function botResult(id,r){
     if(m){selected=-1;targets=[];doMove(m);}
   },wait);
 }
-// ---------- Barra de avaliação (análise independente do nível do bot) ----------
-const MATE_V=100000,EVAL_MS=900;
-let evWorker=null,evOk=true,evToken=0,evBusy=false,evKey=null,evShown=null;
-const EVCACHE=new Map();
-const evOn=()=>!!(G&&G.bot&&G.bot.evalBar);
+// ---------- Análise: barra de avaliação e avaliação dos lances (independente do nível do bot) ----------
+// Cada posição da partida é analisada uma vez, em fila. A avaliação de um lance é a perda de chance de vitória
+// de quem jogou: a mesma conta da barra, antes e depois do lance.
+const MATE_V=100000,EVAL_MS=800;
+let evWorker=null,evOk=true,evBusy=null,evShown=null;
+const EVCACHE=new Map(),CLSCACHE=new Map();
+const barOn=()=>!!(G&&G.bot&&G.bot.evalBar);
+const clsOn=()=>!!(G&&G.bot&&G.bot.classify);
+const anOn=()=>barOn()||clsOn();
 const posK=st=>st.b.map(x=>x||'.').join('')+st.turn+(st.cr.K?'K':'')+(st.cr.Q?'Q':'')+(st.cr.k?'k':'')+(st.cr.q?'q':'')+st.ep;
-function evResult(id,r,s){
-  if(id!==evToken)return;evBusy=false;
-  let v;
-  if(!r||!r.m){v=inCheck(s,s.turn)?{mate:s.turn==='w'?-0:0,winner:other(s.turn)}:{cp:0};} // sem lances: mate ou afogamento
-  else{const sc=s.turn==='w'?r.score:-r.score;
+const keyAt=k=>posK(G.states[k])+'|'+k;
+function nextPly(){
+  const N=G.states.length-1,P=ply(),need=k=>!EVCACHE.has(keyAt(k));
+  if(need(P))return P;              // primeiro a posição na tela
+  if(need(N))return N;              // depois a posição atual
+  if(clsOn())for(let k=0;k<=N;k++)if(need(k))return k; // depois as que faltam para avaliar os lances
+  return -1;
+}
+function ensureEvWorker(){
+  if(!evOk||evWorker)return;
+  try{evWorker=new Worker(workerURL());
+    evWorker.onmessage=e=>evDone(e.data.id,e.data.r);
+    evWorker.onerror=ev=>{if(ev.preventDefault)ev.preventDefault();evOk=false;evWorker=null;if(evBusy){evBusy=null;setTimeout(pump,30);}};
+  }catch(e){evOk=false;evWorker=null;}
+}
+function pump(){
+  if(evBusy||!G||!anOn())return;
+  const k=nextPly();if(k<0)return;
+  const s=G.states[k],key=keyAt(k);
+  evBusy={key,s};
+  const o={maxDepth:14,noise:0,timeMs:EVAL_MS,history:G.states.slice(0,k+1).map(st=>st.b.map(x=>x||'.').join('')+st.turn)};
+  ensureEvWorker();
+  if(evWorker)evWorker.postMessage({id:key,s,o});
+  else setTimeout(()=>{let r=null;try{if(!localE)localE=ENGINE(RULES());r=localE.think(s,{...o,timeMs:300});}catch(e){}evDone(key,r);},60);
+}
+function evDone(key,r){
+  if(!evBusy||evBusy.key!==key)return;
+  const s=evBusy.s;evBusy=null;
+  let v,best=null;
+  if(!r||!r.m){v=inCheck(s,s.turn)?{mate:0,winner:other(s.turn)}:{cp:0};} // sem lances: mate ou afogamento
+  else{best={from:r.m.from,to:r.m.to,promo:r.m.promo||''};
+    const sc=s.turn==='w'?r.score:-r.score;
     if(Math.abs(r.score)>MATE_V-1000){const plies=MATE_V-Math.abs(r.score);v={mate:Math.ceil(plies/2),winner:sc>0?'w':'b'};}
     else v={cp:sc};}
-  EVCACHE.set(evKey,v);evShown=v;renderEval();
+  EVCACHE.set(key,{v,best});
+  if(G)render(); // render chama pump() de novo para a próxima posição da fila
 }
-function killEvWorker(){if(evWorker){evWorker.terminate();evWorker=null;}}
-function requestEval(){
-  if(!evOn())return;
-  const P=ply(),s=G.states[P],k=posK(s)+'|'+P;
-  if(k===evKey)return;
-  evKey=k;
-  if(EVCACHE.has(k)){evBusy=false;evShown=EVCACHE.get(k);renderEval();return;}
-  const id=++evToken;
-  if(evBusy)killEvWorker(); // posição mudou no meio da análise: descarta a antiga
-  evBusy=true;renderEval();
-  const o={maxDepth:14,noise:0,timeMs:EVAL_MS,history:G.states.slice(0,P+1).map(st=>st.b.map(x=>x||'.').join('')+st.turn)};
-  if(evOk&&!evWorker){try{evWorker=new Worker(workerURL());evWorker.onmessage=e=>evResult(e.data.id,e.data.r,evWorker&&evWorker._s);
-      evWorker.onerror=ev=>{if(ev.preventDefault)ev.preventDefault();evOk=false;evWorker=null;evKey=null;if(evBusy)setTimeout(requestEval,30);};}
-    catch(e){evOk=false;evWorker=null;}}
-  if(evWorker){evWorker._s=s;evWorker.postMessage({id,s,o});}
-  else setTimeout(()=>{if(id!==evToken)return;if(!localE)localE=ENGINE(RULES());let r=null;try{r=localE.think(s,{...o,timeMs:300});}catch(e){}evResult(id,r,s);},60);
+// chance de vitória (0 a 1) de uma cor, na mesma escala da barra
+const winP=(v,c)=>v.mate!==undefined?(v.winner===c?1:0):1/(1+Math.exp(-(c==='w'?v.cp:-v.cp)/300));
+const CLS={
+  best:{nome:'Melhor lance',sym:'★'},good:{nome:'Excelente',sym:'<svg class="thumb" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="10" width="4.5" height="11" rx="1"/><path d="M8.5 20.5V10.5L13 3.6C13.6 2.7 15.2 3 15.2 4.4V8.6H20C21.4 8.6 22.3 9.9 21.9 11.2L19.8 18.9C19.5 19.9 18.6 20.5 17.6 20.5Z"/></svg>'},ok:{nome:'Bom lance',sym:'✓'},
+  inacc:{nome:'Imprecisão',sym:'?!'},mist:{nome:'Erro',sym:'?'},blund:{nome:'Capivarada',sym:'??'}};
+const CLS_ORDER=['best','good','ok','inacc','mist','blund'];
+function classify(k){ // lance k = G.moves[k-1], da posição k-1 para a posição k
+  if(k<1||k>=G.states.length)return null;
+  const mv=G.moves[k-1],ck=keyAt(k)+'>'+mv.from+'-'+mv.to+(mv.promo||'');
+  if(CLSCACHE.has(ck))return CLSCACHE.get(ck);
+  const a=EVCACHE.get(keyAt(k-1)),b=EVCACHE.get(keyAt(k));if(!a||!b)return null;
+  const c=mv.by,prev=G.states[k-1];
+  const isBest=a.best&&a.best.from===mv.from&&a.best.to===mv.to&&a.best.promo===(mv.promo||'');
+  const loss=Math.max(0,winP(a.v,c)-winP(b.v,c));
+  let id;
+  if(isBest||loss<.005||allLegal(prev).length===1)id='best'; // único lance possível também é o melhor
+  else if(loss<=.02)id='good';else if(loss<=.05)id='ok';else if(loss<=.10)id='inacc';else if(loss<=.20)id='mist';else id='blund';
+  CLSCACHE.set(ck,id);return id;
+}
+const clsBadge=(id,cls)=>`<span class="${cls} c-${id}" title="${CLS[id].nome}">${CLS[id].sym}</span>`;
+function renderClsSummary(){
+  const el=$('clsum');if(!el)return;
+  if(!clsOn()){el.hidden=true;return;}
+  el.hidden=false;
+  const cnt={w:{},b:{}};
+  for(let k=1;k<G.states.length;k++){const id=classify(k);if(id){const c=G.moves[k-1].by;cnt[c][id]=(cnt[c][id]||0)+1;}}
+  const row=c=>`<div class="clrow"><span class="clwho">${c===G.bot.color?'Bot':'Você'}</span>`+
+    CLS_ORDER.map(id=>`<span class="clchip" title="${CLS[id].nome}">${clsBadge(id,'clb-s')}${cnt[c][id]||0}</span>`).join('')+'</div>';
+  const me=other(G.bot.color);
+  el.innerHTML=row(me)+row(G.bot.color)+(evBusy||nextPly()>=0?'<div class="clnote">Analisando…</div>':'');
 }
 function renderEval(){
   const bar=$('evalBar');if(!bar)return;
-  bar.hidden=!evOn();if(!evOn())return;
-  bar.classList.toggle('flip',G.orient==='b');bar.classList.toggle('busy',evBusy);
-  const P=ply();let v=evShown;
+  bar.hidden=!barOn();if(!barOn())return;
+  const P=ply(),e=EVCACHE.get(keyAt(P));
+  if(e)evShown=e.v;
+  bar.classList.toggle('flip',G.orient==='b');bar.classList.toggle('busy',!e);
+  let v=evShown;
   // partida encerrada, olhando a posição final: a barra mostra o resultado
   if(G.result&&P===G.states.length-1)v=G.result.winner?{mate:0,winner:G.result.winner,over:true}:{cp:0,over:true};
   if(!v){$('evFill').style.width='50%';$('evTxt').textContent='';return;}
@@ -916,6 +1012,13 @@ function render(){
   const P=ply(),s=G.states[P],last=G.moves[P-1];
   const chk=inCheck(s,s.turn)?kingSq(s.b,s.turn):-1;
   const tset=new Map(view===null?targets.map(m=>[m.to,m]):[]);
+  const anim=ANIM&&ANIM.ply===P&&Date.now()-ANIM.t0<ANIM_MS?ANIM:null;
+  const dpos=x=>{const d=G.orient==='w'?x:63-x;return[d&7,d>>3];};
+  const upOf=p=>modo()==='face'?col(p)!==G.orient:passUp();
+  const capSq=last&&last.captured?(last.capSq??last.to):-1;
+  // selo no tabuleiro: o seu último lance (até a posição na tela), fica até você jogar de novo
+  let myK=0;if(clsOn())for(let k=P;k>=1;k--)if(G.moves[k-1].by!==G.bot.color){myK=k;break;}
+  const myCls=myK?classify(myK):null,mySq=myK?G.moves[myK-1].to:-1;
   for(let d=0;d<64;d++){
     const sq=G.orient==='w'?d:63-d,el=cells[d],[r,f]=rc(sq);
     let cls='sq '+(((r+f)&1)?'dk':'lt');
@@ -924,10 +1027,26 @@ function render(){
     if(sq===chk)cls+=' check';
     const t=tset.get(sq);if(t)cls+=t.self?' self':(s.b[sq]?' cap':' dot');
     el.className=cls;el.dataset.sq=sq;
-    const p=s.b[sq];let h=p?glyph(p,modo()==='face'?col(p)!==G.orient:passUp()):'';
+    const p=s.b[sq];let extra='',style='';
+    if(anim&&p&&(sq===anim.to||(anim.rook&&sq===anim.rook[1]))){ // a peça desliza da casa de origem
+      const from=sq===anim.to?anim.from:anim.rook[0],[fc,fr]=dpos(from),[tc,tr]=dpos(sq);
+      extra=sq===anim.to&&anim.cap?' arrive hit':' arrive';style=`--dx:${fc-tc};--dy:${fr-tr}`;}
+    let h=p?glyph(p,upOf(p),extra,style):'';
+    if(sq===capSq){ // peça capturada pequena e tombada no canto, até o próximo lance
+      // canto inferior esquerdo, do ponto de vista de quem está em pé na casa (peças invertidas usam o canto oposto)
+      const cp=last.captured,att=s.b[sq]||(last.by==='w'?'P':'p'),up=upOf(att);
+      const pos=up?'--tx:3.75cqw;--ty:-3.75cqw;--rot:105deg':'--tx:-3.75cqw;--ty:3.75cqw;--rot:-75deg';
+      h+=`<span class="capt${anim?' knock':''}" style="${pos}">${glyph(cp,false)}</span>`;
+      if(anim)h+=`<span class="burst${last.self?' gold':''}"></span>`;}
     if((d&7)===0)h+=`<span class="co rk">${8-r}</span>`;
     if((d>>3)===7)h+=`<span class="co fl">${FILES[f]}</span>`;
-    el.innerHTML=h;
+    let rebuilt=false;
+    if(cellHTML[d]!==h){el.innerHTML=h;cellHTML[d]=h;rebuilt=true;} // só reescreve a casa que mudou (não interrompe animações)
+    const cid=myCls&&sq===mySq?myCls:'';
+    if(rebuilt||cellBadge[d]!==cid){ // selo da avaliação do último lance, acrescentado à parte
+      const old=el.querySelector(':scope > .clb');if(old)old.remove();
+      if(cid)el.insertAdjacentHTML('beforeend',clsBadge(cid,'clb'));
+      cellBadge[d]=cid;}
   }
   renderBar($('barTop'),other(G.orient));renderBar($('barBottom'),G.orient);
   const st=$('statusText');
@@ -949,19 +1068,23 @@ function render(){
   $('bSound').textContent=muted?'🔇':'🔊';
   $('bLock').textContent=G.lock?'🔒':'🔓';$('bLock').classList.toggle('on',!!G.lock);
   renderMoves();renderClocks();renderPlacar();
-  const eo=$('evOpt');eo.checked=evOn();eo.disabled=!G.bot;$('evOptRow').style.opacity=G.bot?1:.5;
-  requestEval();renderEval();
+  const eo=$('evOpt');eo.checked=barOn();eo.disabled=!G.bot;$('evOptRow').style.opacity=G.bot?1:.5;
+  const co=$('clsOpt');co.checked=clsOn();co.disabled=!G.bot;$('clsOptRow').style.opacity=G.bot?1:.5;
+  renderEval();renderClsSummary();pump();
 }
 function renderBar(el,c){
   const s=cur();
   const byVal=(a,b)=>VAL[b]-VAL[a];
-  const took=G.moves.filter(m=>m.by===c&&m.captured&&!m.self).map(m=>typ(m.captured)).sort(byVal);
-  const lost=G.moves.filter(m=>m.by===c&&m.self).map(m=>typ(m.captured)).sort(byVal);
+  const lm=G.moves[G.moves.length-1];
+  const item=m=>({t:typ(m.captured),last:m===lm});
+  const byV=(a,b)=>VAL[b.t]-VAL[a.t];
+  const took=G.moves.filter(m=>m.by===c&&m.captured&&!m.self).map(item).sort(byV);
+  const lost=G.moves.filter(m=>m.by===c&&m.self).map(item).sort(byV);
   const diff=material(s.b,c)-material(s.b,other(c));
   const oc=other(c);
-  let caps=took.map(t=>`<span class="${oc}">${fig(t)}</span>`).join('');
+  let caps=took.map(x=>`<span class="${oc}${x.last?' lastcap':''}">${fig(x.t)}</span>`).join('');
   if(diff>0)caps+=`<span class="adv">+${diff}</span>`;
-  if(lost.length)caps+=`<span class="sep" title="Peças capturadas pelo próprio rei">⊗</span>`+lost.map(t=>`<span class="lost">${fig(t)}</span>`).join('');
+  if(lost.length)caps+=`<span class="sep" title="Peças capturadas pelo próprio rei">⊗</span>`+lost.map(x=>`<span class="lost${x.last?' lastcap':''}">${fig(x.t)}</span>`).join('');
   el.className='bar'+(!G.result&&s.turn===c?' turn':'');
   el.innerHTML=`<span class="sw ${c}"></span><span class="who">${NAME[c]}${G.bot?`<span class="tag">${c===G.bot.color?'Bot · '+BOT_NIV[G.bot.level].nome:'Você'}</span>`:''}</span><span class="caps">${caps}</span>`+
     (G.clock.base?`<span class="clock" id="clk-${c}"></span>`:'');
@@ -982,7 +1105,8 @@ function renderClocks(){
 function renderMoves(){
   const ol=$('moves');let h='';
   for(let i=0;i<G.moves.length;i+=2){const a=G.moves[i],b=G.moves[i+1];
-    const P=ply(),c=(k,m)=>`<span class="mv${m.self?' sf':''}${P===k?' cur':''}" data-ply="${k}">${m.san}</span>`;
+    const P=ply(),cl=clsOn(),c=(k,m)=>{const id=cl?classify(k):null;
+      return `<span class="mv${m.self?' sf':''}${P===k?' cur':''}" data-ply="${k}">${m.san}${id?clsBadge(id,'clb-s'):''}</span>`;};
     h+=`<li><span class="n">${i/2+1}.</span>${c(i+1,a)}${b?c(i+2,b):'<span></span>'}</li>`;}
   if(G.result)h+=`<li class="res">${G.result.winner==='w'?'1–0':G.result.winner==='b'?'0–1':'½–½'}</li>`;
   ol.innerHTML=h||'<li class="empty">Brancas começam. Toque numa peça para ver os lances.</li>';
@@ -1020,7 +1144,8 @@ $('bSound').onclick=()=>{muted=!muted;try{localStorage.setItem(STORE+'-mute',mut
 $('sndTest').addEventListener('click',e=>{const b=e.target.closest('[data-snd]');if(!b)return;
   if(muted){$('sndErr').textContent='O som está desligado no botão 🔇.';return;}
   $('sndErr').textContent='';sfx(b.dataset.snd);});
-$('evOpt').onchange=e=>{if(!G.bot)return;G.bot.evalBar=e.target.checked;evKey=null;save();render();};
+$('evOpt').onchange=e=>{if(!G.bot)return;G.bot.evalBar=e.target.checked;save();render();};
+$('clsOpt').onchange=e=>{if(!G.bot)return;G.bot.classify=e.target.checked;save();render();};
 $('bZerar').onclick=()=>modal('Zerar placar','<p>Apagar vitórias, empates e derrotas de todos os bots?</p>',
   [{label:'Cancelar'},{label:'Zerar',primary:true,fn:()=>{PLACAR={};try{localStorage.removeItem(PLACAR_KEY);}catch(e){}renderPlacar();}}]);
 $('bUndo').onclick=undo;
@@ -1059,6 +1184,7 @@ $('bNew').onclick=()=>{
       <label for="myc" class="flbl">Você joga com</label>
       <select id="myc"><option value="w">Brancas</option><option value="b">Pretas</option><option value="r">Sorteio</option></select>
       <label class="opt" style="margin-top:12px"><input type="checkbox" id="evNew"> Mostrar barra de avaliação</label>
+      <label class="opt" style="margin-top:8px"><input type="checkbox" id="clsNew"> Avaliar os lances</label>
     </div>
     <label for="tc" class="flbl">Relógio</label>
     <select id="tc">
@@ -1072,10 +1198,10 @@ $('bNew').onclick=()=>{
     [{label:'Cancelar'},{label:'Começar',primary:true,fn:()=>{const[a,b]=$('tc').value.split(',').map(Number);
       if(contaDerrota)registrarPlacar(G.bot.color);
       let bot=null;
-      if($('opp').value==='bot'){let me=$('myc').value;if(me==='r')me=Math.random()<.5?'w':'b';bot={color:other(me),level:+$('lvl').value,myPick:$('myc').value,evalBar:$('evNew').checked};}
+      if($('opp').value==='bot'){let me=$('myc').value;if(me==='r')me=Math.random()<.5?'w':'b';bot={color:other(me),level:+$('lvl').value,myPick:$('myc').value,evalBar:$('evNew').checked,classify:$('clsNew').checked};}
       newGame(a,b,bot);}}]);
   const lastBot=G.bot||G.lastBot;
-  if(lastBot){$('opp').value=G.bot?'bot':'friend';$('lvl').value=lastBot.level;$('myc').value=lastBot.myPick||other(lastBot.color);$('evNew').checked=!!lastBot.evalBar;}
+  if(lastBot){$('opp').value=G.bot?'bot':'friend';$('lvl').value=lastBot.level;$('myc').value=lastBot.myPick||other(lastBot.color);$('evNew').checked=!!lastBot.evalBar;$('clsNew').checked=!!lastBot.classify;}
   else{$('lvl').value='3';}
   const sync=()=>{$('botOpts').hidden=$('opp').value!=='bot';};$('opp').onchange=sync;sync();
   const cb=G.clock.base/60000,ci=G.clock.inc/1000,v=cb+','+ci,sel=$('tc');
