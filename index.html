@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- index.html · Xadrez do Rei Tirano · versão 2.0 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -114,6 +115,16 @@ h1 .crown{color:var(--gold)}
 .controls .btn span{display:block;font-size:1.1rem;line-height:1.1}
 
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.phead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.phead h2{margin:0}
+.btn.mini{padding:5px 10px;font-size:.8rem}
+.placar{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem}
+.placar th{color:var(--muted);font-weight:600;font-size:.78rem;text-align:center;padding:2px 4px}
+.placar th:first-child,.placar td:first-child{text-align:left}
+.placar td{text-align:center;padding:5px 4px;border-top:1px solid var(--line)}
+.placar tr.cur td{background:var(--gold-soft)}
+.placar td.v{color:#3c8d4f;font-weight:700}.placar td.d{color:rgb(var(--check));font-weight:700}
+.placar td.pct{color:var(--muted);font-size:.82rem}
 .panel h2{font-family:Spectral,Georgia,serif;font-size:1.05rem;margin:0 0 6px}
 #moves{list-style:none;margin:0;padding:0;max-height:180px;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:2px 12px;font-variant-numeric:tabular-nums}
 #moves li{display:grid;grid-template-columns:2.2em 1fr 1fr;gap:4px}
@@ -140,9 +151,18 @@ details ul{padding-left:1.1em;margin:6px 0}
 .flbl{display:block;font-weight:600;margin:12px 0 6px}
 #botOpts[hidden]{display:none}
 .card select{font:inherit;width:100%;padding:10px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
-.promo{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.promo{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .promo button{aspect-ratio:1;border-radius:10px;border:1px solid var(--line);background:var(--light);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
-.promo .pc{font-size:2.6rem;transform:none}
+.promo .pc{font-size:2.2rem;transform:none}
+.palg{position:relative;display:inline-block;line-height:1;transform:translate(-.17em,.12em) scale(.86)}
+.wing{position:absolute;left:.48em;top:-.3em;width:.78em;height:.78em;z-index:-1;overflow:visible}
+.wing .wf{fill:currentColor;stroke-width:1.2;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.wing .wl{fill:none;stroke-width:.8;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.pc.w .wing path,.caps .w .wing path{stroke:#1e1812}
+.pc.b .wing path{stroke:rgba(255,250,240,.55)}
+.caps .b .wing path{stroke:#9aa8b6}
+.caps .lost .wing .wf{stroke:none}.caps .lost .wing .wl{stroke:rgba(0,0,0,.35)}
+.caps>span{position:relative}
 .pc.up{transform:rotate(180deg) translateY(-3%)}
 .bar.up{transform:rotate(180deg)}
 .card.up{transform:rotate(180deg)}
@@ -201,6 +221,11 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
   </div>
 
   <div class="panel">
+    <div class="phead"><h2>Placar contra os bots</h2><button class="btn mini" id="bZerar">Zerar</button></div>
+    <table class="placar" id="placar"></table>
+  </div>
+
+  <div class="panel">
     <label class="opt" id="evOptRow"><input type="checkbox" id="evOpt"> Barra de avaliação (contra o bot)</label>
     <label class="optlbl" for="mode" style="margin-top:12px">Jogar contra um amigo</label>
     <div class="opt"><select id="mode">
@@ -218,7 +243,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
     </div>
     <div id="sndInfo" class="sndinfo"></div>
     <div id="sndErr" class="snderr"></div>
-    <div class="ver">Versão 1.9</div>
+    <div class="ver">Versão 2.0</div>
   </div>
 
   <div class="panel">
@@ -242,7 +267,8 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
         <li>Com relógio: quem zera o tempo perde, a menos que o adversário não tenha material para dar mate.</li>
       </ul>
       <p><strong>Contra o bot:</strong> escolha em Nova partida, com 5 níveis. O bot conhece a regra do Rei Tirano, nunca propõe empate, recusa as suas propostas e joga até o fim. Voltar desfaz o seu lance e o dele. Você pode reivindicar empate normalmente. A barra de avaliação, abaixo do tabuleiro, mostra quem está melhor segundo uma análise própria, sempre no nível máximo, independente do nível do bot: o número é a vantagem em peões e M3 significa mate em 3 lances.</p>
-      <p>Notação em português: R rei, D dama, T torre, B bispo, C cavalo.</p>
+      <p><strong>Paladino</strong> (cavalo alado): peça extra, que só aparece por promoção. Em cada lance ele escolhe entre andar como torre ou saltar como cavalo. Como torre, não pula ninguém; só pula peças quando salta como cavalo. Vale 8, entre a dama e a torre.</p>
+      <p>Notação em português: R rei, D dama, P paladino, T torre, B bispo, C cavalo.</p>
     </details>
   </div>
 </div>
@@ -259,10 +285,11 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
 (()=>{
 const FILES='abcdefgh';
 const NAME={w:'Brancas',b:'Pretas'};
-const GLYPH={k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'};
-const PT={k:'R',q:'D',r:'T',b:'B',n:'C'};
-const OWN={q:'a própria Dama',r:'a própria Torre',b:'o próprio Bispo',n:'o próprio Cavalo',p:'o próprio Peão'};
-const VAL={p:1,n:3,b:3,r:5,q:9,k:0};
+const GLYPH={k:'♚',q:'♛',l:'♞',r:'♜',b:'♝',n:'♞',p:'♟'};
+const PT={k:'R',q:'D',l:'P',r:'T',b:'B',n:'C'};
+const NOMEP={q:'Dama',l:'Paladino',r:'Torre',b:'Bispo',n:'Cavalo'};
+const OWN={q:'a própria Dama',l:'o próprio Paladino',r:'a própria Torre',b:'o próprio Bispo',n:'o próprio Cavalo',p:'o próprio Peão'};
+const VAL={p:1,n:3,b:3,r:5,l:8,q:9,k:0};
 const STORE='xadrez-rei-tirano-v1';
 const $=id=>document.getElementById(id);
 
@@ -286,10 +313,10 @@ function attacked(b,sq,by){
   const [r,f]=rc(sq); const up=x=>by==='w'?x.toUpperCase():x;
   const pr=by==='w'?r+1:r-1;
   for(const df of[-1,1]) if(inB(pr,f+df)&&b[idx(pr,f+df)]===up('p')) return true;
-  for(const[dr,df]of N_OFF){const rr=r+dr,ff=f+df;if(inB(rr,ff)&&b[idx(rr,ff)]===up('n'))return true;}
+  for(const[dr,df]of N_OFF){const rr=r+dr,ff=f+df;if(inB(rr,ff)){const p=b[idx(rr,ff)];if(p===up('n')||p===up('l'))return true;}}
   for(const[dr,df]of K_OFF){const rr=r+dr,ff=f+df;if(inB(rr,ff)&&b[idx(rr,ff)]===up('k'))return true;}
-  const slide=(dirs,a,q)=>{for(const[dr,df]of dirs){let rr=r+dr,ff=f+df;while(inB(rr,ff)){const p=b[idx(rr,ff)];if(p){if(p===a||p===q)return true;break;}rr+=dr;ff+=df;}}return false;};
-  return slide(DIAG,up('b'),up('q'))||slide(ORTH,up('r'),up('q'));
+  const slide=(dirs,a,q,x)=>{for(const[dr,df]of dirs){let rr=r+dr,ff=f+df;while(inB(rr,ff)){const p=b[idx(rr,ff)];if(p){if(p===a||p===q||p===x)return true;break;}rr+=dr;ff+=df;}}return false;};
+  return slide(DIAG,up('b'),up('q'),null)||slide(ORTH,up('r'),up('q'),up('l')); // paladino ataca como torre e como cavalo
 }
 const kingSq=(b,c)=>b.indexOf(c==='w'?'K':'k');
 const inCheck=(s,c)=>attacked(s.b,kingSq(s.b,c),other(c));
@@ -299,10 +326,16 @@ function pseudo(s,from){
   const add=(to,x={})=>out.push({from,to,...x});
   if(t==='p'){
     const dir=c==='w'?-1:1,start=c==='w'?6:1,last=c==='w'?0:7,r1=r+dir;
-    const push=(to,cap)=>{if((to>>3)===last){for(const pr of'qrbn')add(to,{promo:pr,cap});}else add(to,{cap});};
+    const push=(to,cap)=>{if((to>>3)===last){for(const pr of'qlrbn')add(to,{promo:pr,cap});}else add(to,{cap});};
     if(inB(r1,f)&&!b[idx(r1,f)]){push(idx(r1,f),false);const r2=r+2*dir;if(r===start&&!b[idx(r2,f)])add(idx(r2,f),{dbl:true});}
     for(const df of[-1,1]){const ff=f+df;if(!inB(r1,ff))continue;const to=idx(r1,ff);
       if(b[to]&&col(b[to])===en)push(to,true);else if(to===s.ep)add(to,{ep:true,cap:true});}
+  }else if(t==='l'){
+    // Paladino: OU salta como cavalo (pode pular peças), OU desliza como torre (não pula ninguém)
+    for(const[dr,df]of N_OFF){const rr=r+dr,ff=f+df;if(!inB(rr,ff))continue;const to=idx(rr,ff),q=b[to];
+      if(!q)add(to);else if(col(q)===en)add(to,{cap:true});}
+    for(const[dr,df]of ORTH){let rr=r+dr,ff=f+df;while(inB(rr,ff)){const to=idx(rr,ff),q=b[to];
+      if(!q)add(to);else{if(col(q)===en)add(to,{cap:true});break;}rr+=dr;ff+=df;}}
   }else if(t==='n'||t==='k'){
     for(const[dr,df]of(t==='n'?N_OFF:K_OFF)){const rr=r+dr,ff=f+df;if(!inB(rr,ff))continue;const to=idx(rr,ff),q=b[to];
       if(!q)add(to);else if(col(q)===en)add(to,{cap:true});else if(t==='k')add(to,{self:true,cap:true});}
@@ -353,7 +386,7 @@ const {N_OFF,K_OFF,DIAG,ORTH,col,typ,other,rc,idx,inB,initState,attacked,kingSq,
 // Motor do bot: busca alfa-beta com aprofundamento iterativo e quiescência
 function ENGINE(R){
   const {pseudo,apply,attacked,kingSq,col,typ,other}=R;
-  const V={p:100,n:320,b:330,r:500,q:900,k:0};
+  const V={p:100,n:320,b:330,r:500,l:850,q:900,k:0};
   const T={
     p:[0,0,0,0,0,0,0,0,50,50,50,50,50,50,50,50,10,10,20,30,30,20,10,10,5,5,10,25,25,10,5,5,0,0,0,20,20,0,0,0,5,-5,-10,0,0,-10,-5,5,5,10,10,-20,-20,10,10,5,0,0,0,0,0,0,0,0],
     n:[-50,-40,-30,-30,-30,-30,-40,-50,-40,-20,0,0,0,0,-20,-40,-30,0,10,15,15,10,0,-30,-30,5,15,20,20,15,5,-30,-30,0,15,20,20,15,0,-30,-30,5,10,15,15,10,5,-30,-40,-20,0,5,5,0,-20,-40,-50,-40,-30,-30,-30,-30,-40,-50],
@@ -363,6 +396,7 @@ function ENGINE(R){
     k:[-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-20,-30,-30,-40,-40,-30,-30,-20,-10,-20,-20,-20,-20,-20,-20,-10,20,20,0,0,0,0,20,20,20,30,10,0,0,10,30,20],
     e:[-50,-40,-30,-20,-20,-30,-40,-50,-30,-20,-10,0,0,-10,-20,-30,-30,-10,20,30,30,20,-10,-30,-30,-10,30,40,40,30,-10,-30,-30,-10,30,40,40,30,-10,-30,-30,-10,20,30,30,20,-10,-30,-30,-30,0,0,0,0,-30,-30,-50,-30,-30,-30,-30,-30,-30,-50]
   };
+  T.l=T.r.map((v,i)=>v+Math.round(T.n[i]*.6)); // paladino: torre + centralização de cavalo
   const MATE=100000;
   let nodes=0,deadline=0,stopped=false,canStop=false,killers=[],path=[],hist=null;
   const cdist=i=>{const r=i>>3,f=i&7;return Math.max(3-r,r-4)+Math.max(3-f,f-4);};
@@ -454,7 +488,9 @@ function ENGINE(R){
   return {think,evaluate};
 }
 const sqName=i=>FILES[i&7]+(8-(i>>3));
-const glyph=(p,up)=>`<span class="pc ${col(p)}${up?' up':''}">${GLYPH[typ(p)]}\uFE0E</span>`;
+const WING=`<svg class="wing" viewBox="0 0 100 100" aria-hidden="true"><path class="wf" d="M14,88 C8,60 18,28 46,12 C62,4 82,2 98,8 C88,14 80,18 72,20 C84,22 92,26 96,32 C86,36 76,38 66,38 C78,42 86,48 88,54 C76,56 64,56 56,54 C64,60 70,66 70,72 C58,74 44,72 36,70 C38,76 34,84 14,88 Z"/><path class="wl" d="M28,66 C40,46 56,28 84,14 M34,68 C48,54 62,44 82,34 M40,70 C50,62 60,58 74,52"/></svg>`;
+const fig=t=>t==='l'?`<span class="palg">${GLYPH.l}\uFE0E${WING}</span>`:`${GLYPH[t]}\uFE0E`;
+const glyph=(p,up)=>`<span class="pc ${col(p)}${up?' up':''}">${fig(typ(p))}</span>`;
 
 function san(s,m,legal){
   const p=s.b[m.from],t=typ(p);let str;
@@ -630,7 +666,7 @@ function newGame(baseMin=0,incSec=0,bot=null){
   selected=-1;targets=[];view=null;legalNow=lg;save();render();setTimeout(maybeBot,300);
 }
 function stopClock(){const c=G.clock;if(c.base&&c.running){const t=cur().turn;c[t]=Math.max(0,c[t]-(Date.now()-c.last));c.running=false;}}
-function end(w,text,snd='end'){cancelBot();stopClock();G.result={winner:w,text};if(G.moves.length&&!endQuiet)setTimeout(()=>sfx(snd),180);}
+function end(w,text,snd='end'){cancelBot();stopClock();G.result={winner:w,text};registrarPlacar(w);if(G.moves.length&&!endQuiet)setTimeout(()=>sfx(snd),180);}
 let endQuiet=false;
 
 function evaluate(){
@@ -694,6 +730,26 @@ function undo(){
   G.result=null;G.claim=null;refresh();
   const c=G.clock;if(c.base){c.running=G.moves.length>0;c.last=Date.now();}
   selected=-1;targets=[];view=null;if(modo()==='auto')G.orient=cur().turn;save();render();maybeBot();
+}
+
+// ---------- Placar contra os bots (guardado só neste aparelho) ----------
+const PLACAR_KEY=STORE+'-placar';
+let PLACAR=(()=>{try{const p=JSON.parse(localStorage.getItem(PLACAR_KEY));if(p&&typeof p==='object')return p;}catch(e){}return {};})();
+function registrarPlacar(winner){
+  if(!G||!G.bot||G.scored)return; // cada partida conta uma vez só (voltar lance depois do fim não recontabiliza)
+  G.scored=true;
+  const me=other(G.bot.color),lv=G.bot.level,r=PLACAR[lv]||(PLACAR[lv]={v:0,e:0,d:0});
+  if(winner===me)r.v++;else if(!winner)r.e++;else r.d++;
+  try{localStorage.setItem(PLACAR_KEY,JSON.stringify(PLACAR));}catch(e){}
+  renderPlacar();
+}
+function renderPlacar(){
+  const t=$('placar');if(!t)return;
+  let h='<tr><th>Bot</th><th>Vitórias</th><th>Empates</th><th>Derrotas</th><th>Aprov.</th></tr>';
+  for(let i=1;i<=5;i++){const r=PLACAR[i]||{v:0,e:0,d:0},n=r.v+r.e+r.d;
+    const pct=n?Math.round((r.v+r.e/2)/n*100)+'%':'—';
+    h+=`<tr class="${G&&G.bot&&G.bot.level===i?'cur':''}"><td>${i} · ${BOT_NIV[i].nome}</td><td class="v">${r.v}</td><td>${r.e}</td><td class="d">${r.d}</td><td class="pct">${pct}</td></tr>`;}
+  t.innerHTML=h;
 }
 
 // ---------- Bot ----------
@@ -833,8 +889,8 @@ function confirmSelf(m){
 }
 function askPromo(ms){
   const c=cur().turn;
-  modal('Promover peão','<div class="promo">'+['q','r','b','n'].map(x=>
-    `<button data-p="${x}" aria-label="${PT[x]}">${glyph(c==='w'?x.toUpperCase():x)}</button>`).join('')+'</div>',
+  modal('Promover peão','<div class="promo">'+['q','l','r','b','n'].map(x=>
+    `<button data-p="${x}" aria-label="${NOMEP[x]}" title="${NOMEP[x]}">${glyph(c==='w'?x.toUpperCase():x)}</button>`).join('')+'</div>',
     [{label:'Cancelar'}],c);
   $('mBody').querySelectorAll('button[data-p]').forEach(b=>b.onclick=()=>{closeModal();doMove(ms.find(m=>m.promo===b.dataset.p));});
 }
@@ -892,7 +948,7 @@ function render(){
   document.documentElement.classList.toggle('locked',!!G.lock);
   $('bSound').textContent=muted?'🔇':'🔊';
   $('bLock').textContent=G.lock?'🔒':'🔓';$('bLock').classList.toggle('on',!!G.lock);
-  renderMoves();renderClocks();
+  renderMoves();renderClocks();renderPlacar();
   const eo=$('evOpt');eo.checked=evOn();eo.disabled=!G.bot;$('evOptRow').style.opacity=G.bot?1:.5;
   requestEval();renderEval();
 }
@@ -903,9 +959,9 @@ function renderBar(el,c){
   const lost=G.moves.filter(m=>m.by===c&&m.self).map(m=>typ(m.captured)).sort(byVal);
   const diff=material(s.b,c)-material(s.b,other(c));
   const oc=other(c);
-  let caps=took.map(t=>`<span class="${oc}">${GLYPH[t]}\uFE0E</span>`).join('');
+  let caps=took.map(t=>`<span class="${oc}">${fig(t)}</span>`).join('');
   if(diff>0)caps+=`<span class="adv">+${diff}</span>`;
-  if(lost.length)caps+=`<span class="sep" title="Peças capturadas pelo próprio rei">⊗</span>`+lost.map(t=>`<span class="lost">${GLYPH[t]}\uFE0E</span>`).join('');
+  if(lost.length)caps+=`<span class="sep" title="Peças capturadas pelo próprio rei">⊗</span>`+lost.map(t=>`<span class="lost">${fig(t)}</span>`).join('');
   el.className='bar'+(!G.result&&s.turn===c?' turn':'');
   el.innerHTML=`<span class="sw ${c}"></span><span class="who">${NAME[c]}${G.bot?`<span class="tag">${c===G.bot.color?'Bot · '+BOT_NIV[G.bot.level].nome:'Você'}</span>`:''}</span><span class="caps">${caps}</span>`+
     (G.clock.base?`<span class="clock" id="clk-${c}"></span>`:'');
@@ -942,7 +998,7 @@ function tick(){
       const w=other(t),b=cur().b;
       const wp=b.filter(p=>p&&col(p)===w&&typ(p)!=='k'),lp=b.filter(p=>p&&col(p)===t&&typ(p)!=='k');
       const draw=!wp.length||(wp.length===1&&'bn'.includes(typ(wp[0]))&&!lp.length);
-      sfx('end');G.result={winner:draw?null:w,text:draw?`Empate: tempo das ${NAME[t]} acabou, mas as ${NAME[w]} não têm material para dar mate`:`${NAME[w]} vencem no tempo`};
+      sfx('end');G.result={winner:draw?null:w,text:draw?`Empate: tempo das ${NAME[t]} acabou, mas as ${NAME[w]} não têm material para dar mate`:`${NAME[w]} vencem no tempo`};registrarPlacar(G.result.winner);
       selected=-1;targets=[];save();render();return;
     }
   }
@@ -965,6 +1021,8 @@ $('sndTest').addEventListener('click',e=>{const b=e.target.closest('[data-snd]')
   if(muted){$('sndErr').textContent='O som está desligado no botão 🔇.';return;}
   $('sndErr').textContent='';sfx(b.dataset.snd);});
 $('evOpt').onchange=e=>{if(!G.bot)return;G.bot.evalBar=e.target.checked;evKey=null;save();render();};
+$('bZerar').onclick=()=>modal('Zerar placar','<p>Apagar vitórias, empates e derrotas de todos os bots?</p>',
+  [{label:'Cancelar'},{label:'Zerar',primary:true,fn:()=>{PLACAR={};try{localStorage.removeItem(PLACAR_KEY);}catch(e){}renderPlacar();}}]);
 $('bUndo').onclick=undo;
 $('bFlip').onclick=()=>{G.orient=other(G.orient);save();render();};
 $('mode').onchange=e=>{G.mode=e.target.value;if(G.mode==='auto'&&!G.result)G.orient=cur().turn;save();render();};
@@ -991,7 +1049,8 @@ $('bResign').onclick=()=>{
     [{label:'Continuar jogando'},{label:'Resignar',primary:true,fn:()=>{end(other(t),`${NAME[t]} resignaram. ${NAME[other(t)]} vencem`,'resign');save();render();}}],t);
 };
 $('bNew').onclick=()=>{
-  modal('Nova partida',`<p>A partida atual será descartada.</p>
+  const contaDerrota=!!(G.bot&&!G.result&&!G.scored&&G.moves.length);
+  modal('Nova partida',`<p>A partida atual será descartada.${contaDerrota?` <strong>Ela conta como derrota contra o bot ${G.bot.level} · ${BOT_NIV[G.bot.level].nome}.</strong>`:''}</p>
     <label for="opp" class="flbl">Adversário</label>
     <select id="opp"><option value="friend">Um amigo, no mesmo aparelho</option><option value="bot">Bot</option></select>
     <div id="botOpts">
@@ -1011,6 +1070,7 @@ $('bNew').onclick=()=>{
       <option value="30,0">30 min</option>
     </select>`,
     [{label:'Cancelar'},{label:'Começar',primary:true,fn:()=>{const[a,b]=$('tc').value.split(',').map(Number);
+      if(contaDerrota)registrarPlacar(G.bot.color);
       let bot=null;
       if($('opp').value==='bot'){let me=$('myc').value;if(me==='r')me=Math.random()<.5?'w':'b';bot={color:other(me),level:+$('lvl').value,myPick:$('myc').value,evalBar:$('evNew').checked};}
       newGame(a,b,bot);}}]);
