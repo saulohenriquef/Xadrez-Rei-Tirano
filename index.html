@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez do Rei Tirano · versão 3.1 -->
+<!-- index.html · Xadrez do Rei Tirano · versão 7.0 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -23,7 +23,7 @@
 :root{
   --bg:#e4e9ee; --surface:#f6f8fa; --ink:#18212c; --muted:#5b6878; --line:#c9d2dc;
   --light:#d8dfe7; --dark:#62778f; --coord-l:#62778f; --coord-d:#d8dfe7;
-  --gold:#c3921f; --gold-soft:rgba(195,146,31,.22);
+  --gold:#c3921f; --gold-soft:rgba(195,146,31,.22); --conv:#8a55d4; --conv-soft:rgba(138,85,212,.2);
   --sel:rgba(214,170,60,.55); --last:rgba(214,190,90,.36); --dot:rgba(20,30,45,.30);
   --check:210,55,40; --btn:#e9eef3; --btn-ink:#18212c; --primary:#18212c; --primary-ink:#f6f8fa;
 }
@@ -31,14 +31,14 @@
   :root:not([data-theme="light"]){
     --bg:#10161e; --surface:#18212c; --ink:#e4eaf1; --muted:#95a3b3; --line:#2a3644;
     --light:#b7c3cf; --dark:#4b5f76; --coord-l:#4b5f76; --coord-d:#b7c3cf;
-    --gold:#e0b04a; --gold-soft:rgba(224,176,74,.18);
+    --gold:#e0b04a; --gold-soft:rgba(224,176,74,.18); --conv:#b48cf0; --conv-soft:rgba(180,140,240,.2);
     --btn:#223040; --btn-ink:#e4eaf1; --primary:#e4eaf1; --primary-ink:#10161e;
   }
 }
 :root[data-theme="dark"]{
   --bg:#10161e; --surface:#18212c; --ink:#e4eaf1; --muted:#95a3b3; --line:#2a3644;
   --light:#b7c3cf; --dark:#4b5f76; --coord-l:#4b5f76; --coord-d:#b7c3cf;
-  --gold:#e0b04a; --gold-soft:rgba(224,176,74,.18);
+  --gold:#e0b04a; --gold-soft:rgba(224,176,74,.18); --conv:#b48cf0; --conv-soft:rgba(180,140,240,.2);
   --btn:#223040; --btn-ink:#e4eaf1; --primary:#e4eaf1; --primary-ink:#10161e;
 }
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -77,6 +77,19 @@ h1 .crown{color:var(--gold)}
 .sq.check{background-image:radial-gradient(circle,rgba(var(--check),.95) 0%,rgba(var(--check),.55) 38%,rgba(var(--check),0) 72%)}
 .sq.dot::after{content:"";position:absolute;width:28%;height:28%;border-radius:50%;background:var(--dot);pointer-events:none}
 .sq.cap::after{content:"";position:absolute;inset:3%;border-radius:50%;border:max(3px,.85cqw) solid var(--dot);pointer-events:none}
+.sq.convt::after{content:"";position:absolute;inset:5%;border-radius:50%;border:max(3px,.8cqw) dotted var(--conv);background:var(--conv-soft);pointer-events:none;z-index:2}
+.sq.linked{box-shadow:inset 0 0 0 max(2px,.55cqw) var(--conv)}
+.capt.knock.late{animation-delay:.18s}
+.burst.late{animation-delay:.3s}
+.pc.conv{z-index:5;animation:convert .8s ease-out both}
+@keyframes convert{0%{transform:scale(1.3) var(--base);filter:brightness(2.6) drop-shadow(0 0 7px #fff)}
+  45%{transform:scale(.9) var(--base);filter:brightness(1.4) drop-shadow(0 0 6px var(--conv))}
+  100%{transform:scale(1) var(--base);filter:none}}
+.pc.preach{animation:preach .8s ease-out both}
+@keyframes preach{0%,100%{filter:none}35%{filter:drop-shadow(0 0 6px var(--conv)) brightness(1.15)}}
+.burst.conv{border-color:var(--conv);animation-delay:0s;animation-duration:.6s}
+.burst.conv.b2{animation-delay:.18s}
+@media (prefers-reduced-motion:reduce){.pc.conv,.pc.preach{animation:none}}
 .sq.self::after{content:"";position:absolute;inset:5%;border-radius:50%;border:max(3px,.8cqw) dashed var(--gold);background:var(--gold-soft);pointer-events:none;z-index:2}
 .pc{position:relative;z-index:1;font-family:"Noto Sans Symbols 2","Segoe UI Symbol","DejaVu Sans",serif;font-size:min(10vw,56px);font-size:10.4cqw;line-height:1;--base:translateY(-3%);transform:var(--base);pointer-events:none}
 .pc.w{color:#fbf7ee;text-shadow:1px 0 0 #1e1812,-1px 0 0 #1e1812,0 1px 0 #1e1812,0 -1px 0 #1e1812,1px 1px 0 #1e1812,-1px -1px 0 #1e1812,1px -1px 0 #1e1812,-1px 1px 0 #1e1812,0 3px 4px rgba(0,0,0,.3)}
@@ -93,6 +106,43 @@ h1 .crown{color:var(--gold)}
 .ev-txt{position:absolute;top:0;bottom:0;display:flex;align-items:center;font-size:.72rem;font-weight:700;font-variant-numeric:tabular-nums;padding:0 7px;pointer-events:none}
 .ev-txt.l{left:0}.ev-txt.r{right:0}
 .ev-txt.onw{color:#1d1712}.ev-txt.onb{color:#f4efe4}
+#board{position:relative}
+#arrows{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:8}
+#arrows .arrow{fill:rgba(46,154,85,.82);stroke:rgba(255,255,255,.85);stroke-width:2;stroke-linejoin:round}
+.review[hidden]{display:none}
+.review h3{font-family:Spectral,Georgia,serif;font-size:1rem;margin:14px 0 6px}
+.revprog{font-size:.85rem;color:var(--muted)}
+.revprog:empty{display:none}
+.pbar{height:5px;border-radius:3px;background:var(--btn);margin:5px 0 8px;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--gold);transition:width .3s}
+.revnow{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin:6px 0}
+.revnow p{margin:6px 0 0;font-size:.92rem}
+.revnow .muted,.review .muted{color:var(--muted);font-size:.84rem}
+.rvhead{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px}
+.rvhead span{font-weight:600}.rvhead em{font-style:normal;color:var(--muted);font-size:.85rem;margin-left:auto}
+.clb-s.big{font-size:.82rem;min-width:1.6em;height:1.6em;margin-left:0}
+.revbtns{display:flex;align-items:center;gap:8px;margin:4px 0 10px;flex-wrap:wrap}
+#revErrMsg{color:var(--muted);font-size:.82rem}
+.revacc{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.acc{display:flex;align-items:center;gap:9px;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 10px}
+.accn{font-family:Spectral,Georgia,serif;font-weight:700;font-size:1.6rem;line-height:1;font-variant-numeric:tabular-nums}
+.accl{color:var(--muted);font-size:.78rem;margin-top:2px}
+.revgraph{border-radius:7px;overflow:hidden;cursor:pointer;margin-bottom:6px;border:1px solid var(--line)}
+.revgraph svg{display:block;width:100%;height:110px}
+.revgraph .gb{fill:#2a2420}.revgraph .ga{fill:#f1ece2}.revgraph .gl{fill:none;stroke:var(--gold);stroke-width:1.5}
+.revgraph .gmid{stroke:rgba(128,128,128,.6);stroke-width:1;stroke-dasharray:3 3}
+.revgraph .gcur{stroke:var(--conv);stroke-width:2}
+.revgraph .gm{stroke:#fff;stroke-width:1.5}
+.revgraph .gm.c-miss{fill:#d6457c}.revgraph .gm.c-inacc{fill:#e0b030}.revgraph .gm.c-mist{fill:#e2772a}.revgraph .gm.c-blund{fill:#d1382a}
+.rvt{width:100%;border-collapse:collapse;font-size:.88rem;font-variant-numeric:tabular-nums;margin-top:6px}
+.rvt th{color:var(--muted);font-weight:600;font-size:.78rem;text-align:center;padding:3px}
+.rvt th:first-child,.rvt td:first-child{text-align:left}
+.rvt td{padding:5px 3px;border-top:1px solid var(--line);text-align:center}
+.rvt td:first-child .clb-s{margin:0 4px 0 0}
+#revKeys{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+#revKeys li{display:flex;gap:8px;align-items:flex-start;padding:7px 9px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:.9rem}
+#revKeys li.cur{border-color:var(--gold);background:var(--gold-soft)}
+#revKeys li .clb-s{margin:2px 0 0;flex:none}
 .status{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 2px 8px;min-height:36px}
 #statusText{font-weight:600}
 #statusText.over{font-family:Spectral,Georgia,serif;font-size:1.15rem;font-weight:700}
@@ -130,6 +180,8 @@ h1 .crown{color:var(--gold)}
 #moves li{display:grid;grid-template-columns:2.2em 1fr 1fr;gap:4px}
 #moves .n{color:var(--muted)}
 #moves .sf{color:var(--gold);font-weight:700}
+#moves .cv{color:var(--conv);font-weight:700}
+#moves .mv.cur.cv{color:#1a1307}
 #moves .mv.cur.sf{color:#1a1307}
 #moves .empty{display:block;color:var(--muted)}
 #moves .res{display:block;font-weight:700;grid-column:1/-1}
@@ -153,7 +205,7 @@ details ul{padding-left:1.1em;margin:6px 0}
 .card select{font:inherit;width:100%;padding:10px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
 .promo{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .promo button{aspect-ratio:1;border-radius:10px;border:1px solid var(--line);background:var(--light);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
-.promo .pc{font-size:2.2rem;--base:none;transform:none}
+.promo .pc{font-size:1.95rem;--base:none;transform:none}
 .palg{position:relative;display:inline-block;line-height:1;transform:translate(-.17em,.12em) scale(.86)}
 .wing{position:absolute;left:.48em;top:-.3em;width:.78em;height:.78em;z-index:-1;overflow:visible}
 .wing .wf{fill:currentColor;stroke-width:1.2;stroke-linejoin:round;vector-effect:non-scaling-stroke}
@@ -163,6 +215,14 @@ details ul{padding-left:1.1em;margin:6px 0}
 .caps .b .wing path{stroke:#9aa8b6}
 .caps .lost .wing .wf{stroke:none}.caps .lost .wing .wl{stroke:rgba(0,0,0,.35)}
 .caps>span{position:relative}
+.papg{position:relative;display:inline-block;line-height:1;transform:translateY(.06em) scale(.88)}
+.tiara{position:absolute;left:0;top:0;width:1em;height:1em;overflow:visible}
+.tiara .tf{fill:currentColor;stroke-width:1.2;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.tiara .tb{fill:none;stroke-width:24;stroke-linecap:round}
+.pc.w .tiara path,.caps .w .tiara path{stroke:#1e1812}
+.pc.b .tiara path{stroke:rgba(255,250,240,.6)}
+.caps .b .tiara path{stroke:#9aa8b6}
+.caps .lost .tiara .tf{stroke:none}.caps .lost .tiara .tb{stroke:rgba(0,0,0,.35)}
 .pc.up{--base:rotate(180deg) translateY(-3%)}
 /* ---- animações de lance e captura ---- */
 .pc.arrive{z-index:5;animation:arrive .17s cubic-bezier(.25,.7,.35,1) both}
@@ -194,6 +254,7 @@ details ul{padding-left:1.1em;margin:6px 0}
 @media (prefers-reduced-motion:reduce){.clb{animation:none}}
 .clb-s{display:inline-flex;align-items:center;justify-content:center;min-width:1.25em;height:1.25em;padding:0 .2em;border-radius:.7em;
   font:700 .68rem/1 Figtree,system-ui,sans-serif;letter-spacing:-.04em;color:#fff;margin-left:4px;vertical-align:1px}
+.c-great{background:#3f7fc4}.c-miss{background:#d6457c}
 .c-best{background:#2e9a55}.c-good{background:#69ad48}.c-ok{background:#8fb06a}
 .thumb{width:.95em;height:.95em;fill:currentColor;display:block}
 .c-inacc{background:#e0b030;color:#2a1f05}.c-mist{background:#e2772a}.c-blund{background:#d1382a}
@@ -238,6 +299,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
 
   <div class="status">
     <div id="statusText" aria-live="polite"></div>
+    <button class="btn gold" id="bReview" hidden>Revisar partida</button>
   </div>
 
   <div class="nav" id="nav">
@@ -248,6 +310,21 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
     <button class="btn" id="bSound" aria-label="Som" title="Som">🔊</button>
     <button class="btn" id="bLock" aria-label="Travar rolagem da tela" title="Travar rolagem da tela">🔓</button>
   </div>
+  <div class="panel review" id="review" hidden>
+    <div class="phead"><h2>Revisão da partida</h2><button class="btn mini" id="revClose">Fechar</button></div>
+    <div id="revProg" class="revprog"></div>
+    <div id="revNow" class="revnow"></div>
+    <div class="revbtns"><button class="btn mini" id="revErr">Próximo erro ▶</button><span id="revErrMsg"></span></div>
+    <div id="revAcc" class="revacc"></div>
+    <div id="revGraph" class="revgraph"></div>
+    <div id="revTable"></div>
+    <div id="revPhases"></div>
+    <h3>Momentos decisivos</h3>
+    <ol id="revKeys"></ol>
+    <h3>Curiosidades do Rei Tirano</h3>
+    <div id="revStats"></div>
+  </div>
+
   <div class="controls">
     <button class="btn" id="bUndo"><span>↶</span>Voltar</button>
     <button class="btn" id="bFlip"><span>⇅</span>Girar</button>
@@ -282,11 +359,11 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <button class="btn" data-snd="move">Lance</button><button class="btn" data-snd="capture">Captura</button>
       <button class="btn" data-snd="castle">Roque</button><button class="btn" data-snd="promote">Promoção</button>
       <button class="btn" data-snd="check">Xeque</button><button class="btn" data-snd="mate">Mate</button>
-      <button class="btn" data-snd="resign">Resignar</button><button class="btn" data-snd="end">Empate</button>
+      <button class="btn" data-snd="resign">Resignar</button><button class="btn" data-snd="end">Empate</button><button class="btn" data-snd="convert">Conversão</button><button class="btn" data-snd="martyr">Papa morre</button>
     </div>
     <div id="sndInfo" class="sndinfo"></div>
     <div id="sndErr" class="snderr"></div>
-    <div class="ver">Versão 3.1</div>
+    <div class="ver">Versão 7.0</div>
   </div>
 
   <div class="panel">
@@ -303,16 +380,18 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       </ul>
       <p>Todo o resto segue as regras atuais da FIDE:</p>
       <ul>
-        <li>Roque, en passant e promoção com escolha da peça.</li>
+        <li>Roque, en passant e promoção com escolha da peça, <strong>exceto a dama</strong>: o peão promove a paladino, papa, torre, bispo ou cavalo. Trocou ou perdeu a dama, não tem outra.</li>
         <li>Xeque-mate vence; afogamento é empate.</li>
         <li>Empate automático por material insuficiente, 5 repetições da mesma posição ou 75 lances de cada lado sem captura nem movimento de peão.</li>
         <li>Empate por 3 repetições ou por 50 lances de cada lado sem captura nem movimento de peão só por reivindicação, como no tabuleiro físico: o app não avisa. Na sua vez, toque em Empate → Reivindicar e diga se a posição já está no tabuleiro ou se vai acontecer com o seu próximo lance. O app confere: se estiver certo, é empate; se não, a partida segue, o lance declarado fica valendo e, com relógio, o adversário ganha 2 minutos.</li>
         <li>Com relógio: quem zera o tempo perde, a menos que o adversário não tenha material para dar mate.</li>
       </ul>
       <p><strong>Contra o bot:</strong> escolha em Nova partida, com 5 níveis. O bot conhece a regra do Rei Tirano, nunca propõe empate, recusa as suas propostas e joga até o fim. Voltar desfaz o seu lance e o dele. Você pode reivindicar empate normalmente. A barra de avaliação, abaixo do tabuleiro, mostra quem está melhor segundo uma análise própria, sempre no nível máximo, independente do nível do bot: o número é a vantagem em peões e M3 significa mate em 3 lances.</p>
-      <p><strong>Avaliação dos lances</strong> (contra o bot): cada lance é comparado com a posição antes dele, pela chance de vitória de quem jogou, na mesma conta da barra. <span class="clb-s c-best">★</span> Melhor lance: o mesmo do motor, ou tão bom quanto. <span class="clb-s c-good"><svg class="thumb" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="10" width="4.5" height="11" rx="1"/><path d="M8.5 20.5V10.5L13 3.6C13.6 2.7 15.2 3 15.2 4.4V8.6H20C21.4 8.6 22.3 9.9 21.9 11.2L19.8 18.9C19.5 19.9 18.6 20.5 17.6 20.5Z"/></svg></span> Excelente: perde até 2%. <span class="clb-s c-ok">✓</span> Bom lance: até 5%. <span class="clb-s c-inacc">?!</span> Imprecisão: até 10%. <span class="clb-s c-mist">?</span> Erro: até 20%. <span class="clb-s c-blund">??</span> Capivarada: mais de 20%. Perder um peão numa partida já ganha pesa menos que perder o mesmo peão numa posição igual. No tabuleiro, o selo do seu último lance fica até você jogar de novo; os lances do bot aparecem avaliados na lista.</p>
+      <p><strong>Avaliação dos lances</strong> (contra o bot): cada lance é comparado com a posição antes dele, pela chance de vitória de quem jogou, na mesma conta da barra. <span class="clb-s c-best">★</span> Melhor lance: o mesmo do motor, ou tão bom quanto. <span class="clb-s c-good"><svg class="thumb" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="10" width="4.5" height="11" rx="1"/><path d="M8.5 20.5V10.5L13 3.6C13.6 2.7 15.2 3 15.2 4.4V8.6H20C21.4 8.6 22.3 9.9 21.9 11.2L19.8 18.9C19.5 19.9 18.6 20.5 17.6 20.5Z"/></svg></span> Excelente: perde até 2%. <span class="clb-s c-ok">✓</span> Bom lance: até 5%. <span class="clb-s c-inacc">?!</span> Imprecisão: até 10%. <span class="clb-s c-mist">?</span> Erro: até 20%. <span class="clb-s c-blund">??</span> Capivarada: mais de 20%. Perder um peão numa partida já ganha pesa menos que perder o mesmo peão numa posição igual. No tabuleiro, o selo do seu último lance fica até você jogar de novo; os lances do bot aparecem avaliados na lista. Mais duas categorias: <span class="clb-s c-miss">✕</span> <strong>Chance perdida</strong>: o adversário acabou de errar, havia como punir e você deixou passar, sem ficar muito pior do que estava antes do erro dele (aparece no lugar de erro ou capivarada). <span class="clb-s c-great">!</span> <strong>Lance afiado</strong>: você achou o único lance bom, e o segundo melhor perderia 15% ou mais de chance de vitória; só é calculado na revisão da partida, e recapturas simples não contam.</p>
       <p><strong>Paladino</strong> (cavalo alado): peça extra, que só aparece por promoção. Em cada lance ele escolhe entre andar como torre ou saltar como cavalo. Como torre, não pula ninguém; só pula peças quando salta como cavalo. Vale 8, entre a dama e a torre.</p>
-      <p>Notação em português: R rei, D dama, P paladino, T torre, B bispo, C cavalo.</p>
+      <p><strong>Papa</strong> (bispo com tiara): outra peça extra, também só por promoção. Anda como bispo e, além disso, pode dar um passo na horizontal ou na vertical, mudando a cor da casa. <strong>Ele não captura: converte.</strong> Onde ele poderia capturar, pela diagonal ou pelo passo, ele fica no lugar e a peça inimiga passa para a cor dele, como os monges do Age of Empires. <strong>O risco:</strong> se a peça convertida estava protegida e o adversário a capturar logo no lance seguinte, o Papa morre junto (aparece † na lista de lances). Se o adversário não capturar na hora, a conversão fica valendo para sempre. Cabe ao jogador perceber se a peça está protegida: ao selecionar o Papa, todos os alvos aparecem igual, em violeta pontilhado. Depois da conversão, o Papa e a peça convertida ficam contornados em violeta enquanto o risco existir. O rei não pode ser convertido: o Papa só dá xeque normal. Conversão conta como captura para a regra dos 50/75 lances. Na lista de lances aparece em violeta com ✝, por exemplo <strong>S✝e5</strong>. Com a conversão ele fica mais forte que antes; vale cerca de 6.</p>
+      <p><strong>Revisão da partida:</strong> quando a partida termina, o botão Revisar partida analisa todas as posições (contra o bot ou contra um amigo) e mostra a precisão de cada lado (baseada no Lichess, com um ajuste: cada lance perde pela chance de vitória ou pelo material entregue, o que for maior, então lances descuidados contam mesmo com a partida já decidida; erros graves e momentos decisivos pesam mais), o gráfico da avaliação, a avaliação de cada lance com um comentário curto (o que o lance fez, o que o adversário pode responder, qual era o melhor lance e como fica a partida) e o melhor lance indicado por uma seta verde, a precisão por fase do jogo, os momentos decisivos e as curiosidades das regras novas.</p>
+      <p>Notação em português: R rei, D dama, P paladino, S papa (Santo Padre), T torre, B bispo, C cavalo.</p>
     </details>
   </div>
 </div>
@@ -329,11 +408,11 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
 (()=>{
 const FILES='abcdefgh';
 const NAME={w:'Brancas',b:'Pretas'};
-const GLYPH={k:'♚',q:'♛',l:'♞',r:'♜',b:'♝',n:'♞',p:'♟'};
-const PT={k:'R',q:'D',l:'P',r:'T',b:'B',n:'C'};
-const NOMEP={q:'Dama',l:'Paladino',r:'Torre',b:'Bispo',n:'Cavalo'};
-const OWN={q:'a própria Dama',l:'o próprio Paladino',r:'a própria Torre',b:'o próprio Bispo',n:'o próprio Cavalo',p:'o próprio Peão'};
-const VAL={p:1,n:3,b:3,r:5,l:8,q:9,k:0};
+const GLYPH={k:'♚',q:'♛',l:'♞',a:'♝',r:'♜',b:'♝',n:'♞',p:'♟'};
+const PT={k:'R',q:'D',l:'P',a:'S',r:'T',b:'B',n:'C'};
+const NOMEP={q:'Dama',l:'Paladino',a:'Papa',r:'Torre',b:'Bispo',n:'Cavalo'};
+const OWN={q:'a própria Dama',l:'o próprio Paladino',a:'o próprio Papa',r:'a própria Torre',b:'o próprio Bispo',n:'o próprio Cavalo',p:'o próprio Peão'};
+const VAL={p:1,n:3,b:3,r:5,a:6,l:8,q:9,k:0};
 const STORE='xadrez-rei-tirano-v1';
 const $=id=>document.getElementById(id);
 
@@ -360,7 +439,8 @@ function attacked(b,sq,by){
   for(const[dr,df]of N_OFF){const rr=r+dr,ff=f+df;if(inB(rr,ff)){const p=b[idx(rr,ff)];if(p===up('n')||p===up('l'))return true;}}
   for(const[dr,df]of K_OFF){const rr=r+dr,ff=f+df;if(inB(rr,ff)&&b[idx(rr,ff)]===up('k'))return true;}
   const slide=(dirs,a,q,x)=>{for(const[dr,df]of dirs){let rr=r+dr,ff=f+df;while(inB(rr,ff)){const p=b[idx(rr,ff)];if(p){if(p===a||p===q||p===x)return true;break;}rr+=dr;ff+=df;}}return false;};
-  return slide(DIAG,up('b'),up('q'),null)||slide(ORTH,up('r'),up('q'),up('l')); // paladino ataca como torre e como cavalo
+  for(const[dr,df]of ORTH){const rr=r+dr,ff=f+df;if(inB(rr,ff)&&b[idx(rr,ff)]===up('a'))return true;} // passo do Papa
+  return slide(DIAG,up('b'),up('q'),up('a'))||slide(ORTH,up('r'),up('q'),up('l')); // paladino ataca como torre e como cavalo
 }
 const kingSq=(b,c)=>b.indexOf(c==='w'?'K':'k');
 const inCheck=(s,c)=>attacked(s.b,kingSq(s.b,c),other(c));
@@ -370,10 +450,19 @@ function pseudo(s,from){
   const add=(to,x={})=>out.push({from,to,...x});
   if(t==='p'){
     const dir=c==='w'?-1:1,start=c==='w'?6:1,last=c==='w'?0:7,r1=r+dir;
-    const push=(to,cap)=>{if((to>>3)===last){for(const pr of'qlrbn')add(to,{promo:pr,cap});}else add(to,{cap});};
+    const push=(to,cap)=>{if((to>>3)===last){for(const pr of'larbn')add(to,{promo:pr,cap});}else add(to,{cap});}; // sem promoção a dama: perdeu a dama, não tem outra
     if(inB(r1,f)&&!b[idx(r1,f)]){push(idx(r1,f),false);const r2=r+2*dir;if(r===start&&!b[idx(r2,f)])add(idx(r2,f),{dbl:true});}
     for(const df of[-1,1]){const ff=f+df;if(!inB(r1,ff))continue;const to=idx(r1,ff);
       if(b[to]&&col(b[to])===en)push(to,true);else if(to===s.ep)add(to,{ep:true,cap:true});}
+  }else if(t==='a'){
+    // Papa: anda como bispo e também dá um passo na horizontal ou vertical (troca de cor).
+    // Onde capturaria, ele CONVERTE: fica parado e a peça inimiga passa para a cor dele. O rei nunca é convertido (só leva xeque).
+    // Se o adversário capturar a peça convertida logo no lance seguinte, o Papa morre junto (ver apply).
+    const hit=to=>{if(typ(b[to])!=='k')add(to,{cap:true,conv:true});};
+    for(const[dr,df]of DIAG){let rr=r+dr,ff=f+df;while(inB(rr,ff)){const to=idx(rr,ff),q=b[to];
+      if(!q)add(to);else{if(col(q)===en)hit(to);break;}rr+=dr;ff+=df;}}
+    for(const[dr,df]of ORTH){const rr=r+dr,ff=f+df;if(!inB(rr,ff))continue;const to=idx(rr,ff),q=b[to];
+      if(!q)add(to);else if(col(q)===en)hit(to);}
   }else if(t==='l'){
     // Paladino: OU salta como cavalo (pode pular peças), OU desliza como torre (não pula ninguém)
     for(const[dr,df]of N_OFF){const rr=r+dr,ff=f+df;if(!inB(rr,ff))continue;const to=idx(rr,ff),q=b[to];
@@ -404,6 +493,11 @@ function pseudo(s,from){
 
 function apply(s,m){
   const b=s.b.slice(),p=b[m.from],c=col(p);
+  if(m.conv){ // conversão do Papa: ele não sai do lugar; a peça alvo troca de cor
+    const q=b[m.to];b[m.to]=c==='w'?q.toUpperCase():q.toLowerCase();
+    const cr={...s.cr};const x=m.to;if(x===63)cr.K=false;if(x===56)cr.Q=false;if(x===7)cr.k=false;if(x===0)cr.q=false;
+    return {b,turn:other(c),cr,ep:-1,half:0,full:s.full+(c==='b'?1:0),link:{to:m.to,papa:m.from}};
+  }
   let captured=b[m.to]||'';
   b[m.to]=m.promo?(c==='w'?m.promo.toUpperCase():m.promo):p; b[m.from]='';
   if(m.ep){const cs=m.to+(c==='w'?8:-8);captured=b[cs];b[cs]='';}
@@ -411,6 +505,8 @@ function apply(s,m){
   const cr={...s.cr};
   if(p==='K'){cr.K=cr.Q=false;} if(p==='k'){cr.k=cr.q=false;}
   for(const x of[m.from,m.to]){if(x===63)cr.K=false;if(x===56)cr.Q=false;if(x===7)cr.k=false;if(x===0)cr.q=false;}
+  // capturou logo a peça recém-convertida: o Papa que converteu morre junto
+  if(s.link&&captured&&m.to===s.link.to){const pp=b[s.link.papa];if(pp&&typ(pp)==='a'&&col(pp)!==c)b[s.link.papa]='';}
   return {b,turn:other(c),cr,ep:m.dbl?(m.from+m.to)/2:-1,half:(typ(p)==='p'||captured)?0:s.half+1,full:s.full+(c==='b'?1:0)};
 }
 
@@ -430,7 +526,7 @@ const {N_OFF,K_OFF,DIAG,ORTH,col,typ,other,rc,idx,inB,initState,attacked,kingSq,
 // Motor do bot: busca alfa-beta com aprofundamento iterativo e quiescência
 function ENGINE(R){
   const {pseudo,apply,attacked,kingSq,col,typ,other}=R;
-  const V={p:100,n:320,b:330,r:500,l:850,q:900,k:0};
+  const V={p:100,n:320,b:330,r:500,a:650,l:850,q:900,k:0};
   const T={
     p:[0,0,0,0,0,0,0,0,50,50,50,50,50,50,50,50,10,10,20,30,30,20,10,10,5,5,10,25,25,10,5,5,0,0,0,20,20,0,0,0,5,-5,-10,0,0,-10,-5,5,5,10,10,-20,-20,10,10,5,0,0,0,0,0,0,0,0],
     n:[-50,-40,-30,-30,-30,-30,-40,-50,-40,-20,0,0,0,0,-20,-40,-30,0,10,15,15,10,0,-30,-30,5,15,20,20,15,5,-30,-30,0,15,20,20,15,0,-30,-30,5,10,15,15,10,5,-30,-40,-20,0,5,5,0,-20,-40,-50,-40,-30,-30,-30,-30,-40,-50],
@@ -441,6 +537,7 @@ function ENGINE(R){
     e:[-50,-40,-30,-20,-20,-30,-40,-50,-30,-20,-10,0,0,-10,-20,-30,-30,-10,20,30,30,20,-10,-30,-30,-10,30,40,40,30,-10,-30,-30,-10,30,40,40,30,-10,-30,-30,-10,20,30,30,20,-10,-30,-30,-30,0,0,0,0,-30,-30,-50,-30,-30,-30,-30,-30,-30,-50]
   };
   T.l=T.r.map((v,i)=>v+Math.round(T.n[i]*.6)); // paladino: torre + centralização de cavalo
+  T.a=T.b.map((v,i)=>v+Math.round(T.n[i]*.3)); // papa: bispo + um pouco de centralização
   const MATE=100000;
   let nodes=0,deadline=0,stopped=false,canStop=false,killers=[],path=[],hist=null;
   const cdist=i=>{const r=i>>3,f=i&7;return Math.max(3-r,r-4)+Math.max(3-f,f-4);};
@@ -468,6 +565,7 @@ function ENGINE(R){
   function mscore(s,m,ply){
     if(m.promo)return 90000+V[m.promo];
     if(m.self)return -5000;
+    if(m.conv)return 60000+V[typ(s.b[m.to])]*20; // converter vale o dobro: tira dele e dá para você
     if(m.cap)return 50000+(m.ep?100:V[typ(s.b[m.to])])*10-V[typ(s.b[m.from])]/10;
     const k=killers[ply];if(k&&k[0]===m.from&&k[1]===m.to)return 40000;
     return 0;
@@ -508,6 +606,7 @@ function ENGINE(R){
     nodes=0;stopped=false;canStop=false;killers=[];path=[];hist=new Set(o.history||[]);
     deadline=Date.now()+o.timeMs;
     let root=gen(s).map(m=>({m,n:child(s,m)})).filter(x=>x.n);
+    if(o.exclude)root=root.filter(x=>!(x.m.from===o.exclude.from&&x.m.to===o.exclude.to&&(x.m.promo||'')===(o.exclude.promo||'')));
     if(!root.length)return null;
     if(o.randomPct&&Math.random()<o.randomPct){const x=root[Math.random()*root.length|0];return{m:x.m,score:0,depth:0,nodes};}
     const exact=o.noise>0; // com ruído, cada lance da raiz recebe nota exata para poder sortear entre eles
@@ -533,7 +632,8 @@ function ENGINE(R){
 }
 const sqName=i=>FILES[i&7]+(8-(i>>3));
 const WING=`<svg class="wing" viewBox="0 0 100 100" aria-hidden="true"><path class="wf" d="M14,88 C8,60 18,28 46,12 C62,4 82,2 98,8 C88,14 80,18 72,20 C84,22 92,26 96,32 C86,36 76,38 66,38 C78,42 86,48 88,54 C76,56 64,56 56,54 C64,60 70,66 70,72 C58,74 44,72 36,70 C38,76 34,84 14,88 Z"/><path class="wl" d="M28,66 C40,46 56,28 84,14 M34,68 C48,54 62,44 82,34 M40,70 C50,62 60,58 74,52"/></svg>`;
-const fig=t=>t==='l'?`<span class="palg">${GLYPH.l}\uFE0E${WING}</span>`:`${GLYPH[t]}\uFE0E`;
+const TIARA=`<svg class="tiara" viewBox="0 0 1000 1000" aria-hidden="true"><g transform="translate(0 719.5) scale(1 -1)"><path class="tf" d="M322,262 C300,330 300,470 340,575 C370,650 430,700 500,700 C570,700 630,650 660,575 C700,470 700,330 678,262 Z"/><path class="tb" d="M318,335 Q500,365 682,335 M327,447 Q500,474 673,447 M352,550 Q500,574 648,550"/><path class="tf" d="M468,735 A32,32 0 1,0 532,735 A32,32 0 1,0 468,735 Z M488,762 H512 V800 H542 V824 H512 V858 H488 V824 H458 V800 H488 Z"/></g></svg>`;
+const fig=t=>t==='l'?`<span class="palg">${GLYPH.l}\uFE0E${WING}</span>`:t==='a'?`<span class="papg">${GLYPH.a}\uFE0E${TIARA}</span>`:`${GLYPH[t]}\uFE0E`;
 const glyph=(p,up,extra='',style='')=>`<span class="pc ${col(p)}${up?' up':''}${extra}"${style?` style="${style}"`:''}>${fig(typ(p))}</span>`;
 
 function san(s,m,legal){
@@ -549,8 +649,9 @@ function san(s,m,legal){
         dis=!sf?FILES[m.from&7]:!sr?String(8-(m.from>>3)):sqName(m.from);
       }
     }
-    str=PT[t]+dis+(m.self?'⊗':m.cap?'x':'')+sqName(m.to);
+    str=PT[t]+dis+(m.self?'⊗':m.conv?'✝':m.cap?'x':'')+sqName(m.to);
   }
+  if(s.link&&m.cap&&!m.conv&&m.to===s.link.to)str+='†'; // o Papa morreu junto
   const n=apply(s,m);
   if(inCheck(n,n.turn))str+=allLegal(n).length?'+':'#';
   return str;
@@ -558,7 +659,7 @@ function san(s,m,legal){
 
 function posKey(s,legal){
   const epOk=legal.some(m=>m.ep);
-  return s.b.map(x=>x||'.').join('')+s.turn+(s.cr.K?'K':'')+(s.cr.Q?'Q':'')+(s.cr.k?'k':'')+(s.cr.q?'q':'')+(epOk?'e'+s.ep:'');
+  return s.b.map(x=>x||'.').join('')+s.turn+(s.cr.K?'K':'')+(s.cr.Q?'Q':'')+(s.cr.k?'k':'')+(s.cr.q?'q':'')+(epOk?'e'+s.ep:'')+(s.link?'L'+s.link.to+'.'+s.link.papa:'');
 }
 function insufficient(b){
   const pcs=[];b.forEach((p,i)=>{if(p&&typ(p)!=='k')pcs.push([typ(p),i]);});
@@ -575,7 +676,7 @@ try{muted=localStorage.getItem(STORE+'-mute')==='1';}catch(e){}
 function ac(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();decodificar();}if(AC.state==='suspended')AC.resume();return AC;}
 // ---------- Sons de arquivo (pasta sons/ ao lado do index.html) ----------
 // Se existir sons/<nome>.mp3 ou .wav, ele toca no lugar do som sintetizado.
-const SOM_ARQ={move:'lance',capture:'captura',castle:'roque',promote:'promocao',check:'xeque',mate:'mate',resign:'resignar',end:'fim',self:'autocaptura'};
+const SOM_ARQ={martyr:'papa-morre',convert:'conversao',move:'lance',capture:'captura',castle:'roque',promote:'promocao',check:'xeque',mate:'mate',resign:'resignar',end:'fim',self:'autocaptura'};
 const RAW={},BUFS={},FALHAS={};
 async function carregarSons(){
   if(location.protocol==='file:')return renderSndInfo(); // arquivo avulso: não há pasta para ler
@@ -674,6 +775,11 @@ function sfxRaw(kind){
       knock(t,.85,1600,bus());thump(t,120,70,.08,.25);
       noise(t+.06,.16,'bandpass',700,2200,2.5,.18,.06);
       knock(t+.2,.9,1150,bus());thump(t+.2,110,60,.1,.3);break;
+    case'martyr': // o Papa morre junto: sino grave descendo
+      bell(t,392,1.2,.09);bell(t+.16,262,1.5,.08);thump(t,110,55,.3,.35);break;
+    case'convert': // coro curto que sobe e brilho: a peça muda de lado
+      [[262,0],[330,.06],[392,.12],[523,.2]].forEach(([f,dt])=>{tone(t+dt,f,.9,.05,'sine',bus());tone(t+dt,f*1.005,.9,.03,'triangle',bus());});
+      noise(t+.15,.6,'bandpass',3000,9000,5,.05,.25);bell(t+.32,1047,1.1,.06);break;
     case'self':knock(t,1,1100);tone(t+.06,660,.18,.08,'triangle');tone(t+.16,440,.28,.08,'triangle');break;
     case'promote': // peão pousa, brilho que sobe e sinos em arpejo (sol maior)
       knock(t,.85,1700,bus());noise(t+.04,.45,'bandpass',2500,9000,4,.07,.2);
@@ -702,8 +808,9 @@ const refresh=()=>{legalNow=allLegal(cur());};
 const countKey=k=>G.keys.filter(x=>x===k).length;
 
 function newGame(baseMin=0,incSec=0,bot=null){
+  REV=false;
   if(G)cancelBot();
-  EVCACHE.clear();CLSCACHE.clear();evShown=null;
+  EVCACHE.clear();CLSCACHE.clear();SECCACHE.clear();evShown=null;
   const prev=G,s0=initState(),lg=allLegal(s0);
   G={states:[s0],keys:[posKey(s0,lg)],moves:[],result:null,
      clock:{base:baseMin*60000,inc:incSec*1000,w:baseMin*60000,b:baseMin*60000,running:false,last:0},
@@ -750,18 +857,22 @@ function claimMenu(t){
 
 function doMove(m){
   const s=cur(),sanStr=san(s,m,legalNow);
-  const captured=m.ep?(s.turn==='w'?'p':'P'):(s.b[m.to]||'');
+  const captured=m.conv?'':m.ep?(s.turn==='w'?'p':'P'):(s.b[m.to]||''); // convertida não sai do tabuleiro
+  const conv=m.conv?s.b[m.to]:'';
   const c=G.clock;
   if(c.base){const now=Date.now();if(c.running)c[s.turn]-=now-c.last;c[s.turn]+=c.inc;c.running=true;c.last=now;}
   G.states.push(apply(s,m));
   const capSq=m.ep?m.to+(s.turn==='w'?8:-8):m.to; // no en passant, o peão capturado estava em outra casa
-  G.moves.push({san:sanStr,self:!!m.self,from:m.from,to:m.to,promo:m.promo||'',captured,capSq,by:s.turn});
-  ANIM={ply:G.states.length-1,t0:Date.now(),from:m.from,to:m.to,cap:!!captured,
+  const papaSq=s.link&&captured&&m.to===s.link.to&&s.b[s.link.papa]&&typ(s.b[s.link.papa])==='a'?s.link.papa:-1;
+  G.moves.push({san:sanStr,self:!!m.self,from:m.from,to:m.to,promo:m.promo||'',captured,capSq,conv,
+    papa:papaSq>=0?s.b[papaSq]:'',papaSq,by:s.turn});
+  ANIM={ply:G.states.length-1,t0:Date.now(),from:m.from,to:m.to,cap:!!captured,conv:!!m.conv,
     rook:m.castle?{K:[63,61],Q:[56,59],k:[7,5],q:[0,3]}[m.castle]:null};
   selected=-1;targets=[];view=null;
   evaluate();
   { const n=cur(),chk=inCheck(n,n.turn);
-    sfx(m.self?'self':m.promo?'promote':m.castle?'castle':captured?'capture':'move');
+    sfx(m.conv?'convert':m.self?'self':m.promo?'promote':m.castle?'castle':captured?'capture':'move');
+    if(papaSq>=0)setTimeout(()=>sfx('martyr'),160);
     if(!G.result&&chk)setTimeout(()=>sfx('check'),110); }
   if(modo()==='auto'&&!G.result)G.orient=cur().turn;
   save();render();
@@ -860,17 +971,17 @@ function botResult(id,r){
 // de quem jogou: a mesma conta da barra, antes e depois do lance.
 const MATE_V=100000,EVAL_MS=800;
 let evWorker=null,evOk=true,evBusy=null,evShown=null;
-const EVCACHE=new Map(),CLSCACHE=new Map();
+const EVCACHE=new Map(),CLSCACHE=new Map(),SECCACHE=new Map();
 const barOn=()=>!!(G&&G.bot&&G.bot.evalBar);
 const clsOn=()=>!!(G&&G.bot&&G.bot.classify);
-const anOn=()=>barOn()||clsOn();
-const posK=st=>st.b.map(x=>x||'.').join('')+st.turn+(st.cr.K?'K':'')+(st.cr.Q?'Q':'')+(st.cr.k?'k':'')+(st.cr.q?'q':'')+st.ep;
+const anOn=()=>barOn()||clsOn()||REV;
+const posK=st=>st.b.map(x=>x||'.').join('')+st.turn+(st.cr.K?'K':'')+(st.cr.Q?'Q':'')+(st.cr.k?'k':'')+(st.cr.q?'q':'')+st.ep+(st.link?'L'+st.link.to+'.'+st.link.papa:'');
 const keyAt=k=>posK(G.states[k])+'|'+k;
 function nextPly(){
   const N=G.states.length-1,P=ply(),need=k=>!EVCACHE.has(keyAt(k));
   if(need(P))return P;              // primeiro a posição na tela
   if(need(N))return N;              // depois a posição atual
-  if(clsOn())for(let k=0;k<=N;k++)if(need(k))return k; // depois as que faltam para avaliar os lances
+  if(clsOn()||REV)for(let k=0;k<=N;k++)if(need(k))return k; // depois as que faltam para avaliar os lances
   return -1;
 }
 function ensureEvWorker(){
@@ -882,32 +993,54 @@ function ensureEvWorker(){
 }
 function pump(){
   if(evBusy||!G||!anOn())return;
-  const k=nextPly();if(k<0)return;
-  const s=G.states[k],key=keyAt(k);
-  evBusy={key,s};
-  const o={maxDepth:14,noise:0,timeMs:EVAL_MS,history:G.states.slice(0,k+1).map(st=>st.b.map(x=>x||'.').join('')+st.turn)};
+  let k=nextPly(),sec=false;
+  if(k<0){k=nextSec();sec=true;} // só na revisão: segundo melhor lance, para achar os lances afiados
+  if(k<0)return;
+  const pos=sec?k-1:k,s=G.states[pos],key=sec?secKey(k):keyAt(k);
+  evBusy={key,s,sec};
+  const o={maxDepth:14,noise:0,timeMs:REV&&!clsOn()||sec?REV_MS:EVAL_MS,history:G.states.slice(0,pos+1).map(st=>st.b.map(x=>x||'.').join('')+st.turn)};
+  if(sec)o.exclude=EVCACHE.get(keyAt(k-1)).best;
   ensureEvWorker();
   if(evWorker)evWorker.postMessage({id:key,s,o});
   else setTimeout(()=>{let r=null;try{if(!localE)localE=ENGINE(RULES());r=localE.think(s,{...o,timeMs:300});}catch(e){}evDone(key,r);},60);
 }
 function evDone(key,r){
   if(!evBusy||evBusy.key!==key)return;
-  const s=evBusy.s;evBusy=null;
+  const s=evBusy.s,sec=evBusy.sec;evBusy=null;
   let v,best=null;
   if(!r||!r.m){v=inCheck(s,s.turn)?{mate:0,winner:other(s.turn)}:{cp:0};} // sem lances: mate ou afogamento
   else{best={from:r.m.from,to:r.m.to,promo:r.m.promo||''};
     const sc=s.turn==='w'?r.score:-r.score;
     if(Math.abs(r.score)>MATE_V-1000){const plies=MATE_V-Math.abs(r.score);v={mate:Math.ceil(plies/2),winner:sc>0?'w':'b'};}
     else v={cp:sc};}
+  if(sec){SECCACHE.set(key,{v});if(G){(G.secs||(G.secs={}))[key]={v};save();}if(G)render();return;}
   EVCACHE.set(key,{v,best});
+  if(G){(G.evals||(G.evals={}))[key]={v,best};save();}
   if(G)render(); // render chama pump() de novo para a próxima posição da fila
 }
 // chance de vitória (0 a 1) de uma cor, na mesma escala da barra
 const winP=(v,c)=>v.mate!==undefined?(v.winner===c?1:0):1/(1+Math.exp(-(c==='w'?v.cp:-v.cp)/300));
+// Perda efetiva de um lance = a maior entre:
+//  • a chance de vitória perdida, e
+//  • o material perdido, convertido como se a posição estivesse igual.
+// Assim um lance descuidado conta mesmo quando a partida já está decidida (antes, numa posição perdida,
+// entregar uma torre "não mudava nada" e o lance saía como melhor lance). Quem continua ganhando com folga
+// e devolve material perde no máximo como um erro.
+const CP_CAP=4000,CP_SC=220,CP_FOLGA=15;
+const cpFor=(v,c)=>{const x=v.mate!==undefined?(v.winner==='w'?CP_CAP:-CP_CAP):Math.max(-CP_CAP,Math.min(CP_CAP,v.cp));return c==='w'?x:-x;};
+function effLoss(vb,va,c){
+  const lw=Math.max(0,winP(vb,c)-winP(va,c));
+  const cl=Math.max(0,cpFor(vb,c)-cpFor(va,c)-CP_FOLGA);
+  let lc=1/(1+Math.exp(-cl/CP_SC))-.5;
+  if(winP(va,c)>.9)lc=Math.min(lc*.5,.15);
+  return Math.max(lw,lc);
+}
 const CLS={
+  great:{nome:'Lance afiado',sym:'!'},miss:{nome:'Chance perdida',sym:'✕'},
   best:{nome:'Melhor lance',sym:'★'},good:{nome:'Excelente',sym:'<svg class="thumb" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="10" width="4.5" height="11" rx="1"/><path d="M8.5 20.5V10.5L13 3.6C13.6 2.7 15.2 3 15.2 4.4V8.6H20C21.4 8.6 22.3 9.9 21.9 11.2L19.8 18.9C19.5 19.9 18.6 20.5 17.6 20.5Z"/></svg>'},ok:{nome:'Bom lance',sym:'✓'},
   inacc:{nome:'Imprecisão',sym:'?!'},mist:{nome:'Erro',sym:'?'},blund:{nome:'Capivarada',sym:'??'}};
-const CLS_ORDER=['best','good','ok','inacc','mist','blund'];
+const CLS_ORDER=['great','best','good','ok','inacc','mist','miss','blund'];
+const ERRS=['inacc','mist','miss','blund'];
 function classify(k){ // lance k = G.moves[k-1], da posição k-1 para a posição k
   if(k<1||k>=G.states.length)return null;
   const mv=G.moves[k-1],ck=keyAt(k)+'>'+mv.from+'-'+mv.to+(mv.promo||'');
@@ -915,11 +1048,44 @@ function classify(k){ // lance k = G.moves[k-1], da posição k-1 para a posiç�
   const a=EVCACHE.get(keyAt(k-1)),b=EVCACHE.get(keyAt(k));if(!a||!b)return null;
   const c=mv.by,prev=G.states[k-1];
   const isBest=a.best&&a.best.from===mv.from&&a.best.to===mv.to&&a.best.promo===(mv.promo||'');
-  const loss=Math.max(0,winP(a.v,c)-winP(b.v,c));
+  const loss=effLoss(a.v,b.v,c);
   let id;
   if(isBest||loss<.005||allLegal(prev).length===1)id='best'; // único lance possível também é o melhor
   else if(loss<=.02)id='good';else if(loss<=.05)id='ok';else if(loss<=.10)id='inacc';else if(loss<=.20)id='mist';else id='blund';
   CLSCACHE.set(ck,id);return id;
+}
+// Chance perdida: o adversário acabou de cometer um erro ou capivarada, você deixou passar a punição
+// e não ficou muito pior do que estava antes do erro dele (até 20% de chance a menos).
+function isMiss(k,base){
+  if(k<2||!['mist','blund'].includes(base)||!['mist','blund'].includes(classify(k-1)))return false;
+  const c=G.moves[k-1].by,e0=EVCACHE.get(keyAt(k-2)),e1=EVCACHE.get(keyAt(k));if(!e0||!e1)return false;
+  return winP(e1.v,c)>=winP(e0.v,c)-.20; // se ficou muito pior do que antes do erro dele, o erro foi seu (erro/capivarada)
+}
+// Lance afiado (só na revisão): você jogou o melhor lance e o segundo melhor perderia 15% ou mais de chance de vitória.
+// Recaptura simples na casa onde o adversário acabou de capturar não conta.
+const secKey=k=>{const b=EVCACHE.get(keyAt(k-1)).best;return 'S|'+keyAt(k-1)+'#'+b.from+'-'+b.to+(b.promo||'');};
+function greatCand(k){
+  if(k<1||k>=G.states.length)return false;
+  const a=EVCACHE.get(keyAt(k-1));if(!a||!a.best||!EVCACHE.has(keyAt(k))||classify(k)!=='best')return false;
+  const mv=G.moves[k-1];if(!(a.best.from===mv.from&&a.best.to===mv.to&&a.best.promo===(mv.promo||'')))return false;
+  if(allLegal(G.states[k-1]).length<2)return false;
+  const pm=G.moves[k-2];if(pm&&pm.captured&&mv.captured&&mv.to===pm.to)return false; // recaptura simples
+  return true;
+}
+function nextSec(){
+  if(!REV)return -1;const N=G.states.length-1;
+  for(let k=1;k<=N;k++)if(greatCand(k)&&!SECCACHE.has(secKey(k)))return k;
+  return -1;
+}
+function secGap(k){ // quanto o segundo melhor lance perderia (chance de vitória de quem jogou)
+  if(!greatCand(k))return null;const s2=SECCACHE.get(secKey(k));if(!s2)return null;
+  const c=G.moves[k-1].by;return winP(EVCACHE.get(keyAt(k-1)).v,c)-winP(s2.v,c);
+}
+function finalCls(k){
+  const base=classify(k);if(!base)return null;
+  if(base==='best'){const g=secGap(k);if(g!==null&&g>=.15)return 'great';}
+  if(isMiss(k,base))return 'miss';
+  return base;
 }
 const clsBadge=(id,cls)=>`<span class="${cls} c-${id}" title="${CLS[id].nome}">${CLS[id].sym}</span>`;
 function renderClsSummary(){
@@ -927,7 +1093,7 @@ function renderClsSummary(){
   if(!clsOn()){el.hidden=true;return;}
   el.hidden=false;
   const cnt={w:{},b:{}};
-  for(let k=1;k<G.states.length;k++){const id=classify(k);if(id){const c=G.moves[k-1].by;cnt[c][id]=(cnt[c][id]||0)+1;}}
+  for(let k=1;k<G.states.length;k++){const id=finalCls(k);if(id){const c=G.moves[k-1].by;cnt[c][id]=(cnt[c][id]||0)+1;}}
   const row=c=>`<div class="clrow"><span class="clwho">${c===G.bot.color?'Bot':'Você'}</span>`+
     CLS_ORDER.map(id=>`<span class="clchip" title="${CLS[id].nome}">${clsBadge(id,'clb-s')}${cnt[c][id]||0}</span>`).join('')+'</div>';
   const me=other(G.bot.color);
@@ -954,12 +1120,226 @@ function renderEval(){
   t.className='ev-txt '+(onLeft?'l':'r')+' '+(wLead?'onw':'onb');
 }
 
+// ---------- Comentários dos lances (revisão) ----------
+// Frases curtas montadas a partir do próprio lance, da resposta que o motor daria e do melhor lance.
+const NOMEPC={p:'peão',n:'cavalo',b:'bispo',r:'torre',q:'dama',l:'Paladino',a:'Papa',k:'rei'};
+const oa=t=>(t==='r'||t==='q'?'a ':'o ')+NOMEPC[t];         // "o cavalo", "a torre"
+const doa=t=>(t==='r'||t==='q'?'da ':'do ')+NOMEPC[t];       // "do cavalo", "da dama"
+const proprio=t=>(t==='r'||t==='q'?'a própria ':'o próprio ')+NOMEPC[t];
+function respostaDe(k){ // melhor resposta do adversário depois do lance k (já calculada na análise)
+  const e=EVCACHE.get(keyAt(k));if(!e||!e.best)return null;
+  const st=G.states[k],L=allLegal(st),m=L.find(x=>x.from===e.best.from&&x.to===e.best.to&&(x.promo||'')===e.best.promo);
+  if(!m)return null;
+  const alvo=m.ep?'p':st.b[m.to]?typ(st.b[m.to]):null;
+  return {m,san:san(st,m,L),alvo,conv:!!m.conv};
+}
+function efeitoDe(st,m,sanTxt){ // o que um lance faz, para "o melhor era X, …"
+  if(/#$/.test(sanTxt))return ', com xeque-mate';
+  const alvo=m.ep?'p':st.b[m.to]&&col(st.b[m.to])!==col(st.b[m.from])?typ(st.b[m.to]):null;
+  let e='';
+  if(m.conv)e=`, convertendo ${oa(alvo)}`;
+  else if(m.self)e=`, comendo ${proprio(alvo)}`;
+  else if(alvo)e=`, capturando ${oa(alvo)}`;
+  else if(m.promo)e=`, promovendo a ${NOMEPC[m.promo]}`;
+  else if(m.castle)e=', fazendo o roque';
+  if(/\+$/.test(sanTxt))e+=e?' com xeque':', com xeque';
+  return e;
+}
+function garfo(st,sq,c){ // peças importantes que a peça em sq passa a atacar
+  const tmp={...st,turn:c,ep:-1},o=other(c),me=VAL[typ(st.b[sq])]||0,alvos=[];
+  for(const m of pseudo(tmp,sq)){if(!m.cap)continue;const q=st.b[m.to];if(!q||col(q)!==o)continue;const t=typ(q);
+    if(t==='k'||(VAL[t]>=3&&(VAL[t]>me||!attacked(st.b,m.to,o))))alvos.push(t);}
+  return alvos;
+}
+function situacao(v){
+  if(v.mate!==undefined)return v.mate>0?`Mate forçado para as ${NAME[v.winner]} em ${v.mate}.`:'';
+  const a=Math.abs(v.cp),q=NAME[v.cp>0?'w':'b'];
+  if(a<60)return 'Posição equilibrada.';if(a<200)return `Ligeira vantagem das ${q}.`;if(a<500)return `Vantagem das ${q}.`;return `Vantagem decisiva das ${q}.`;
+}
+function comentario(k,inf,best,only){
+  const S0=G.states[k-1],S1=G.states[k],mv=G.moves[k-1],c=mv.by,o=other(c),t=typ(S0.b[mv.from]);
+  const F=[],ruim=ERRS.includes(inf.id),onde=sqName(mv.to);
+  // 1) o que o lance faz
+  if(/#$/.test(mv.san))F.push('Xeque-mate!');
+  else if(mv.conv){F.push(`O Papa converte ${oa(typ(mv.conv))} em ${onde}.`);
+    if(attacked(S1.b,mv.to,o))F.push(`Conversão arriscada: se as ${NAME[o]} capturarem a peça agora, o Papa morre junto.`);}
+  else if(mv.self)F.push(`O rei come ${proprio(typ(mv.captured))} em ${onde} (regra do Rei Tirano).`);
+  else if(mv.papa)F.push('Captura a peça recém-convertida e o Papa morre junto.');
+  else if(mv.san.startsWith('O-O'))F.push('Roque: o rei vai para a segurança e a torre entra em jogo.');
+  else if(mv.promo)F.push(`Promove o peão a ${NOMEPC[mv.promo]}.`);
+  else if(mv.captured){const ct=typ(mv.captured);
+    F.push(VAL[ct]===VAL[t]&&attacked(S1.b,mv.to,o)?`Troca: ${oa(t)} captura ${oa(ct)} em ${onde}.`:`Captura ${oa(ct)} em ${onde}.`);}
+  else if(k<=20&&(t==='n'||t==='b')&&(mv.from>>3)===(c==='w'?7:0))F.push(`Desenvolve ${oa(t)}.`);
+  else if(k<=20&&t==='p'&&[27,28,35,36].includes(mv.to))F.push('Ocupa o centro.');
+  if(/\+$/.test(mv.san))F.push('Dá xeque.');
+  if(!ruim&&!mv.conv){const g=garfo(S1,mv.to,c);
+    if(g.length>=2)F.push(`Garfo: ${oa(t)} ataca ${g.map(x=>x==='k'?'o rei':oa(x)).join(' e ')} ao mesmo tempo.`);
+    else if(g.length===1&&g[0]!=='k')F.push(`Ataca ${oa(g[0])}.`);}
+  // 2) o que acontece de ruim (só nos lances com problema)
+  if(only)F.unshift('Único lance possível.');
+  else if(inf.id==='miss')F.push(`As ${NAME[o]} tinham acabado de errar e havia como punir.`);
+  else if(ruim){const v=inf.b.v,r=respostaDe(k);
+    if(v.mate!==undefined&&v.winner===o&&v.mate>0)F.push(`Agora as ${NAME[o]} têm mate em ${v.mate}${r?`, começando com ${r.san}`:''}.`);
+    else if(r&&r.alvo&&r.alvo!=='p'&&!r.conv)F.push(`Agora ${r.san} ganha ${oa(r.alvo)}.`);
+    else if(r&&r.conv)F.push(`Agora o Papa adversário converte ${oa(r.alvo)} com ${r.san}.`);
+    else if(r)F.push(`A resposta forte é ${r.san}.`);}
+  // 3) o melhor lance
+  if(inf.id==='great'){const g=secGap(k);F.push(`Era o único lance bom: a segunda melhor opção perderia ${Math.round(g*100)}% de chance de vitória.`);}
+  else if(best&&!only&&inf.id!=='best')F.push(`O melhor era <strong>${best.san}</strong>${efeitoDe(S0,best.m,best.san)} (seta verde).`);
+  else if(inf.id==='best'&&F.length===0)F.push('Foi o lance que o motor escolheria.');
+  // 4) como fica a partida
+  const sit=situacao(inf.b.v);if(sit)F.push(sit);
+  return F.join(' ');
+}
+
+// ---------- Revisão da partida ----------
+let REV=false;
+const REV_MS=600;
+const showCls=()=>clsOn()||REV;
+const sideName=c=>G.bot?(c===G.bot.color?'Bot':'Você'):NAME[c];
+const chanceDe=c=>G.bot?(c===G.bot.color?'do bot':'sua'):'das '+NAME[c];
+// ---- Precisão, pelo método completo do Lichess ----
+// 1) chance de vitória pela fórmula deles, com a avaliação limitada a ±10 peões (mate conta como ±10);
+// 2) precisão de cada lance pela perda efetiva (chance de vitória ou material, a maior), com 1 ponto de bônus;
+// 3) nota da partida = média entre a média ponderada pela volatilidade (lances em momentos agitados pesam até 24×
+//    mais que lances em posição já decidida) e a média harmônica (um erro grave puxa a nota bem para baixo).
+const cpOf=v=>v.mate!==undefined?(v.winner==='w'?1000:-1000):Math.max(-1000,Math.min(1000,v.cp));
+const wpL=v=>50+50*(2/(1+Math.exp(-0.00368208*cpOf(v)))-1);
+const accLoss=l=>l<=0?100:Math.max(0,Math.min(100,103.1668100711649*Math.exp(-0.04354415386753951*l*100)-3.166924740191411+1));
+const stdev=xs=>{const m=xs.reduce((a,x)=>a+x,0)/xs.length;return Math.sqrt(xs.reduce((a,x)=>a+(x-m)**2,0)/xs.length);};
+function accEntries(){ // um item por lance analisado: {k, c, acc, w}
+  const N=G.states.length-1,wp=[];
+  for(let k=0;k<=N;k++){const e=EVCACHE.get(keyAt(k));wp.push(e?wpL(e.v):null);}
+  let last=50;const fill=wp.map(x=>x===null?last:(last=x));
+  const ws=Math.max(2,Math.min(8,Math.floor(N/10))),weights=[];
+  for(let i=0;i<ws-2;i++)weights.push(stdev(fill.slice(0,ws)));
+  for(let i=0;i+ws<=fill.length;i++)weights.push(stdev(fill.slice(i,i+ws)));
+  const out=[];
+  for(let k=1;k<=N;k++){if(wp[k-1]===null||wp[k]===null)continue;
+    const c=G.moves[k-1].by;
+    out.push({k,c,acc:accLoss(effLoss(EVCACHE.get(keyAt(k-1)).v,EVCACHE.get(keyAt(k)).v,c)),w:Math.max(.5,Math.min(12,weights[k-1]??.5))});}
+  return out;
+}
+function gameAcc(list){
+  if(!list.length)return null;
+  const wm=list.reduce((s,x)=>s+x.acc*x.w,0)/list.reduce((s,x)=>s+x.w,0);
+  const hm=list.length/list.reduce((s,x)=>s+1/Math.max(1,x.acc),0);
+  return (wm+hm)/2;
+}
+const fmtEv=v=>v.mate!==undefined?(v.mate===0?'mate':(v.winner==='w'?'+':'−')+'M'+v.mate):(v.cp>=0?'+':'−')+(Math.abs(v.cp)/100).toFixed(1);
+const fmtPct=x=>x===null?'—':x.toFixed(1).replace('.',',');
+function moveInfo(k){ // dados do lance k (da posição k-1 para a k)
+  if(k<1||k>=G.states.length)return null;
+  const a=EVCACHE.get(keyAt(k-1)),b=EVCACHE.get(keyAt(k));if(!a||!b)return null;
+  const mv=G.moves[k-1],c=mv.by,wb=winP(a.v,c),wa=winP(b.v,c);
+  return {k,mv,c,id:finalCls(k),wb,wa,loss:effLoss(a.v,b.v,c),a,b};
+}
+function bestMoveObj(k){
+  const a=EVCACHE.get(keyAt(k-1));if(!a||!a.best)return null;
+  const st=G.states[k-1],L=allLegal(st);
+  const m=L.find(x=>x.from===a.best.from&&x.to===a.best.to&&(x.promo||'')===a.best.promo);
+  return m?{m,san:san(st,m,L)}:null;
+}
+function phaseOf(k){ // fase do jogo no lance k, pelo material de peças (sem peões e reis) antes do lance
+  let mat=0;for(const p of G.states[k-1].b)if(p&&!'pk'.includes(typ(p)))mat+=VAL[typ(p)];
+  if(mat<=26)return 'fin';if(k<=20)return 'abe';return 'meio';
+}
+const moveNum=k=>Math.ceil(k/2)+(k%2?'.':'...');
+function openReview(){REV=true;selected=-1;targets=[];render();setTimeout(()=>{const el=$('review');if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'start'});},50);}
+function closeReview(){REV=false;drawArrow(null);render();}
+function nextError(){
+  const N=G.states.length-1,me=G.bot?other(G.bot.color):null;
+  for(let k=ply()+1;k<=N;k++){const inf=moveInfo(k);
+    if(inf&&ERRS.includes(inf.id)&&(!me||inf.c===me))return goTo(k);}
+  const el=$('revErrMsg');el.textContent=G.bot?'Nenhum erro seu daqui para frente.':'Nenhum erro daqui para frente.';
+  setTimeout(()=>{el.textContent='';},2200);
+}
+function drawArrow(m){
+  const svg=$('arrows');if(!svg)return;
+  if(!m){svg.innerHTML='';return;}
+  const dp=x=>{const d=G.orient==='w'?x:63-x;return[(d&7)*100+50,(d>>3)*100+50];};
+  const[x1,y1]=dp(m.from),[x2,y2]=dp(m.to),ang=Math.atan2(y2-y1,x2-x1),L=Math.hypot(x2-x1,y2-y1)-8;
+  const pts=[[14,-8],[L-34,-8],[L-34,-20],[L,0],[L-34,20],[L-34,8],[14,8]]
+    .map(([u,v])=>`${(x1+u*Math.cos(ang)-v*Math.sin(ang)).toFixed(1)},${(y1+u*Math.sin(ang)+v*Math.cos(ang)).toFixed(1)}`).join(' ');
+  svg.innerHTML=`<polygon points="${pts}" class="arrow"/>`;
+}
+function renderGraph(N){
+  const box=$('revGraph');const W=Math.max(200,box.clientWidth||320),H=110;
+  const xs=k=>N?k/N*W:0;let pts=[],marks='';
+  for(let k=0;k<=N;k++){const e=EVCACHE.get(keyAt(k));if(!e)continue;
+    let w=winP(e.v,'w');if(G.result&&k===N)w=G.result.winner==='w'?1:G.result.winner==='b'?0:.5;
+    pts.push([xs(k),(1-w)*H]);}
+  for(let k=1;k<=N;k++){const inf=moveInfo(k);if(!inf||!ERRS.includes(inf.id))continue;
+    const e=EVCACHE.get(keyAt(k));const y=(1-winP(e.v,'w'))*H;
+    marks+=`<circle cx="${xs(k).toFixed(1)}" cy="${y.toFixed(1)}" r="4" class="gm c-${inf.id}"/>`;}
+  const P=ply();
+  let area='';
+  if(pts.length>1){const line=pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' L');
+    area=`<path d="M${pts[0][0].toFixed(1)},${H} L${line} L${pts[pts.length-1][0].toFixed(1)},${H} Z" class="ga"/><path d="M${line}" class="gl"/>`;}
+  box.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-label="Gráfico da avaliação ao longo da partida">
+    <rect width="${W}" height="${H}" class="gb"/>${area}<line x1="0" y1="${H/2}" x2="${W}" y2="${H/2}" class="gmid"/>
+    <line x1="${xs(P).toFixed(1)}" y1="0" x2="${xs(P).toFixed(1)}" y2="${H}" class="gcur"/>${marks}</svg>`;
+  box.onclick=e=>{const r=box.getBoundingClientRect();goTo(Math.round((e.clientX-r.left)/r.width*N));};
+}
+function renderReview(){
+  const el=$('review');if(!el)return;
+  $('bReview').hidden=!(G.result&&G.moves.length&&!REV);
+  el.hidden=!REV;
+  if(!REV){drawArrow(null);return;}
+  const N=G.states.length-1,P=ply();
+  // progresso da análise
+  let done=0;for(let k=0;k<=N;k++)if(EVCACHE.has(keyAt(k)))done++;
+  let cand=0,cdone=0;if(done===N+1)for(let k=1;k<=N;k++)if(greatCand(k)){cand++;if(SECCACHE.has(secKey(k)))cdone++;}
+  $('revProg').innerHTML=done<N+1?`<span>Analisando a partida… ${done} de ${N+1} posições</span><div class="pbar"><i style="width:${(done/(N+1)*100).toFixed(1)}%"></i></div>`
+    :cdone<cand?`<span>Procurando lances afiados… ${cdone} de ${cand}</span><div class="pbar"><i style="width:${(cdone/cand*100).toFixed(1)}%"></i></div>`:'';
+  // comentário do lance na tela
+  let now='',arrow=null;
+  if(P===0)now='<p class="muted">Posição inicial. Use ◀ ▶, o gráfico ou a lista de lances para percorrer a partida.</p>';
+  else{const mv=G.moves[P-1],inf=moveInfo(P);
+    if(!inf)now=`<div class="rvhead"><strong>${moveNum(P)} ${mv.san}</strong></div><p class="muted">Analisando este lance…</p>`;
+    else{const only=allLegal(G.states[P-1]).length===1,best=bestMoveObj(P);
+      const body=comentario(P,inf,best,only);
+      if(best&&!only&&!['best','great'].includes(inf.id))arrow=best.m;
+      now=`<div class="rvhead">${clsBadge(inf.id,'clb-s big')}<strong>${moveNum(P)} ${mv.san}</strong><span>${CLS[inf.id].nome}</span><em>${sideName(inf.c)}</em></div>
+        <p>${body}</p><p class="muted">Chance de vitória ${chanceDe(inf.c)}: ${Math.round(inf.wb*100)}% → ${Math.round(inf.wa*100)}% · avaliação ${fmtEv(inf.a.v)} → ${fmtEv(inf.b.v)}</p>`;}}
+  $('revNow').innerHTML=now;drawArrow(arrow);
+  // dados de todos os lances analisados
+  const data=[];for(let k=1;k<=N;k++){const inf=moveInfo(k);if(inf)data.push(inf);}
+  const AE=accEntries();
+  const acc=(c,f)=>gameAcc(AE.filter(d=>d.c===c&&(!f||f(d))));
+  const sides=['w','b'];
+  $('revAcc').innerHTML=sides.map(c=>`<div class="acc ${c}"><span class="sw ${c}"></span><div><div class="accn">${fmtPct(acc(c))}</div><div class="accl">Precisão · ${sideName(c)}</div></div></div>`).join('');
+  renderGraph(N);
+  // contagem por avaliação
+  const cnt={w:{},b:{}};for(const d of data)cnt[d.c][d.id]=(cnt[d.c][d.id]||0)+1;
+  $('revTable').innerHTML=`<table class="rvt"><tr><th></th><th>${sideName('w')}</th><th>${sideName('b')}</th></tr>`+
+    CLS_ORDER.map(id=>`<tr><td>${clsBadge(id,'clb-s')} ${CLS[id].nome}</td><td>${cnt.w[id]||0}</td><td>${cnt.b[id]||0}</td></tr>`).join('')+'</table>';
+  // precisão por fase
+  const FASES=[['abe','Abertura'],['meio','Meio-jogo'],['fin','Final']];
+  $('revPhases').innerHTML=`<table class="rvt"><tr><th>Precisão por fase</th><th>${sideName('w')}</th><th>${sideName('b')}</th></tr>`+
+    FASES.map(([f,nm])=>`<tr><td>${nm}</td>${sides.map(c=>`<td>${fmtPct(acc(c,d=>phaseOf(d.k)===f))}</td>`).join('')}</tr>`).join('')+'</table>';
+  // momentos decisivos: as maiores perdas de chance de vitória
+  const keys=data.filter(d=>ERRS.includes(d.id)).sort((a,b)=>b.loss-a.loss).slice(0,6).sort((a,b)=>a.k-b.k);
+  $('revKeys').innerHTML=keys.length?keys.map(d=>{const best=bestMoveObj(d.k);
+    return `<li data-k="${d.k}" class="${P===d.k?'cur':''}">${clsBadge(d.id,'clb-s')}<div><strong>${moveNum(d.k)} ${d.mv.san}</strong> · ${sideName(d.c)} · ${CLS[d.id].nome}<br>
+      <span class="muted">${comentario(d.k,d,best,false).replace(/<\/?strong>/g,'').replace(/ \(seta verde\)/,'')}</span></div></li>`;}).join('')
+    :`<li class="muted">${data.length?'Nenhuma imprecisão, erro ou capivarada. Partida limpa!':'Aguardando a análise…'}</li>`;
+  // curiosidades das regras desta variante
+  const ST=[['Capturas',m=>m.captured&&!m.self],['Xeques',m=>/[+#]$/.test(m.san)],['Roques',m=>m.san.startsWith('O-O')],
+    ['Promoções',m=>!!m.promo],['Autocapturas do Rei Tirano',m=>m.self],['Conversões do Papa',m=>!!m.conv]];
+  const cntS=(c,f)=>G.moves.filter(m=>m.by===c&&f(m)).length;
+  const papasPerdidos=c=>G.moves.filter(m=>m.papa&&col(m.papa)===c).length;
+  $('revStats').innerHTML=`<table class="rvt"><tr><th></th><th>${sideName('w')}</th><th>${sideName('b')}</th></tr>`+
+    ST.map(([nm,f])=>`<tr><td>${nm}</td><td>${cntS('w',f)}</td><td>${cntS('b',f)}</td></tr>`).join('')+
+    `<tr><td>Papas que morreram junto</td><td>${papasPerdidos('w')}</td><td>${papasPerdidos('b')}</td></tr></table>`;
+}
+
 function cancelBot(){botToken++;botBusy=false;pendingReq=null;}
 
 // ---------- Interação ----------
 function select(sq){selected=sq;targets=legalNow.filter(m=>m.from===sq);}
 function onSquare(sq){
-  if(modalOpen)return;
+  if(modalOpen||REV)return;
   if(view!==null){view=null;selected=-1;targets=[];return render();}
   if(G.result||botTurn())return;
   const s=cur(),p=s.b[sq];
@@ -985,7 +1365,7 @@ function confirmSelf(m){
 }
 function askPromo(ms){
   const c=cur().turn;
-  modal('Promover peão','<div class="promo">'+['q','l','r','b','n'].map(x=>
+  modal('Promover peão','<div class="promo">'+['l','a','r','b','n'].map(x=>
     `<button data-p="${x}" aria-label="${NOMEP[x]}" title="${NOMEP[x]}">${glyph(c==='w'?x.toUpperCase():x)}</button>`).join('')+'</div>',
     [{label:'Cancelar'}],c);
   $('mBody').querySelectorAll('button[data-p]').forEach(b=>b.onclick=()=>{closeModal();doMove(ms.find(m=>m.promo===b.dataset.p));});
@@ -1006,6 +1386,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modalOpen)closeModa
 // ---------- Render ----------
 const board=$('board'),cells=[];
 for(let d=0;d<64;d++){const el=document.createElement('div');el.className='sq';board.appendChild(el);cells.push(el);}
+board.insertAdjacentHTML('beforeend','<svg id="arrows" viewBox="0 0 800 800" aria-hidden="true"></svg>');
 board.addEventListener('click',e=>{const el=e.target.closest('.sq');if(el)onSquare(+el.dataset.sq);});
 
 function render(){
@@ -1017,18 +1398,21 @@ function render(){
   const upOf=p=>modo()==='face'?col(p)!==G.orient:passUp();
   const capSq=last&&last.captured?(last.capSq??last.to):-1;
   // selo no tabuleiro: o seu último lance (até a posição na tela), fica até você jogar de novo
-  let myK=0;if(clsOn())for(let k=P;k>=1;k--)if(G.moves[k-1].by!==G.bot.color){myK=k;break;}
-  const myCls=myK?classify(myK):null,mySq=myK?G.moves[myK-1].to:-1;
+  let myK=0;if(REV)myK=P;else if(clsOn())for(let k=P;k>=1;k--)if(G.moves[k-1].by!==G.bot.color){myK=k;break;}
+  const myCls=myK?finalCls(myK):null,mySq=myK?G.moves[myK-1].to:-1;
   for(let d=0;d<64;d++){
     const sq=G.orient==='w'?d:63-d,el=cells[d],[r,f]=rc(sq);
     let cls='sq '+(((r+f)&1)?'dk':'lt');
     if(last&&(sq===last.from||sq===last.to))cls+=' last';
     if(sq===selected)cls+=' sel';
     if(sq===chk)cls+=' check';
-    const t=tset.get(sq);if(t)cls+=t.self?' self':(s.b[sq]?' cap':' dot');
+    const t=tset.get(sq);if(t)cls+=t.self?' self':t.conv?' convt':(s.b[sq]?' cap':' dot');
+    if(s.link&&(sq===s.link.to||sq===s.link.papa))cls+=' linked'; // vínculo ativo: se a convertida for capturada agora, o Papa morre junto
     el.className=cls;el.dataset.sq=sq;
     const p=s.b[sq];let extra='',style='';
-    if(anim&&p&&(sq===anim.to||(anim.rook&&sq===anim.rook[1]))){ // a peça desliza da casa de origem
+    if(anim&&anim.conv&&p&&sq===anim.to){extra=' conv';} // a peça convertida brilha e troca de cor
+    else if(anim&&anim.conv&&p&&sq===anim.from){extra=' preach';} // o Papa fica no lugar
+    else if(anim&&p&&(sq===anim.to||(anim.rook&&sq===anim.rook[1]))){ // a peça desliza da casa de origem
       const from=sq===anim.to?anim.from:anim.rook[0],[fc,fr]=dpos(from),[tc,tr]=dpos(sq);
       extra=sq===anim.to&&anim.cap?' arrive hit':' arrive';style=`--dx:${fc-tc};--dy:${fr-tr}`;}
     let h=p?glyph(p,upOf(p),extra,style):'';
@@ -1038,6 +1422,11 @@ function render(){
       const pos=up?'--tx:3.75cqw;--ty:-3.75cqw;--rot:105deg':'--tx:-3.75cqw;--ty:3.75cqw;--rot:-75deg';
       h+=`<span class="capt${anim?' knock':''}" style="${pos}">${glyph(cp,false)}</span>`;
       if(anim)h+=`<span class="burst${last.self?' gold':''}"></span>`;}
+    if(anim&&anim.conv&&sq===anim.to)h+=`<span class="burst conv"></span><span class="burst conv b2"></span>`;
+    if(last&&last.papaSq===sq&&last.papa){ // o Papa morreu junto: fica tombado no canto da casa dele até o próximo lance
+      const up=upOf(last.papa),pos=up?'--tx:3.75cqw;--ty:-3.75cqw;--rot:105deg':'--tx:-3.75cqw;--ty:3.75cqw;--rot:-75deg';
+      h+=`<span class="capt${anim?' knock late':''}" style="${pos}">${glyph(last.papa,false)}</span>`;
+      if(anim)h+=`<span class="burst conv late"></span>`;}
     if((d&7)===0)h+=`<span class="co rk">${8-r}</span>`;
     if((d>>3)===7)h+=`<span class="co fl">${FILES[f]}</span>`;
     let rebuilt=false;
@@ -1070,7 +1459,7 @@ function render(){
   renderMoves();renderClocks();renderPlacar();
   const eo=$('evOpt');eo.checked=barOn();eo.disabled=!G.bot;$('evOptRow').style.opacity=G.bot?1:.5;
   const co=$('clsOpt');co.checked=clsOn();co.disabled=!G.bot;$('clsOptRow').style.opacity=G.bot?1:.5;
-  renderEval();renderClsSummary();pump();
+  renderEval();renderClsSummary();renderReview();pump();
 }
 function renderBar(el,c){
   const s=cur();
@@ -1078,7 +1467,7 @@ function renderBar(el,c){
   const lm=G.moves[G.moves.length-1];
   const item=m=>({t:typ(m.captured),last:m===lm});
   const byV=(a,b)=>VAL[b.t]-VAL[a.t];
-  const took=G.moves.filter(m=>m.by===c&&m.captured&&!m.self).map(item).sort(byV);
+  const took=G.moves.filter(m=>m.by===c&&m.captured&&!m.self).flatMap(m=>m.papa?[item(m),{t:'a',last:m===lm}]:[item(m)]).sort(byV);
   const lost=G.moves.filter(m=>m.by===c&&m.self).map(item).sort(byV);
   const diff=material(s.b,c)-material(s.b,other(c));
   const oc=other(c);
@@ -1105,13 +1494,16 @@ function renderClocks(){
 function renderMoves(){
   const ol=$('moves');let h='';
   for(let i=0;i<G.moves.length;i+=2){const a=G.moves[i],b=G.moves[i+1];
-    const P=ply(),cl=clsOn(),c=(k,m)=>{const id=cl?classify(k):null;
-      return `<span class="mv${m.self?' sf':''}${P===k?' cur':''}" data-ply="${k}">${m.san}${id?clsBadge(id,'clb-s'):''}</span>`;};
+    const P=ply(),cl=showCls(),c=(k,m)=>{const id=cl?finalCls(k):null;
+      return `<span class="mv${m.self?' sf':''}${m.conv?' cv':''}${P===k?' cur':''}" data-ply="${k}">${m.san}${id?clsBadge(id,'clb-s'):''}</span>`;};
     h+=`<li><span class="n">${i/2+1}.</span>${c(i+1,a)}${b?c(i+2,b):'<span></span>'}</li>`;}
   if(G.result)h+=`<li class="res">${G.result.winner==='w'?'1–0':G.result.winner==='b'?'0–1':'½–½'}</li>`;
   ol.innerHTML=h||'<li class="empty">Brancas começam. Toque numa peça para ver os lances.</li>';
   const curEl=ol.querySelector('.cur');
-  if(view===null)ol.scrollTop=ol.scrollHeight;else if(curEl)curEl.scrollIntoView({block:'nearest'});
+  // rola só a lista de lances (nunca a página) para manter o lance atual visível
+  if(view===null)ol.scrollTop=ol.scrollHeight;
+  else if(curEl){const r=curEl.getBoundingClientRect(),o=ol.getBoundingClientRect();
+    if(r.top<o.top)ol.scrollTop-=o.top-r.top;else if(r.bottom>o.bottom)ol.scrollTop+=r.bottom-o.bottom;}
 }
 function tick(){
   if(!G||!G.clock.base)return;
@@ -1148,7 +1540,12 @@ $('evOpt').onchange=e=>{if(!G.bot)return;G.bot.evalBar=e.target.checked;save();r
 $('clsOpt').onchange=e=>{if(!G.bot)return;G.bot.classify=e.target.checked;save();render();};
 $('bZerar').onclick=()=>modal('Zerar placar','<p>Apagar vitórias, empates e derrotas de todos os bots?</p>',
   [{label:'Cancelar'},{label:'Zerar',primary:true,fn:()=>{PLACAR={};try{localStorage.removeItem(PLACAR_KEY);}catch(e){}renderPlacar();}}]);
-$('bUndo').onclick=undo;
+$('bReview').onclick=openReview;
+$('revClose').onclick=closeReview;
+$('revErr').onclick=nextError;
+$('revKeys').addEventListener('click',e=>{const li=e.target.closest('[data-k]');if(li)goTo(+li.dataset.k);});
+window.addEventListener('resize',()=>{if(REV)renderReview();});
+$('bUndo').onclick=()=>{if(REV)closeReview();undo();};
 $('bFlip').onclick=()=>{G.orient=other(G.orient);save();render();};
 $('mode').onchange=e=>{G.mode=e.target.value;if(G.mode==='auto'&&!G.result)G.orient=cur().turn;save();render();};
 $('bLock').onclick=()=>{G.lock=!G.lock;if(G.lock)$('barTop').scrollIntoView({block:'start'});save();render();};
@@ -1213,7 +1610,7 @@ function save(){try{localStorage.setItem(STORE,JSON.stringify(G));}catch(e){}}
 function load(){
   try{const raw=localStorage.getItem(STORE);if(!raw)return false;
     const g=JSON.parse(raw);if(!g||!Array.isArray(g.states)||!g.states.length||!g.clock)return false;
-    if(!g.mode)g.mode=g.autoflip?'auto':'normal';G=g;G.clock.last=Date.now();refresh();return true;
+    if(!g.mode)g.mode=g.autoflip?'auto':'normal';G=g;G.clock.last=Date.now();if(G.evals)for(const k in G.evals)EVCACHE.set(k,G.evals[k]);if(G.secs)for(const k in G.secs)SECCACHE.set(k,G.secs[k]);refresh();return true;
   }catch(e){return false;}
 }
 if(load()){render();setTimeout(maybeBot,300);}else newGame(0,0);
