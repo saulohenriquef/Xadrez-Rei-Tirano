@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez do Rei Tirano · versão 7.5 TESTE -->
+<!-- index.html · Xadrez do Rei Tirano · versão 8.0 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -226,6 +226,14 @@ details ul{padding-left:1.1em;margin:6px 0}
 .caps .lost .tiara .tf{stroke:none}.caps .lost .tiara .tb{stroke:rgba(0,0,0,.35)}
 .pc.up{--base:rotate(180deg) translateY(-3%)}
 /* ---- animações de lance e captura ---- */
+.sq.dragsrc .pc{opacity:.28}
+.sq.dragover{box-shadow:inset 0 0 0 max(3px,.6cqw) rgba(255,255,255,.85)}
+.ghost{position:fixed;left:0;top:0;z-index:300;pointer-events:none;display:flex;align-items:center;justify-content:center;will-change:transform}
+.ghost .pc{font-size:inherit;filter:drop-shadow(0 6px 7px rgba(0,0,0,.4))}
+.ghost.big .pc{font-size:1.3em}
+body.grabbing,body.grabbing *{cursor:grabbing!important}
+.pc.land{animation:land .18s ease-out both}
+@keyframes land{from{transform:scale(1.12) var(--base)}to{transform:scale(1) var(--base)}}
 .pc.arrive{z-index:5;animation:arrive .17s cubic-bezier(.25,.7,.35,1) both}
 .pc.arrive.hit{animation:arriveHit .3s cubic-bezier(.25,.7,.35,1) both}
 @keyframes arrive{from{transform:translate(calc(var(--dx)*12.5cqw),calc(var(--dy)*12.5cqw)) var(--base)}to{transform:translate(0,0) var(--base)}}
@@ -423,6 +431,12 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
   <div class="panel">
     <label class="opt" id="evOptRow"><input type="checkbox" id="evOpt"> Barra de avaliação (contra o bot)</label>
     <label class="opt" id="clsOptRow"><input type="checkbox" id="clsOpt"> Avaliação dos lances (contra o bot)</label>
+    <label class="optlbl" for="moveMode" style="margin-top:12px">Mover as peças</label>
+    <div class="opt"><select id="moveMode">
+      <option value="both">Tocar ou arrastar</option>
+      <option value="tap">Só tocar: a peça e depois a casa</option>
+      <option value="drag">Só arrastar</option>
+    </select></div>
     <label class="optlbl" for="mode" style="margin-top:12px">Jogar contra um amigo</label>
     <div class="opt"><select id="mode">
       <option value="normal">Tabuleiro fixo</option>
@@ -430,7 +444,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <option value="face">Frente a frente: peças de cima invertidas</option>
       <option value="pass">Passar para o amigo: só as peças giram</option>
     </select></div>
-    <div class="ver">Versão 7.5</div>
+    <div class="ver">Versão 8.0</div>
   </div>
 
   <div class="panel">
@@ -922,7 +936,7 @@ function claimMenu(t){
     {label:'Cancelar'}],t,true);
 }
 
-function doMove(m){
+function doMove(m,opt={}){
   const s=cur(),sanStr=san(s,m,legalNow);
   const captured=m.conv?'':m.ep?(s.turn==='w'?'p':'P'):(s.b[m.to]||''); // convertida não sai do tabuleiro
   const conv=m.conv?s.b[m.to]:'';
@@ -933,7 +947,7 @@ function doMove(m){
   const papaSq=s.link&&captured&&m.to===s.link.to&&s.b[s.link.papa]&&typ(s.b[s.link.papa])==='a'?s.link.papa:-1;
   G.moves.push({san:sanStr,self:!!m.self,from:m.from,to:m.to,promo:m.promo||'',captured,capSq,conv,
     papa:papaSq>=0?s.b[papaSq]:'',papaSq,by:s.turn});
-  ANIM={ply:G.states.length-1,t0:Date.now(),from:m.from,to:m.to,cap:!!captured,conv:!!m.conv,
+  ANIM={ply:G.states.length-1,t0:Date.now(),from:m.from,to:m.to,cap:!!captured,conv:!!m.conv,drag:!!opt.drag,
     rook:m.castle?{K:[63,61],Q:[56,59],k:[7,5],q:[0,3]}[m.castle]:null};
   selected=-1;targets=[];view=null;
   evaluate();
@@ -1430,12 +1444,12 @@ function confirmSelf(m){
      {label:'Selecionar a peça',fn:()=>{select(m.to);render();}},
      {label:'Capturar',primary:true,fn:()=>doMove(m)}],s.turn);
 }
-function askPromo(ms){
+function askPromo(ms,opt={}){
   const c=cur().turn;
   modal('Promover peão','<div class="promo">'+['l','a','r','b','n'].map(x=>
     `<button data-p="${x}" aria-label="${NOMEP[x]}" title="${NOMEP[x]}">${glyph(c==='w'?x.toUpperCase():x)}</button>`).join('')+'</div>',
     [{label:'Cancelar'}],c);
-  $('mBody').querySelectorAll('button[data-p]').forEach(b=>b.onclick=()=>{closeModal();doMove(ms.find(m=>m.promo===b.dataset.p));});
+  $('mBody').querySelectorAll('button[data-p]').forEach(b=>b.onclick=()=>{closeModal();doMove(ms.find(m=>m.promo===b.dataset.p),opt);});
 }
 function modal(title,body,buttons,who,stack){
   document.querySelector('#modal .card').classList.toggle('up',(modo()==='face'&&who===other(G.orient))||passUp());
@@ -1466,11 +1480,66 @@ function renderFx(dk,anim,fimEmp){
   }
   const el=$('fx');if(el&&el._h!==fx){el.innerHTML=fx;el._h=fx;}
 }
+const upOf0=p=>modo()==='face'?col(p)!==G.orient:passUp();
 // ---------- Render ----------
 const board=$('board'),cells=[];
 for(let d=0;d<64;d++){const el=document.createElement('div');el.className='sq';board.appendChild(el);cells.push(el);}
 board.insertAdjacentHTML('beforeend','<svg id="arrows" viewBox="0 0 800 800" aria-hidden="true"></svg><div id="fx" aria-hidden="true"></div>');
-board.addEventListener('click',e=>{const el=e.target.closest('.sq');if(el)onSquare(+el.dataset.sq);});
+board.addEventListener('click',e=>{if(suppressClick)return;const el=e.target.closest('.sq');if(!el)return;
+  if(MOVE_MODE==='drag'&&view===null)return; // só arrastar: o toque serve apenas para voltar da revisão de lances
+  onSquare(+el.dataset.sq);});
+// ---------- Mover as peças: tocar (peça e depois a casa) e/ou arrastar ----------
+let MOVE_MODE='both';
+try{const m=localStorage.getItem(STORE+'-mover');if(m==='tap'||m==='drag'||m==='both')MOVE_MODE=m;}catch(e){}
+let DRAG=null,suppressClick=false,ghost=null;
+const sqAt=(x,y)=>{const el=document.elementFromPoint(x,y);const c=el&&el.closest?el.closest('#board .sq'):null;return c?+c.dataset.sq:-1;};
+function dragCells(){ // marca a casa de origem e a casa sob o dedo/mouse sem redesenhar o tabuleiro
+  for(const el of cells){const sq=+el.dataset.sq;
+    el.classList.toggle('dragsrc',!!(DRAG&&DRAG.active&&sq===DRAG.from));
+    el.classList.toggle('dragover',!!(DRAG&&DRAG.active&&sq===DRAG.over));}
+}
+function moveGhost(x,y){
+  if(!ghost)return;const z=DRAG.sz,lift=DRAG.touch?z*.55:0;
+  ghost.style.transform=`translate(${x-z/2}px,${y-z/2-lift}px)`;
+}
+board.addEventListener('pointerdown',e=>{
+  if(MOVE_MODE==='tap'||e.button>0||!G)return;
+  const el=e.target.closest('.sq');if(!el)return;
+  if(modalOpen||REV||view!==null||G.result||botTurn())return;
+  const sq=+el.dataset.sq,s=cur(),p=s.b[sq];
+  if(!p||col(p)!==s.turn)return; // só começa arrasto numa peça de quem joga
+  DRAG={from:sq,p,x0:e.clientX,y0:e.clientY,active:false,over:-1,pid:e.pointerId,touch:e.pointerType!=='mouse',sz:board.getBoundingClientRect().width/8};
+});
+board.addEventListener('pointermove',e=>{
+  if(!DRAG||e.pointerId!==DRAG.pid)return;
+  if(!DRAG.active){
+    if(Math.hypot(e.clientX-DRAG.x0,e.clientY-DRAG.y0)<7)return;
+    DRAG.active=true;try{board.setPointerCapture(e.pointerId);}catch(_){}
+    if(selected!==DRAG.from){select(DRAG.from);render();}
+    ghost=document.createElement('div');ghost.className='ghost'+(DRAG.touch?' big':'');
+    ghost.style.width=ghost.style.height=DRAG.sz+'px';ghost.style.fontSize=(DRAG.sz*.832)+'px';
+    ghost.innerHTML=glyph(DRAG.p,upOf0(DRAG.p));document.body.appendChild(ghost);
+    document.body.classList.add('grabbing');
+  }
+  moveGhost(e.clientX,e.clientY);
+  const sq=sqAt(e.clientX,e.clientY-(DRAG.touch?DRAG.sz*.55:0));
+  DRAG.over=targets.some(m=>m.to===sq)?sq:-1;dragCells();
+});
+function endDrag(){if(ghost){ghost.remove();ghost=null;}document.body.classList.remove('grabbing');}
+board.addEventListener('pointerup',e=>{
+  if(!DRAG||e.pointerId!==DRAG.pid)return;
+  const d=DRAG;DRAG=null;
+  if(!d.active)return; // foi só um toque: o clique normal cuida
+  suppressClick=true;setTimeout(()=>{suppressClick=false;},0);
+  const to=sqAt(e.clientX,e.clientY-(d.touch?d.sz*.55:0));
+  endDrag();dragCells();
+  const ms=targets.filter(m=>m.from===d.from&&m.to===to);
+  if(!ms.length){render();return;} // soltou fora de uma casa válida: a peça volta e continua selecionada
+  if(ms[0].promo)return askPromo(ms,{drag:true});
+  doMove(ms[0],{drag:true}); // arrastando, comer a própria peça com o rei não pede confirmação
+});
+board.addEventListener('pointercancel',e=>{if(DRAG&&e.pointerId===DRAG.pid){DRAG=null;endDrag();dragCells();}});
+
 
 function render(){
   const P=ply(),s=G.states[P],last=G.moves[P-1];
@@ -1502,6 +1571,8 @@ function render(){
     let cls='sq '+(((r+f)&1)?'dk':'lt');
     if(last&&(sq===last.from||sq===last.to))cls+=' last';
     if(sq===selected)cls+=' sel';
+    if(DRAG&&DRAG.active&&sq===DRAG.from)cls+=' dragsrc';
+    if(DRAG&&DRAG.active&&sq===DRAG.over)cls+=' dragover';
     if(sq===chk)cls+=fimTipo==='mate'?' check mate':' check';
     const t=tset.get(sq);if(t)cls+=t.self?' self':t.conv?' convt':(s.b[sq]?' cap':' dot');
     if(s.link&&(sq===s.link.to||sq===s.link.papa))cls+=' linked'; // vínculo ativo: se a convertida for capturada agora, o Papa morre junto
@@ -1509,6 +1580,7 @@ function render(){
     const p=s.b[sq];let extra='',style='';
     if(anim&&anim.conv&&p&&sq===anim.to){extra=' conv';} // a peça convertida brilha e troca de cor
     else if(anim&&anim.conv&&p&&sq===anim.from){extra=' preach';} // o Papa fica no lugar
+    else if(anim&&anim.drag&&p&&sq===anim.to){extra=' land';} // solta pelo arrasto: só um assentar
     else if(anim&&p&&(sq===anim.to||(anim.rook&&sq===anim.rook[1]))){ // a peça desliza da casa de origem
       const from=sq===anim.to?anim.from:anim.rook[0],[fc,fr]=dpos(from),[tc,tr]=dpos(sq);
       extra=sq===anim.to&&anim.cap?' arrive hit':' arrive';style=`--dx:${fc-tc};--dy:${fr-tr}`;}
@@ -1650,6 +1722,8 @@ $('revClose').onclick=closeReview;
 $('revErr').onclick=nextError;
 $('revKeys').addEventListener('click',e=>{const li=e.target.closest('[data-k]');if(li)goTo(+li.dataset.k);});
 window.addEventListener('resize',()=>{if(REV)renderReview();});
+$('moveMode').value=MOVE_MODE;
+$('moveMode').onchange=e=>{MOVE_MODE=e.target.value;try{localStorage.setItem(STORE+'-mover',MOVE_MODE);}catch(_){}};
 $('bUndo').onclick=()=>{if(REV)closeReview();undo();};
 $('bFlip').onclick=()=>{G.orient=other(G.orient);save();render();};
 $('mode').onchange=e=>{G.mode=e.target.value;if(G.mode==='auto'&&!G.result)G.orient=cur().turn;save();render();};
