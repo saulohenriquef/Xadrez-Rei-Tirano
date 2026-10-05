@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez do Rei Tirano · versão 7.0 -->
+<!-- index.html · Xadrez do Rei Tirano · versão 7.1 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -246,6 +246,24 @@ details ul{padding-left:1.1em;margin:6px 0}
 .burst.gold{border-color:var(--gold)}
 @keyframes burst{0%{transform:scale(.35);opacity:.95}100%{transform:scale(1.3);opacity:0}}
 @media (prefers-reduced-motion:reduce){.pc.arrive,.pc.arrive.hit,.capt.knock{animation:none}.burst{display:none}}
+/* fim de partida: rei tombado no mate e bandeira branca na resignação */
+.pc.mated{transform:var(--base) translate(24%,-12%) translate(0,35%) rotate(-78deg) scale(.86) translate(0,-35%)}
+.pc.mated.topple{animation:topple 1.1s cubic-bezier(.45,.05,.35,1) .3s both}
+@keyframes topple{
+  0%{transform:var(--base) translate(0,0) translate(0,35%) rotate(0deg) scale(1) translate(0,-35%)}
+  25%{transform:var(--base) translate(0,0) translate(0,35%) rotate(9deg) scale(1) translate(0,-35%)}
+  72%{transform:var(--base) translate(24%,-12%) translate(0,35%) rotate(-86deg) scale(.86) translate(0,-35%)}
+  86%{transform:var(--base) translate(24%,-12%) translate(0,35%) rotate(-73deg) scale(.86) translate(0,-35%)}
+  100%{transform:var(--base) translate(24%,-12%) translate(0,35%) rotate(-78deg) scale(.86) translate(0,-35%)}}
+.flag{position:absolute;left:2%;top:0;width:50%;height:50%;z-index:6;pointer-events:none}
+.flag.up{left:auto;top:auto;right:2%;bottom:0;transform:rotate(180deg)}
+.flag svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.35))}
+.flag .pole{stroke:#2a2018;stroke-width:2.6;stroke-linecap:round}
+.flag .cloth{fill:#fbfaf6;stroke:#2a2018;stroke-width:1.6;stroke-linejoin:round;transform-box:view-box;transform-origin:9px 11px;animation:wave 2.6s ease-in-out infinite}
+@keyframes wave{0%,100%{transform:skewY(0deg) scaleX(1)}50%{transform:skewY(-7deg) scaleX(.93)}}
+.flag svg.raise{animation:flagUp .7s cubic-bezier(.3,1.4,.5,1) .25s both}
+@keyframes flagUp{from{opacity:0;transform:translateY(55%) scale(.5)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.pc.mated.topple,.flag svg.raise,.flag .cloth{animation:none}}
 /* peça capturada no último lance, marcada na lista de capturas */
 .clb{position:absolute;top:-1cqw;right:-1cqw;width:4.8cqw;height:4.8cqw;border-radius:50%;display:flex;align-items:center;justify-content:center;
   font:700 2.5cqw/1 Figtree,system-ui,sans-serif;letter-spacing:-.04em;color:#fff;z-index:6;pointer-events:none;
@@ -363,7 +381,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
     </div>
     <div id="sndInfo" class="sndinfo"></div>
     <div id="sndErr" class="snderr"></div>
-    <div class="ver">Versão 7.0</div>
+    <div class="ver">Versão 7.1</div>
   </div>
 
   <div class="panel">
@@ -818,7 +836,7 @@ function newGame(baseMin=0,incSec=0,bot=null){
   selected=-1;targets=[];view=null;legalNow=lg;save();render();setTimeout(maybeBot,300);
 }
 function stopClock(){const c=G.clock;if(c.base&&c.running){const t=cur().turn;c[t]=Math.max(0,c[t]-(Date.now()-c.last));c.running=false;}}
-function end(w,text,snd='end'){cancelBot();stopClock();G.result={winner:w,text};registrarPlacar(w);if(G.moves.length&&!endQuiet)setTimeout(()=>sfx(snd),180);}
+function end(w,text,snd='end'){cancelBot();stopClock();G.result={winner:w,text,kind:snd,t0:Date.now()};registrarPlacar(w);if(G.moves.length&&!endQuiet)setTimeout(()=>sfx(snd),180);}
 let endQuiet=false;
 
 function evaluate(){
@@ -1397,6 +1415,10 @@ function render(){
   const dpos=x=>{const d=G.orient==='w'?x:63-x;return[d&7,d>>3];};
   const upOf=p=>modo()==='face'?col(p)!==G.orient:passUp();
   const capSq=last&&last.captured?(last.capSq??last.to):-1;
+  // fim de partida na posição final: rei tombado (mate) ou bandeira branca (resignação)
+  const fimTipo=G.result&&G.result.winner&&P===G.states.length-1?(G.result.kind||(/^Xeque-mate/.test(G.result.text)?'mate':/resignaram/.test(G.result.text)?'resign':'')):'';
+  const fimAnim=fimTipo&&G.result.t0&&Date.now()-G.result.t0<1800;
+  const fimRei=fimTipo?kingSq(s.b,other(G.result.winner)):-1;
   // selo no tabuleiro: o seu último lance (até a posição na tela), fica até você jogar de novo
   let myK=0;if(REV)myK=P;else if(clsOn())for(let k=P;k>=1;k--)if(G.moves[k-1].by!==G.bot.color){myK=k;break;}
   const myCls=myK?finalCls(myK):null,mySq=myK?G.moves[myK-1].to:-1;
@@ -1415,7 +1437,9 @@ function render(){
     else if(anim&&p&&(sq===anim.to||(anim.rook&&sq===anim.rook[1]))){ // a peça desliza da casa de origem
       const from=sq===anim.to?anim.from:anim.rook[0],[fc,fr]=dpos(from),[tc,tr]=dpos(sq);
       extra=sq===anim.to&&anim.cap?' arrive hit':' arrive';style=`--dx:${fc-tc};--dy:${fr-tr}`;}
+    if(p&&sq===fimRei&&fimTipo==='mate')extra+=fimAnim?' mated topple':' mated';
     let h=p?glyph(p,upOf(p),extra,style):'';
+    if(sq===fimRei&&fimTipo==='resign')h+=`<span class="flag${upOf(p)?' up':''}"><svg viewBox="0 0 40 40" class="${fimAnim?'raise':''}"><line x1="9" y1="38" x2="9" y2="3" class="pole"/><path class="cloth" d="M9,4 C15,1.5 21,7 32,4.5 L32,19 C21,21.5 15,16 9,18.5 Z"/></svg></span>`;
     if(sq===capSq){ // peça capturada pequena e tombada no canto, até o próximo lance
       // canto inferior esquerdo, do ponto de vista de quem está em pé na casa (peças invertidas usam o canto oposto)
       const cp=last.captured,att=s.b[sq]||(last.by==='w'?'P':'p'),up=upOf(att);
@@ -1514,7 +1538,7 @@ function tick(){
       const w=other(t),b=cur().b;
       const wp=b.filter(p=>p&&col(p)===w&&typ(p)!=='k'),lp=b.filter(p=>p&&col(p)===t&&typ(p)!=='k');
       const draw=!wp.length||(wp.length===1&&'bn'.includes(typ(wp[0]))&&!lp.length);
-      sfx('end');G.result={winner:draw?null:w,text:draw?`Empate: tempo das ${NAME[t]} acabou, mas as ${NAME[w]} não têm material para dar mate`:`${NAME[w]} vencem no tempo`};registrarPlacar(G.result.winner);
+      sfx('end');G.result={kind:'time',t0:Date.now(),winner:draw?null:w,text:draw?`Empate: tempo das ${NAME[t]} acabou, mas as ${NAME[w]} não têm material para dar mate`:`${NAME[w]} vencem no tempo`};registrarPlacar(G.result.winner);
       selected=-1;targets=[];save();render();return;
     }
   }
