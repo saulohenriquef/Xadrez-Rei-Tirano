@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez do Rei Tirano · versão 7.1 -->
+<!-- index.html · Xadrez do Rei Tirano · versão 7.2 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -246,6 +246,35 @@ details ul{padding-left:1.1em;margin:6px 0}
 .burst.gold{border-color:var(--gold)}
 @keyframes burst{0%{transform:scale(.35);opacity:.95}100%{transform:scale(1.3);opacity:0}}
 @media (prefers-reduced-motion:reduce){.pc.arrive,.pc.arrive.hit,.capt.knock{animation:none}.burst{display:none}}
+/* empates */
+.half{position:absolute;left:3%;top:3%;width:36%;height:36%;z-index:6;pointer-events:none}
+.half.up{left:auto;top:auto;right:3%;bottom:3%;transform:rotate(180deg)}
+.half i{font-style:normal;width:100%;height:100%;border-radius:50%;background:#fbfaf6;color:#2a2018;border:max(1.5px,.35cqw) solid var(--gold);
+  display:flex;align-items:center;justify-content:center;font:700 3.4cqw/1 Figtree,system-ui,sans-serif;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.half i.pop{animation:halfpop .6s cubic-bezier(.3,1.6,.5,1) .45s both}
+@keyframes halfpop{from{transform:scale(0) rotate(-90deg)}to{transform:none}}
+.pc.bow{animation:bow 1.7s ease-in-out .3s both}
+@keyframes bow{0%,100%{transform:var(--base) translate(0,35%) rotate(0deg) translate(0,-35%)}
+  30%,62%{transform:var(--base) translate(0,35%) rotate(calc(17deg * var(--bowdir))) translate(0,-35%)}}
+.pc.shake{animation:shake 1s ease-in-out .35s both}
+@keyframes shake{0%,100%{transform:var(--base) translateX(0)}12%{transform:var(--base) translateX(-8%)}26%{transform:var(--base) translateX(8%)}
+  40%{transform:var(--base) translateX(-7%)}54%{transform:var(--base) translateX(6%)}68%{transform:var(--base) translateX(-3%)}82%{transform:var(--base) translateX(2%)}}
+.nox{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 6.5cqw/1 Figtree,system-ui,sans-serif;
+  color:rgb(var(--check));opacity:0;z-index:4;pointer-events:none;animation:nox 1.6s ease-out both;animation-delay:calc(.45s + var(--i) * .07s)}
+@keyframes nox{0%{opacity:0;transform:scale(.3)}22%{opacity:.85;transform:scale(1)}70%{opacity:.85;transform:scale(1)}100%{opacity:0;transform:scale(1.15)}}
+.echo{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:4;pointer-events:none;opacity:0;
+  animation:echo 1.2s ease-out both;animation-delay:calc(.35s + var(--i) * .4s)}
+.echo .pc{filter:drop-shadow(0 0 4px var(--gold))}
+@keyframes echo{0%{opacity:.75;transform:scale(1)}100%{opacity:0;transform:scale(1.8)}}
+.hglass{position:absolute;left:30%;top:-14%;width:40%;height:52%;z-index:7;pointer-events:none;opacity:0;animation:hgl 2s ease-in-out .3s both}
+.hglass svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+.hglass .hgf{stroke:#2a2018;stroke-width:2.5;stroke-linecap:round}
+.hglass .hgb{fill:rgba(255,255,255,.85);stroke:#2a2018;stroke-width:1.6;stroke-linejoin:round}
+.hglass .hgs{fill:var(--gold)}
+@keyframes hgl{0%{opacity:0;transform:translateY(25%)}15%{opacity:1;transform:none}45%{opacity:1;transform:rotate(0deg)}70%{opacity:1;transform:rotate(180deg)}100%{opacity:0;transform:rotate(180deg)}}
+#board{transition:filter 1.6s ease}
+#board.dk-fifty{filter:saturate(.25) sepia(.3)}
+@media (prefers-reduced-motion:reduce){.half i.pop,.pc.bow,.pc.shake{animation:none}.nox,.echo,.hglass{display:none}#board{transition:none}}
 /* fim de partida: rei tombado no mate e bandeira branca na resignação */
 .pc.mated{transform:var(--base) translate(24%,-12%) translate(0,35%) rotate(-78deg) scale(.86) translate(0,-35%)}
 .pc.mated.topple{animation:topple 1.1s cubic-bezier(.45,.05,.35,1) .3s both}
@@ -381,7 +410,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
     </div>
     <div id="sndInfo" class="sndinfo"></div>
     <div id="sndErr" class="snderr"></div>
-    <div class="ver">Versão 7.1</div>
+    <div class="ver">Versão 7.2</div>
   </div>
 
   <div class="panel">
@@ -836,25 +865,25 @@ function newGame(baseMin=0,incSec=0,bot=null){
   selected=-1;targets=[];view=null;legalNow=lg;save();render();setTimeout(maybeBot,300);
 }
 function stopClock(){const c=G.clock;if(c.base&&c.running){const t=cur().turn;c[t]=Math.max(0,c[t]-(Date.now()-c.last));c.running=false;}}
-function end(w,text,snd='end'){cancelBot();stopClock();G.result={winner:w,text,kind:snd,t0:Date.now()};registrarPlacar(w);if(G.moves.length&&!endQuiet)setTimeout(()=>sfx(snd),180);}
+function end(w,text,snd='end',dk=''){cancelBot();stopClock();G.result={winner:w,text,kind:snd,dk,t0:Date.now()};registrarPlacar(w);if(G.moves.length&&!endQuiet)setTimeout(()=>sfx(snd),180);}
 let endQuiet=false;
 
 function evaluate(){
   const s=cur();refresh();const key=posKey(s,legalNow);G.keys.push(key);
   if(!legalNow.length){
     if(inCheck(s,s.turn))end(other(s.turn),`Xeque-mate. ${NAME[other(s.turn)]} vencem`,'mate');
-    else end(null,'Empate por afogamento');return;
+    else end(null,'Empate por afogamento','end','stale');return;
   }
-  if(insufficient(s.b))return end(null,'Empate: material insuficiente para dar mate');
-  if(countKey(key)>=5)return end(null,'Empate: mesma posição repetida 5 vezes');
-  if(s.half>=150)return end(null,'Empate: 75 lances sem captura nem movimento de peão');
+  if(insufficient(s.b))return end(null,'Empate: material insuficiente para dar mate','end','insuf');
+  if(countKey(key)>=5)return end(null,'Empate: mesma posição repetida 5 vezes','end','rep');
+  if(s.half>=150)return end(null,'Empate: 75 lances sem captura nem movimento de peão','end','fifty');
 }
 // Reivindicação de empate (3 repetições / 50 lances): o app não avisa, só confere quando o jogador reivindica
 function resolveClaim(by,kind,withMove){
   const n=kind==='rep'?countKey(G.keys[G.keys.length-1]):cur().half;
   const ok=kind==='rep'?n>=3:n>=100;
   const motivo=kind==='rep'?'posição repetida 3 vezes':'50 lances sem captura nem movimento de peão';
-  if(ok){end(null,`Empate reivindicado pelas ${NAME[by]}: ${motivo}`);save();render();return;}
+  if(ok){end(null,`Empate reivindicado pelas ${NAME[by]}: ${motivo}`,'end',kind==='rep'?'rep':'fifty');save();render();return;}
   const det=kind==='rep'
     ?`A posição ${withMove?'depois do lance':'atual'} apareceu ${n} ${n===1?'vez':'vezes'} na partida. São necessárias 3.`
     :`Desde a última captura ou movimento de peão foram ${Math.floor(n/2)} lances de cada lado (${n} meios-lances). São necessários 50.`;
@@ -1419,6 +1448,14 @@ function render(){
   const fimTipo=G.result&&G.result.winner&&P===G.states.length-1?(G.result.kind||(/^Xeque-mate/.test(G.result.text)?'mate':/resignaram/.test(G.result.text)?'resign':'')):'';
   const fimAnim=fimTipo&&G.result.t0&&Date.now()-G.result.t0<1800;
   const fimRei=fimTipo?kingSq(s.b,other(G.result.winner)):-1;
+  // empates: ½ nos dois reis e uma animação diferente para cada tipo
+  const fimEmp=!!(G.result&&!G.result.winner&&P===G.states.length-1);
+  const dk=fimEmp?(G.result.dk||(/acordo/.test(G.result.text)?'agree':/repetida/.test(G.result.text)?'rep':/lances sem/.test(G.result.text)?'fifty':/afogamento/.test(G.result.text)?'stale':'insuf')):'';
+  const empAnim=fimEmp&&G.result.t0&&Date.now()-G.result.t0<2600;
+  const kW=fimEmp?kingSq(s.b,'w'):-1,kB=fimEmp?kingSq(s.b,'b'):-1;
+  const staleK=dk==='stale'?kingSq(s.b,s.turn):-1,staleN=new Map();
+  if(staleK>=0&&empAnim){let i=0;const[r0,f0]=rc(staleK);for(const[dr,df]of K_OFF){const rr=r0+dr,ff=f0+df;if(inB(rr,ff))staleN.set(idx(rr,ff),i++);}}
+  board.classList.toggle('dk-fifty',dk==='fifty');
   // selo no tabuleiro: o seu último lance (até a posição na tela), fica até você jogar de novo
   let myK=0;if(REV)myK=P;else if(clsOn())for(let k=P;k>=1;k--)if(G.moves[k-1].by!==G.bot.color){myK=k;break;}
   const myCls=myK?finalCls(myK):null,mySq=myK?G.moves[myK-1].to:-1;
@@ -1438,7 +1475,16 @@ function render(){
       const from=sq===anim.to?anim.from:anim.rook[0],[fc,fr]=dpos(from),[tc,tr]=dpos(sq);
       extra=sq===anim.to&&anim.cap?' arrive hit':' arrive';style=`--dx:${fc-tc};--dy:${fr-tr}`;}
     if(p&&sq===fimRei&&fimTipo==='mate')extra+=fimAnim?' mated topple':' mated';
+    if(p&&empAnim&&(sq===kW||sq===kB)){
+      if(dk==='agree'){ // reverência: cada rei se inclina na direção do outro
+        const o=sq===kW?kB:kW,[c1]=dpos(sq),[c2]=dpos(o);extra+=' bow';style=(style?style+';':'')+`--bowdir:${c2>=c1?1:-1}`;}
+      if(dk==='stale'&&sq===staleK)extra+=' shake'; // "não tenho para onde ir"
+    }
     let h=p?glyph(p,upOf(p),extra,style):'';
+    if(fimEmp&&p&&(sq===kW||sq===kB))h+=`<span class="half${upOf(p)?' up':''}"><i class="${empAnim?'pop':''}">½</i></span>`;
+    if(dk==='fifty'&&empAnim&&p&&(sq===kW||sq===kB))h+=`<span class="hglass"><svg viewBox="0 0 24 32"><path class="hgf" d="M3,2 H21 M3,30 H21"/><path class="hgb" d="M5,2 C5,10 11,13 12,16 C11,19 5,22 5,30 H19 C19,22 13,19 12,16 C13,13 19,10 19,2 Z"/><path class="hgs" d="M8,27 H16 L12,21 Z M9,7 H15 L12,11 Z"/></svg></span>`;
+    if(dk==='rep'&&empAnim&&p&&last&&sq===last.to)for(let i=0;i<3;i++)h+=`<span class="echo" style="--i:${i}">${glyph(p,upOf(p))}</span>`; // déjà-vu: a posição se repetiu
+    if(staleN.has(sq))h+=`<span class="nox" style="--i:${staleN.get(sq)}">✕</span>`;
     if(sq===fimRei&&fimTipo==='resign')h+=`<span class="flag${upOf(p)?' up':''}"><svg viewBox="0 0 40 40" class="${fimAnim?'raise':''}"><line x1="9" y1="38" x2="9" y2="3" class="pole"/><path class="cloth" d="M9,4 C15,1.5 21,7 32,4.5 L32,19 C21,21.5 15,16 9,18.5 Z"/></svg></span>`;
     if(sq===capSq){ // peça capturada pequena e tombada no canto, até o próximo lance
       // canto inferior esquerdo, do ponto de vista de quem está em pé na casa (peças invertidas usam o canto oposto)
@@ -1538,7 +1584,7 @@ function tick(){
       const w=other(t),b=cur().b;
       const wp=b.filter(p=>p&&col(p)===w&&typ(p)!=='k'),lp=b.filter(p=>p&&col(p)===t&&typ(p)!=='k');
       const draw=!wp.length||(wp.length===1&&'bn'.includes(typ(wp[0]))&&!lp.length);
-      sfx('end');G.result={kind:'time',t0:Date.now(),winner:draw?null:w,text:draw?`Empate: tempo das ${NAME[t]} acabou, mas as ${NAME[w]} não têm material para dar mate`:`${NAME[w]} vencem no tempo`};registrarPlacar(G.result.winner);
+      sfx('end');G.result={kind:'time',dk:draw?'time':'',t0:Date.now(),winner:draw?null:w,text:draw?`Empate: tempo das ${NAME[t]} acabou, mas as ${NAME[w]} não têm material para dar mate`:`${NAME[w]} vencem no tempo`};registrarPlacar(G.result.winner);
       selected=-1;targets=[];save();render();return;
     }
   }
@@ -1587,7 +1633,7 @@ $('bDraw').onclick=()=>{
 function offerDraw(t){
   if(G.bot){modal('Proposta de empate','<p>O bot recusou. Ele joga até o fim.</p>',[{label:'OK',primary:true}]);return;}
   modal('Proposta de empate',`<p>As ${NAME[t]} propõem empate. As ${NAME[other(t)]} aceitam?</p>`,
-    [{label:'Recusar'},{label:'Aceitar empate',primary:true,fn:()=>{end(null,'Empate por acordo');save();render();}}],other(t));
+    [{label:'Recusar'},{label:'Aceitar empate',primary:true,fn:()=>{end(null,'Empate por acordo','end','agree');save();render();}}],other(t));
 }
 $('bResign').onclick=()=>{
   const t=G.bot?other(G.bot.color):cur().turn;
