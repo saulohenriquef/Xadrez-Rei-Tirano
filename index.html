@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez do Rei Tirano · versão 7.3 -->
+<!-- index.html · Xadrez do Rei Tirano · versão 7.4 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -25,7 +25,7 @@
   --light:#d8dfe7; --dark:#62778f; --coord-l:#62778f; --coord-d:#d8dfe7;
   --gold:#c3921f; --gold-soft:rgba(195,146,31,.22); --conv:#8a55d4; --conv-soft:rgba(138,85,212,.2);
   --sel:rgba(214,170,60,.55); --last:rgba(214,190,90,.36); --dot:rgba(20,30,45,.30);
-  --check:210,55,40; --btn:#e9eef3; --btn-ink:#18212c; --primary:#18212c; --primary-ink:#f6f8fa;
+  --check:210,55,40; --matec:128,70,210; --btn:#e9eef3; --btn-ink:#18212c; --primary:#18212c; --primary-ink:#f6f8fa;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -74,6 +74,7 @@ h1 .crown{color:var(--gold)}
 .sq.dk{background-color:var(--dark)}
 .sq.last{background-image:linear-gradient(var(--last),var(--last))}
 .sq.sel{background-image:linear-gradient(var(--sel),var(--sel))}
+.sq.check.mate{background-image:radial-gradient(circle,rgba(var(--matec),.95) 0%,rgba(var(--matec),.55) 38%,rgba(var(--matec),0) 72%)}
 .sq.check{background-image:radial-gradient(circle,rgba(var(--check),.95) 0%,rgba(var(--check),.55) 38%,rgba(var(--check),0) 72%)}
 .sq.dot::after{content:"";position:absolute;width:28%;height:28%;border-radius:50%;background:var(--dot);pointer-events:none}
 .sq.cap::after{content:"";position:absolute;inset:3%;border-radius:50%;border:max(3px,.85cqw) solid var(--dot);pointer-events:none}
@@ -429,16 +430,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <option value="face">Frente a frente: peças de cima invertidas</option>
       <option value="pass">Passar para o amigo: só as peças giram</option>
     </select></div>
-    <span class="optlbl" style="margin-top:12px">Testar sons</span>
-    <div class="sndtest" id="sndTest">
-      <button class="btn" data-snd="move">Lance</button><button class="btn" data-snd="capture">Captura</button>
-      <button class="btn" data-snd="castle">Roque</button><button class="btn" data-snd="promote">Promoção</button>
-      <button class="btn" data-snd="check">Xeque</button><button class="btn" data-snd="mate">Mate</button>
-      <button class="btn" data-snd="resign">Resignar</button><button class="btn" data-snd="end">Empate</button><button class="btn" data-snd="convert">Conversão</button><button class="btn" data-snd="martyr">Papa morre</button>
-    </div>
-    <div id="sndInfo" class="sndinfo"></div>
-    <div id="sndErr" class="snderr"></div>
-    <div class="ver">Versão 7.3</div>
+    <div class="ver">Versão 7.4</div>
   </div>
 
   <div class="panel">
@@ -1510,7 +1502,7 @@ function render(){
     let cls='sq '+(((r+f)&1)?'dk':'lt');
     if(last&&(sq===last.from||sq===last.to))cls+=' last';
     if(sq===selected)cls+=' sel';
-    if(sq===chk)cls+=' check';
+    if(sq===chk)cls+=fimTipo==='mate'?' check mate':' check';
     const t=tset.get(sq);if(t)cls+=t.self?' self':t.conv?' convt':(s.b[sq]?' cap':' dot');
     if(s.link&&(sq===s.link.to||sq===s.link.papa))cls+=' linked'; // vínculo ativo: se a convertida for capturada agora, o Papa morre junto
     el.className=cls;el.dataset.sq=sq;
@@ -1649,9 +1641,6 @@ document.addEventListener('keydown',e=>{if(modalOpen||e.target.closest('input,se
   const k={ArrowLeft:()=>goTo(ply()-1),ArrowRight:()=>goTo(ply()+1),Home:()=>goTo(0),End:()=>goTo(G.states.length-1)}[e.key];
   if(k){e.preventDefault();k();}});
 $('bSound').onclick=()=>{muted=!muted;try{localStorage.setItem(STORE+'-mute',muted?'1':'0');}catch(e){}if(!muted)sfx('move');render();};
-$('sndTest').addEventListener('click',e=>{const b=e.target.closest('[data-snd]');if(!b)return;
-  if(muted){$('sndErr').textContent='O som está desligado no botão 🔇.';return;}
-  $('sndErr').textContent='';sfx(b.dataset.snd);});
 $('evOpt').onchange=e=>{if(!G.bot)return;G.bot.evalBar=e.target.checked;save();render();};
 $('clsOpt').onchange=e=>{if(!G.bot)return;G.bot.classify=e.target.checked;save();render();};
 $('bZerar').onclick=()=>modal('Zerar placar','<p>Apagar vitórias, empates e derrotas de todos os bots?</p>',
