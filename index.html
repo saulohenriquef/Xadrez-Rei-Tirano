@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez do Rei Tirano · versão 7.2 -->
+<!-- index.html · Xadrez do Rei Tirano · versão 7.3 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -272,6 +272,34 @@ details ul{padding-left:1.1em;margin:6px 0}
 .hglass .hgb{fill:rgba(255,255,255,.85);stroke:#2a2018;stroke-width:1.6;stroke-linejoin:round}
 .hglass .hgs{fill:var(--gold)}
 @keyframes hgl{0%{opacity:0;transform:translateY(25%)}15%{opacity:1;transform:none}45%{opacity:1;transform:rotate(0deg)}70%{opacity:1;transform:rotate(180deg)}100%{opacity:0;transform:rotate(180deg)}}
+#fx{position:absolute;inset:0;pointer-events:none;z-index:9}
+.fxc{position:absolute;left:30%;top:30%;width:40%;height:40%;animation:fxin 3s ease both .35s;opacity:0}
+.fxc svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 3px 8px rgba(0,0,0,.45))}
+@keyframes fxin{0%{opacity:0;transform:scale(.5)}12%{opacity:1;transform:scale(1.05)}18%{transform:scale(1)}82%{opacity:1}100%{opacity:0;transform:scale(.95)}}
+.fxc .disc{fill:rgba(251,250,246,.93);stroke:var(--gold);stroke-width:2}
+.fxc .disc.dark{stroke:#2a2018;stroke-width:3}
+.fxc .ln{fill:none;stroke:#2a2018;stroke-width:2.6;stroke-linecap:round}
+.fxc .ln.thick{stroke-width:3}
+.fxc .pan,.fxc .pin{fill:var(--gold);stroke:#2a2018;stroke-width:2}
+.fxc .hub{fill:#2a2018}
+.bal .beam{transform-box:view-box;transform-origin:50px 30px;animation:beam 2.3s ease-in-out .6s both}
+@keyframes beam{0%{transform:rotate(-15deg)}28%{transform:rotate(12deg)}50%{transform:rotate(-7deg)}70%{transform:rotate(4deg)}86%{transform:rotate(-1.5deg)}100%{transform:rotate(0deg)}}
+.crono .hand line{stroke:#d2382a;stroke-width:3.2;stroke-linecap:round}
+.crono .hand{transform-box:view-box;transform-origin:50px 56px;animation:handspin 2.1s cubic-bezier(.15,.6,.25,1) .5s both}
+@keyframes handspin{from{transform:rotate(0deg)}to{transform:rotate(1080deg)}}
+.loop5 .arc{fill:none;stroke:#2a2018;stroke-width:5;stroke-linecap:round}
+.loop5 .head{fill:#2a2018}
+.loop5 .five{font:800 26px Figtree,system-ui,sans-serif;fill:#2a2018}
+.loop5 .spin{transform-box:view-box;transform-origin:50px 50px;animation:loopspin 2.2s ease-in-out .5s both}
+@keyframes loopspin{from{transform:rotate(0deg)}to{transform:rotate(-720deg)}}
+.web{position:absolute;width:34%;height:34%}
+.web.tl{left:0;top:0}.web.tr{right:0;top:0;transform:scaleX(-1)}.web.bl{left:0;bottom:0;transform:scaleY(-1)}.web.br{right:0;bottom:0;transform:scale(-1,-1)}
+.web svg{width:100%;height:100%;display:block;filter:drop-shadow(0 0 1.5px rgba(0,0,0,.6))}
+.web path{fill:none;stroke:rgba(255,255,255,.85);stroke-width:1.2;vector-effect:non-scaling-stroke}
+.web.grow svg{transform-origin:0 0;animation:webin 2s ease-out .5s both}
+@keyframes webin{from{opacity:0;transform:scale(.15)}to{opacity:1;transform:none}}
+#board.dk-75{filter:grayscale(.9) sepia(.15)}
+@media (prefers-reduced-motion:reduce){.fxc{display:none}.web.grow svg{animation:none}}
 #board{transition:filter 1.6s ease}
 #board.dk-fifty{filter:saturate(.25) sepia(.3)}
 @media (prefers-reduced-motion:reduce){.half i.pop,.pc.bow,.pc.shake{animation:none}.nox,.echo,.hglass{display:none}#board{transition:none}}
@@ -410,7 +438,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
     </div>
     <div id="sndInfo" class="sndinfo"></div>
     <div id="sndErr" class="snderr"></div>
-    <div class="ver">Versão 7.2</div>
+    <div class="ver">Versão 7.3</div>
   </div>
 
   <div class="panel">
@@ -875,8 +903,8 @@ function evaluate(){
     else end(null,'Empate por afogamento','end','stale');return;
   }
   if(insufficient(s.b))return end(null,'Empate: material insuficiente para dar mate','end','insuf');
-  if(countKey(key)>=5)return end(null,'Empate: mesma posição repetida 5 vezes','end','rep');
-  if(s.half>=150)return end(null,'Empate: 75 lances sem captura nem movimento de peão','end','fifty');
+  if(countKey(key)>=5)return end(null,'Empate: mesma posição repetida 5 vezes','end','rep5');
+  if(s.half>=150)return end(null,'Empate: 75 lances sem captura nem movimento de peão','end','fifty75');
 }
 // Reivindicação de empate (3 repetições / 50 lances): o app não avisa, só confere quando o jogador reivindica
 function resolveClaim(by,kind,withMove){
@@ -1430,10 +1458,26 @@ function closeModal(){$('modal').hidden=true;modalOpen=false;}
 $('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modalOpen)closeModal();});
 
+
+// efeitos de empate que ocupam o tabuleiro inteiro
+const FX_BAL=`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="47" class="disc"/><g class="beam"><g class="ln"><line x1="16" y1="30" x2="84" y2="30"/><path d="M16,30 L9,56 M16,30 L23,56 M84,30 L77,56 M84,30 L91,56"/></g><path class="pan" d="M6,56 Q16,67 26,56 Z M74,56 Q84,67 94,56 Z"/></g><g class="ln thick"><line x1="50" y1="26" x2="50" y2="80"/><path d="M36,82 H64"/></g><circle cx="50" cy="26" r="4" class="pin"/></svg>`;
+const FX_CRONO=`<svg viewBox="0 0 100 100"><circle cx="50" cy="56" r="37" class="disc dark"/><rect x="43" y="7" width="14" height="10" rx="2.5" class="pin"/><line x1="50" y1="17" x2="50" y2="20" class="ln thick"/><g class="ln">${[...Array(12)].map((_,i)=>`<line x1="50" y1="23" x2="50" y2="28" transform="rotate(${i*30} 50 56)"/>`).join('')}</g><g class="hand"><line x1="50" y1="56" x2="50" y2="29"/></g><circle cx="50" cy="56" r="4" class="hub"/></svg>`;
+const FX_LOOP=`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="47" class="disc"/><g class="spin"><path d="M50,16 A34,34 0 1,1 21,32" class="arc"/><path d="M12,30 L24,22 L27,37 Z" class="head"/></g><text x="50" y="60" text-anchor="middle" class="five">5×</text></svg>`;
+const FX_WEB=`<svg viewBox="0 0 100 100"><path d="M0,0 L100.0,0.0 M0,0 L94.9,31.6 M0,0 L70.7,70.7 M0,0 L31.6,94.9 M0,0 L0.0,100.0 M22.0,0.0 Q18.4,3.0 20.9,6.9 Q15.7,9.7 15.6,15.6 Q9.7,15.7 6.9,20.9 Q3.0,18.4 0.0,22.0 M42.0,0.0 Q35.2,5.7 39.9,13.3 Q29.9,18.5 29.7,29.7 Q18.5,29.9 13.3,39.9 Q5.7,35.2 0.0,42.0 M62.0,0.0 Q52.0,8.4 58.8,19.6 Q44.1,27.3 43.8,43.8 Q27.3,44.1 19.6,58.8 Q8.4,52.0 0.0,62.0 M82.0,0.0 Q68.7,11.1 77.8,25.9 Q58.4,36.1 58.0,58.0 Q36.1,58.4 25.9,77.8 Q11.1,68.7 0.0,82.0"/></svg>`;
+function renderFx(dk,anim,fimEmp){
+  let fx='';
+  if(fimEmp){
+    if(anim&&dk==='insuf')fx+=`<div class="fxc bal">${FX_BAL}</div>`;   // balança: ninguém tem força para dar mate
+    if(anim&&dk==='time')fx+=`<div class="fxc crono">${FX_CRONO}</div>`; // o relógio parou, mas não há como dar mate
+    if(anim&&dk==='rep5')fx+=`<div class="fxc loop5">${FX_LOOP}</div>`;  // a mesma posição 5 vezes: o árbitro encerra
+    if(dk==='fifty75')fx+=['tl','tr','bl','br'].map(c=>`<div class="web ${c}${anim?' grow':''}">${FX_WEB}</div>`).join(''); // 75 lances: criou teia
+  }
+  const el=$('fx');if(el&&el._h!==fx){el.innerHTML=fx;el._h=fx;}
+}
 // ---------- Render ----------
 const board=$('board'),cells=[];
 for(let d=0;d<64;d++){const el=document.createElement('div');el.className='sq';board.appendChild(el);cells.push(el);}
-board.insertAdjacentHTML('beforeend','<svg id="arrows" viewBox="0 0 800 800" aria-hidden="true"></svg>');
+board.insertAdjacentHTML('beforeend','<svg id="arrows" viewBox="0 0 800 800" aria-hidden="true"></svg><div id="fx" aria-hidden="true"></div>');
 board.addEventListener('click',e=>{const el=e.target.closest('.sq');if(el)onSquare(+el.dataset.sq);});
 
 function render(){
@@ -1450,12 +1494,14 @@ function render(){
   const fimRei=fimTipo?kingSq(s.b,other(G.result.winner)):-1;
   // empates: ½ nos dois reis e uma animação diferente para cada tipo
   const fimEmp=!!(G.result&&!G.result.winner&&P===G.states.length-1);
-  const dk=fimEmp?(G.result.dk||(/acordo/.test(G.result.text)?'agree':/repetida/.test(G.result.text)?'rep':/lances sem/.test(G.result.text)?'fifty':/afogamento/.test(G.result.text)?'stale':'insuf')):'';
+  const tx=fimEmp?G.result.text:'';
+  const dk=fimEmp?(G.result.dk||(/acordo/.test(tx)?'agree':/5 vezes/.test(tx)?'rep5':/repetida/.test(tx)?'rep':/75 lances/.test(tx)?'fifty75':/lances sem/.test(tx)?'fifty':/afogamento/.test(tx)?'stale':/tempo/.test(tx)?'time':'insuf')):'';
   const empAnim=fimEmp&&G.result.t0&&Date.now()-G.result.t0<2600;
   const kW=fimEmp?kingSq(s.b,'w'):-1,kB=fimEmp?kingSq(s.b,'b'):-1;
   const staleK=dk==='stale'?kingSq(s.b,s.turn):-1,staleN=new Map();
   if(staleK>=0&&empAnim){let i=0;const[r0,f0]=rc(staleK);for(const[dr,df]of K_OFF){const rr=r0+dr,ff=f0+df;if(inB(rr,ff))staleN.set(idx(rr,ff),i++);}}
-  board.classList.toggle('dk-fifty',dk==='fifty');
+  board.classList.toggle('dk-fifty',dk==='fifty'||dk==='fifty75');board.classList.toggle('dk-75',dk==='fifty75');
+  renderFx(dk,empAnim,fimEmp);
   // selo no tabuleiro: o seu último lance (até a posição na tela), fica até você jogar de novo
   let myK=0;if(REV)myK=P;else if(clsOn())for(let k=P;k>=1;k--)if(G.moves[k-1].by!==G.bot.color){myK=k;break;}
   const myCls=myK?finalCls(myK):null,mySq=myK?G.moves[myK-1].to:-1;
@@ -1483,7 +1529,7 @@ function render(){
     let h=p?glyph(p,upOf(p),extra,style):'';
     if(fimEmp&&p&&(sq===kW||sq===kB))h+=`<span class="half${upOf(p)?' up':''}"><i class="${empAnim?'pop':''}">½</i></span>`;
     if(dk==='fifty'&&empAnim&&p&&(sq===kW||sq===kB))h+=`<span class="hglass"><svg viewBox="0 0 24 32"><path class="hgf" d="M3,2 H21 M3,30 H21"/><path class="hgb" d="M5,2 C5,10 11,13 12,16 C11,19 5,22 5,30 H19 C19,22 13,19 12,16 C13,13 19,10 19,2 Z"/><path class="hgs" d="M8,27 H16 L12,21 Z M9,7 H15 L12,11 Z"/></svg></span>`;
-    if(dk==='rep'&&empAnim&&p&&last&&sq===last.to)for(let i=0;i<3;i++)h+=`<span class="echo" style="--i:${i}">${glyph(p,upOf(p))}</span>`; // déjà-vu: a posição se repetiu
+    if((dk==='rep'||dk==='rep5')&&empAnim&&p&&last&&sq===last.to)for(let i=0;i<(dk==='rep5'?5:3);i++)h+=`<span class="echo" style="--i:${i}">${glyph(p,upOf(p))}</span>`; // déjà-vu: a posição se repetiu
     if(staleN.has(sq))h+=`<span class="nox" style="--i:${staleN.get(sq)}">✕</span>`;
     if(sq===fimRei&&fimTipo==='resign')h+=`<span class="flag${upOf(p)?' up':''}"><svg viewBox="0 0 40 40" class="${fimAnim?'raise':''}"><line x1="9" y1="38" x2="9" y2="3" class="pole"/><path class="cloth" d="M9,4 C15,1.5 21,7 32,4.5 L32,19 C21,21.5 15,16 9,18.5 Z"/></svg></span>`;
     if(sq===capSq){ // peça capturada pequena e tombada no canto, até o próximo lance
