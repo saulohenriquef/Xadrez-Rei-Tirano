@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez do Rei Tirano · versão 8.2 -->
+<!-- index.html · Xadrez do Rei Tirano · versão 8.3 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -178,7 +178,14 @@ h1 .crown{color:var(--gold)}
 .placar td.pct{color:var(--muted);font-size:.82rem}
 .panel h2{font-family:Spectral,Georgia,serif;font-size:1.05rem;margin:0 0 6px}
 #moves{list-style:none;margin:0;padding:0;max-height:180px;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:2px 12px;font-variant-numeric:tabular-nums}
-#moves li{display:grid;grid-template-columns:2.2em 1fr 1fr;gap:4px}
+#moves li{display:grid;grid-template-columns:2.2em 1fr 1fr auto;gap:4px;align-items:center}
+.loopi{width:1.05em;height:1.05em;margin-left:4px;vertical-align:-2px;fill:none;stroke:var(--gold);stroke-width:2.6;stroke-linecap:round}
+.loopi .hd{fill:var(--gold);stroke:none}
+.cnt{font-size:.72rem;font-weight:700;color:var(--muted);background:var(--btn);border-radius:6px;padding:1px 5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cnt.full{background:var(--gold);color:#1a1307}
+.mvnote{margin-top:8px;font-size:.84rem;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.mvnote[hidden]{display:none}
+.mvnote .loopi{margin-left:0}
 #moves .n{color:var(--muted)}
 #moves .sf{color:var(--gold);font-weight:700}
 #moves .cv{color:var(--conv);font-weight:700}
@@ -421,6 +428,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
   <div class="panel">
     <h2>Lances</h2>
     <ol id="moves"></ol>
+    <div id="mvNote" class="mvnote" hidden></div>
     <div id="clsum" class="clsum" hidden></div>
   </div>
 
@@ -445,7 +453,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <option value="face">Frente a frente: peças de cima invertidas</option>
       <option value="pass">Passar para o amigo: só as peças giram</option>
     </select></div>
-    <div class="ver">Versão 8.2</div>
+    <div class="ver">Versão 8.3</div>
   </div>
 
   <div class="panel">
@@ -1557,8 +1565,7 @@ function render(){
   const fimRei=fimTipo?kingSq(s.b,other(G.result.winner)):-1;
   // empates: ½ nos dois reis e uma animação diferente para cada tipo
   const fimEmp=!!(G.result&&!G.result.winner&&P===G.states.length-1);
-  const tx=fimEmp?G.result.text:'';
-  const dk=fimEmp?(G.result.dk||(/acordo/.test(tx)?'agree':/5 vezes/.test(tx)?'rep5':/repetida/.test(tx)?'rep':/75 lances/.test(tx)?'fifty75':/lances sem/.test(tx)?'fifty':/afogamento/.test(tx)?'stale':/tempo/.test(tx)?'time':'insuf')):'';
+  const dk=fimEmp?resultDk():'';
   const empAnim=fimEmp&&G.result.t0&&Date.now()-G.result.t0<2600;
   const kW=fimEmp?kingSq(s.b,'w'):-1,kB=fimEmp?kingSq(s.b,'b'):-1;
   const staleK=dk==='stale'?kingSq(s.b,s.turn):-1,staleN=new Map();
@@ -1673,14 +1680,31 @@ function renderClocks(){
     el.textContent=fmt(v);
     el.className='clock'+(!G.result&&cur().turn===c&&G.clock.running?' on':'')+(v<20000?' low':'');}
 }
+function resultDk(){ // tipo do empate (também deduz pelo texto em partidas salvas antes de existir o campo)
+  if(!G.result||G.result.winner)return '';if(G.result.dk)return G.result.dk;const tx=G.result.text;
+  return /acordo/.test(tx)?'agree':/5 vezes/.test(tx)?'rep5':/repetida/.test(tx)?'rep':/75 lances/.test(tx)?'fifty75':/lances sem/.test(tx)?'fifty':/afogamento/.test(tx)?'stale':/tempo/.test(tx)?'time':'insuf';
+}
+const LOOPI='<svg class="loopi" viewBox="0 0 24 24" aria-label="posição repetida"><path d="M12,4 A8,8 0 1,1 5.2,8.2"/><path d="M2.2,7.6 L6.6,4.6 L7.6,9.8 Z" class="hd"/></svg>';
 function renderMoves(){
+  // depois do empate: posições repetidas marcadas com o laço, e a contagem dos 50/75 lances
+  const dkM=resultDk(),N=G.states.length-1;let repSet=null,run=null,note='';
+  if(dkM==='rep'||dkM==='rep5'){const fk=G.keys[N];repSet=new Set();G.keys.forEach((k,i)=>{if(i>0&&k===fk)repSet.add(i);});
+    const vezes=G.keys.filter(k=>k===fk).length;
+    note=`${LOOPI} Lances que levaram à posição repetida (${vezes} vezes${G.keys[0]===fk?', contando a posição inicial':''}).`;}
+  if(dkM==='fifty'||dkM==='fifty75'){const H=G.states[N].half,lim=dkM==='fifty'?50:75;run={from:N-H+1,lim};
+    note=`<span class="cnt">1–${lim}</span> Contagem dos ${lim} lances de cada lado sem captura nem movimento de peão.`;}
   const ol=$('moves');let h='';
   for(let i=0;i<G.moves.length;i+=2){const a=G.moves[i],b=G.moves[i+1];
     const P=ply(),cl=showCls(),c=(k,m)=>{const id=cl?finalCls(k):null;
-      return `<span class="mv${m.self?' sf':''}${m.conv?' cv':''}${P===k?' cur':''}" data-ply="${k}">${m.san}${id?clsBadge(id,'clb-s'):''}</span>`;};
-    h+=`<li><span class="n">${i/2+1}.</span>${c(i+1,a)}${b?c(i+2,b):'<span></span>'}</li>`;}
+      return `<span class="mv${m.self?' sf':''}${m.conv?' cv':''}${P===k?' cur':''}" data-ply="${k}">${m.san}${id?clsBadge(id,'clb-s'):''}${repSet&&repSet.has(k)?LOOPI:''}</span>`;};
+    let cnt='';
+    if(run){const ks=[i+1,i+2].filter(k=>k<=N&&k>=run.from);
+      if(ks.length){const v=Math.floor(G.states[Math.max(...ks)].half/2); // lances completos de cada lado até aqui
+        if(v>0)cnt=`<span class="cnt${v>=run.lim?' full':''}">${v}/${run.lim}</span>`;}}
+    h+=`<li><span class="n">${i/2+1}.</span>${c(i+1,a)}${b?c(i+2,b):'<span></span>'}${cnt}</li>`;}
   if(G.result)h+=`<li class="res">${G.result.winner==='w'?'1–0':G.result.winner==='b'?'0–1':'½–½'}</li>`;
   ol.innerHTML=h||'<li class="empty">Brancas começam. Toque numa peça para ver os lances.</li>';
+  const mn=$('mvNote');if(mn){mn.innerHTML=note;mn.hidden=!note;}
   const curEl=ol.querySelector('.cur');
   // rola só a lista de lances (nunca a página) para manter o lance atual visível
   if(view===null)ol.scrollTop=ol.scrollHeight;
