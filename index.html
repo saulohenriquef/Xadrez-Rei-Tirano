@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez do Rei Tirano · versão 9.6 -->
+<!-- index.html · Xadrez do Rei Tirano · versão 10.1 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -144,6 +144,33 @@ h1 .crown{color:var(--gold)}
 #revKeys li{display:flex;gap:8px;align-items:flex-start;padding:7px 9px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:.9rem}
 #revKeys li.cur{border-color:var(--gold);background:var(--gold-soft)}
 #revKeys li .clb-s{margin:2px 0 0;flex:none}
+.nomes{display:grid;grid-template-columns:auto 1fr;gap:6px 8px;align-items:center}
+.nomes #nSwap{grid-column:1/-1;justify-self:start;margin-left:26px;padding:3px 10px}
+.card input:not([type]),.card input.nome1{font:inherit;width:100%;padding:9px 10px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.arq{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:340px;overflow-y:auto}
+.arq li{display:flex;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:9px;cursor:pointer;font-size:.9rem}
+.arq li:hover{border-color:var(--muted)}
+.arq li.vazio{cursor:default;border-style:dashed}
+.ares{flex:none;min-width:3.1em;text-align:center;font-weight:800;font-size:.85rem;border-radius:7px;padding:4px 6px;font-variant-numeric:tabular-nums}
+.ares.w{background:#f1ece2;color:#1d1712;border:1px solid var(--line)}.ares.b{background:#1d1712;color:#f1ece2}
+.ares.d{background:var(--btn);color:var(--ink)}.ares.o{background:transparent;color:var(--muted);border:1px dashed var(--line)}
+.pgnprev{max-height:150px;overflow:auto;font-size:.72rem;line-height:1.35;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;white-space:pre-wrap;word-break:break-word;margin:8px 0 0}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;pointer-events:none;z-index:400;
+  background:var(--primary);color:var(--primary-ink);padding:9px 16px;border-radius:20px;font-weight:600;font-size:.9rem;transition:opacity .2s,transform .2s}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+#disc{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:8}
+#disc .dl{fill:none;stroke:rgb(var(--checkc));stroke-width:7;stroke-linecap:round;stroke-dasharray:var(--len);stroke-dashoffset:var(--len);
+  filter:drop-shadow(0 0 5px rgba(var(--checkc),.85));animation:dline 1.6s ease-out both}
+@keyframes dline{0%{stroke-dashoffset:var(--len);opacity:0}8%{opacity:.9}32%{stroke-dashoffset:0;opacity:.9}68%{opacity:.8}100%{stroke-dashoffset:0;opacity:0}}
+#disc .dh{fill:rgb(var(--checkc));filter:drop-shadow(0 0 4px rgba(var(--checkc),.85));animation:dhead 1.6s ease-out both}
+@keyframes dhead{0%,28%{opacity:0}36%{opacity:.9}68%{opacity:.8}100%{opacity:0}}
+#disc .dt{font:900 31px Figtree,system-ui,sans-serif;letter-spacing:.07em;fill:rgb(var(--checkc));stroke:#1a1307;stroke-width:6;paint-order:stroke;
+  text-anchor:middle;transform-box:fill-box;transform-origin:center;animation:dtxt 2s ease-out both}
+@keyframes dtxt{0%{opacity:0;transform:scale(.4)}12%{opacity:1;transform:scale(1.18)}20%{transform:scale(1)}78%{opacity:1}100%{opacity:0}}
+#disc.mate .dl{stroke:rgb(var(--check));filter:drop-shadow(0 0 5px rgba(var(--check),.85))}
+#disc.mate .dh{fill:rgb(var(--check));filter:drop-shadow(0 0 4px rgba(var(--check),.85))}
+#disc.mate .dt{fill:rgb(var(--check))}
+@media (prefers-reduced-motion:reduce){#disc{display:none}}
 .status{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 2px 8px;min-height:36px}
 #statusText{font-weight:600}
 #statusText.over{font-family:Spectral,Georgia,serif;font-size:1.15rem;font-weight:700}
@@ -474,6 +501,12 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
   </div>
 
   <div class="panel">
+    <div class="phead"><h2>Partidas salvas</h2><button class="btn mini" id="bArqPGN">Exportar todas</button></div>
+    <ol id="arquivo" class="arq"></ol>
+  </div>
+  <div id="toast" class="toast" role="status"></div>
+
+  <div class="panel">
     <label class="opt" id="evOptRow"><input type="checkbox" id="evOpt"> Barra de avaliação (contra o bot)</label>
     <label class="opt" id="clsOptRow"><input type="checkbox" id="clsOpt"> Avaliação dos lances (contra o bot)</label>
     <label class="optlbl" for="moveMode" style="margin-top:12px">Mover as peças</label>
@@ -489,7 +522,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <option value="face">Frente a frente: peças de cima invertidas</option>
       <option value="pass">Passar para o amigo: só as peças giram</option>
     </select></div>
-    <div class="ver">Versão 9.6</div>
+    <div class="ver">Versão 10.1</div>
   </div>
 
   <div class="panel">
@@ -570,6 +603,18 @@ function attacked(b,sq,by){
   for(const[dr,df]of DIAG){const rr=r+dr,ff=f+df;if(inB(rr,ff)&&b[idx(rr,ff)]===up('m'))return true;} // passo diagonal do Ministro
   for(const[dr,df]of ORTH){const rr=r+dr,ff=f+df;if(inB(rr,ff)&&b[idx(rr,ff)]===up('a'))return true;} // passo do Papa
   return slide(DIAG,up('b')+up('q')+up('a'))||slide(ORTH,up('r')+up('q')+up('l')+up('m')); // paladino e ministro atacam como torre
+}
+function attackers(b,sq,by){ // casas das peças de 'by' que atacam sq (mesma lógica de attacked)
+  const[r,f]=rc(sq),up=x=>by==='w'?x.toUpperCase():x,out=[],add=i=>{if(!out.includes(i))out.push(i);};
+  const pr=by==='w'?r+1:r-1;
+  for(const df of[-1,1])if(inB(pr,f+df)&&b[idx(pr,f+df)]===up('p'))add(idx(pr,f+df));
+  for(const[dr,df]of N_OFF){const rr=r+dr,ff=f+df;if(inB(rr,ff)){const p=b[idx(rr,ff)];if(p===up('n')||p===up('l'))add(idx(rr,ff));}}
+  for(const[dr,df]of K_OFF){const rr=r+dr,ff=f+df;if(inB(rr,ff)&&b[idx(rr,ff)]===up('k'))add(idx(rr,ff));}
+  for(const[dr,df]of DIAG){const rr=r+dr,ff=f+df;if(inB(rr,ff)&&b[idx(rr,ff)]===up('m'))add(idx(rr,ff));}
+  for(const[dr,df]of ORTH){const rr=r+dr,ff=f+df;if(inB(rr,ff)&&b[idx(rr,ff)]===up('a'))add(idx(rr,ff));}
+  const slide=(dirs,set)=>{for(const[dr,df]of dirs){let rr=r+dr,ff=f+df;while(inB(rr,ff)){const p=b[idx(rr,ff)];if(p){if(set.includes(p))add(idx(rr,ff));break;}rr+=dr;ff+=df;}}};
+  slide(DIAG,up('b')+up('q')+up('a'));slide(ORTH,up('r')+up('q')+up('l')+up('m'));
+  return out;
 }
 const kingSq=(b,c)=>b.indexOf(c==='w'?'K':'k');
 const inCheck=(s,c)=>attacked(s.b,kingSq(s.b,c),other(c));
@@ -666,9 +711,9 @@ function legalFrom(s,from){
 }
 function allLegal(s){const out=[];for(let i=0;i<64;i++)if(s.b[i]&&col(s.b[i])===s.turn)out.push(...legalFrom(s,i));return out;}
 
-return {N_OFF,K_OFF,DIAG,ORTH,col,typ,other,rc,idx,inB,initState,attacked,kingSq,inCheck,pseudo,apply,legalFrom,allLegal};
+return {N_OFF,K_OFF,DIAG,ORTH,col,typ,other,rc,idx,inB,initState,attacked,attackers,kingSq,inCheck,pseudo,apply,legalFrom,allLegal};
 }
-const {N_OFF,K_OFF,DIAG,ORTH,col,typ,other,rc,idx,inB,initState,attacked,kingSq,inCheck,pseudo,apply,legalFrom,allLegal}=RULES();
+const {N_OFF,K_OFF,DIAG,ORTH,col,typ,other,rc,idx,inB,initState,attacked,attackers,kingSq,inCheck,pseudo,apply,legalFrom,allLegal}=RULES();
 // Motor do bot: busca alfa-beta com aprofundamento iterativo e quiescência
 function ENGINE(R){
   const {pseudo,apply,attacked,kingSq,col,typ,other}=R;
@@ -959,18 +1004,19 @@ const cur=()=>G.states[G.states.length-1];
 const refresh=()=>{legalNow=allLegal(cur());};
 const countKey=k=>G.keys.filter(x=>x===k).length;
 
-function newGame(baseMin=0,incSec=0,bot=null){
+function newGame(baseMin=0,incSec=0,bot=null,names=null){
   REV=false;
   if(G)cancelBot();
   EVCACHE.clear();CLSCACHE.clear();SECCACHE.clear();evShown=null;
   const prev=G,s0=initState(),lg=allLegal(s0);
   G={states:[s0],keys:[posKey(s0,lg)],moves:[],result:null,
      clock:{base:baseMin*60000,inc:incSec*1000,w:baseMin*60000,b:baseMin*60000,running:false,last:0},
-     orient:bot?other(bot.color):'w',mode:prev?prev.mode:'normal',lock:prev?prev.lock:false,bot,lastBot:bot||(prev&&(prev.bot||prev.lastBot))||null};
+     orient:bot?other(bot.color):'w',mode:prev?prev.mode:'normal',lock:prev?prev.lock:false,bot,lastBot:bot||(prev&&(prev.bot||prev.lastBot))||null,
+     names,t0:Date.now(),id:'p'+Date.now()};
   selected=-1;targets=[];view=null;legalNow=lg;save();render();setTimeout(maybeBot,300);
 }
 function stopClock(){const c=G.clock;if(c.base&&c.running){const t=cur().turn;c[t]=Math.max(0,c[t]-(Date.now()-c.last));c.running=false;}}
-function end(w,text,snd='end',dk=''){cancelBot();stopClock();G.result={winner:w,text,kind:snd,dk,t0:Date.now()};registrarPlacar(w);if(G.moves.length&&!endQuiet)setTimeout(()=>sfx(snd),180);}
+function end(w,text,snd='end',dk=''){cancelBot();stopClock();G.result={winner:w,text,kind:snd,dk,t0:Date.now()};registrarPlacar(w);arquivar();if(G.moves.length&&!endQuiet)setTimeout(()=>sfx(snd),180);}
 let endQuiet=false;
 
 function evaluate(){
@@ -1007,19 +1053,28 @@ function claimMenu(t){
     {label:'Cancelar'}],t,true);
 }
 
-function doMove(m,opt={}){
-  const s=cur(),sanStr=san(s,m,legalNow);
+function mkRecord(s,m,legal){
+  const sanStr=san(s,m,legal);
   const captured=m.conv||m.dem==='p'?'':m.ep?(s.turn==='w'?'p':'P'):(s.b[m.to]||''); // convertida ou rebaixada não sai do tabuleiro
-  const dem=m.dem==='p'?s.b[m.to]:'',cass=m.dem==='x';
-  const conv=m.conv?s.b[m.to]:'';
-  const c=G.clock;
-  if(c.base){const now=Date.now();if(c.running)c[s.turn]-=now-c.last;c[s.turn]+=c.inc;c.running=true;c.last=now;}
-  G.states.push(apply(s,m));
+  const dem=m.dem==='p'?s.b[m.to]:'',cass=m.dem==='x',conv=m.conv?s.b[m.to]:'';
+  const n=apply(s,m);
   const capSq=m.ep?m.to+(s.turn==='w'?8:-8):m.to; // no en passant, o peão capturado estava em outra casa
   const papaSq=s.link&&captured&&!m.conv&&m.to===s.link.to&&s.b[s.link.papa]&&typ(s.b[s.link.papa])==='a'?s.link.papa:-1;
-  G.moves.push({san:sanStr,self:!!m.self,from:m.from,to:m.to,promo:m.promo||'',captured,capSq,conv,
-    papa:papaSq>=0?s.b[papaSq]:'',papaSq,dem,cass,by:s.turn});
-  ANIM={ply:G.states.length-1,t0:Date.now(),from:m.from,to:m.to,cap:!!captured,conv:!!m.conv,dem:m.dem||'',ep:!!m.ep,drag:!!opt.drag,
+  // xeque descoberto: quem dá xeque sem ser a peça que acabou de se mover
+  let disc=[],dbl=false,ck=[];
+  if(inCheck(n,n.turn)){const k=kingSq(n.b,n.turn),at=attackers(n.b,k,s.turn),mv=new Set([m.to]);
+    if(m.castle)mv.add({K:61,Q:59,k:5,q:3}[m.castle]);
+    disc=at.filter(x=>!mv.has(x));dbl=disc.length>0&&at.length>disc.length;ck=at;}
+  return {n,rec:{san:sanStr,self:!!m.self,from:m.from,to:m.to,promo:m.promo||'',captured,capSq,conv,
+    papa:papaSq>=0?s.b[papaSq]:'',papaSq,dem,cass,disc,dbl,ck,by:s.turn}};
+}
+function doMove(m,opt={}){
+  const s=cur(),{n,rec}=mkRecord(s,m,legalNow),captured=rec.captured,papaSq=rec.papaSq;
+  const c=G.clock;
+  if(c.base){const now=Date.now();if(c.running)c[s.turn]-=now-c.last;c[s.turn]+=c.inc;c.running=true;c.last=now;}
+  G.states.push(n);
+  G.moves.push(rec);
+  ANIM={ply:G.states.length-1,t0:Date.now(),from:m.from,to:m.to,cap:!!captured,disc:(rec.dbl?rec.ck:rec.disc).map(x=>[x,kingSq(n.b,n.turn)]),dbl:rec.dbl,conv:!!m.conv,dem:m.dem||'',ep:!!m.ep,drag:!!opt.drag,
     rook:m.castle?{K:[63,61],Q:[56,59],k:[7,5],q:[0,3]}[m.castle]:null};
   selected=-1;targets=[];view=null;
   evaluate();
@@ -1033,7 +1088,7 @@ function doMove(m,opt={}){
   setTimeout(maybeBot,30);
 }
 function undo(){
-  if(!G.moves.length)return;
+  if(!G.moves.length||G.fromArchive)return;
   cancelBot();
   const pop=()=>{G.states.pop();G.keys.pop();G.moves.pop();};
   pop();
@@ -1042,6 +1097,134 @@ function undo(){
   G.result=null;G.claim=null;refresh();
   const c=G.clock;if(c.base){c.running=G.moves.length>0;c.last=Date.now();}
   selected=-1;targets=[];view=null;if(modo()==='auto')G.orient=cur().turn;save();render();maybeBot();
+}
+
+// ---------- Nomes dos jogadores (guardados neste aparelho) ----------
+const NOMES_KEY=STORE+'-nomes';
+let NOMES=(()=>{try{const n=JSON.parse(localStorage.getItem(NOMES_KEY));if(n&&typeof n==='object')return n;}catch(e){}return {};})();
+function salvarNomes(){try{localStorage.setItem(NOMES_KEY,JSON.stringify(NOMES));}catch(e){}}
+const nomeDe=c=>G&&G.names&&G.names[c]?G.names[c]:(G&&G.bot?(c===G.bot.color?'Bot':'Você'):NAME[c]);
+const escH=t=>String(t).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+
+// ---------- Partidas salvas (como no Lichess: nomes, data, horário e PGN) ----------
+const ARQ_KEY=STORE+'-arquivo';
+function lerArquivo(){try{const a=JSON.parse(localStorage.getItem(ARQ_KEY));return Array.isArray(a)?a:[];}catch(e){return [];}}
+function gravarArquivo(a){try{localStorage.setItem(ARQ_KEY,JSON.stringify(a));return true;}catch(e){return false;}}
+const resPGN=w=>w==='w'?'1-0':w==='b'?'0-1':'1/2-1/2';
+function evArray(){const out=[];for(let k=0;k<G.states.length;k++){const e=EVCACHE.get(keyAt(k));out.push(e?[e.v,e.best]:null);}return out;}
+function arquivar(over){ // grava (ou atualiza) a partida atual
+  if(!G||!G.moves.length||G.fromArchive)return;
+  if(!G.id)G.id='p'+(G.t0||Date.now());
+  const e={id:G.id,t0:G.t0||Date.now(),t1:Date.now(),w:nomeDe('w'),b:nomeDe('b'),
+    bot:G.bot?{color:G.bot.color,level:G.bot.level}:null,
+    tc:G.clock.base?`${G.clock.base/1000}+${G.clock.inc/1000}`:'-',
+    res:over?over.res:(G.result?resPGN(G.result.winner):'*'),
+    term:over?over.term:(G.result?G.result.text:'Partida interrompida'),
+    kind:G.result?G.result.kind||'':'',dk:over&&over.res==='*'?'open':(G.result?G.result.dk||'':''),
+    mv:G.moves.map(m=>[m.from,m.to,m.promo||'']),san:G.moves.map(m=>m.san),ev:evArray()};
+  const a=lerArquivo(),i=a.findIndex(x=>x.id===e.id);
+  if(i>=0)a[i]=e;else a.push(e);
+  while(a.length>300)a.shift();
+  if(!gravarArquivo(a)){for(const x of a)if(x.id!==e.id)x.ev=null;gravarArquivo(a);} // sem espaço: guarda sem as análises antigas
+  renderArquivo();
+}
+function arquivarAbandono(){ // partida deixada no meio ao começar outra
+  if(!G||!G.moves.length||G.result||G.fromArchive)return;
+  if(G.bot)arquivar({res:resPGN(G.bot.color),term:'Partida abandonada (conta como derrota)'});
+  else arquivar({res:'*',term:'Partida interrompida'});
+}
+let evArqT=null;
+function salvarEvNoArquivo(){ // guarda a análise junto da partida salva, para a revisão abrir pronta depois
+  clearTimeout(evArqT);evArqT=setTimeout(()=>{
+    if(!G||!G.id||!(G.result||G.fromArchive))return;
+    const a=lerArquivo(),i=a.findIndex(x=>x.id===G.id);if(i<0)return;
+    a[i].ev=evArray();gravarArquivo(a);},1500);
+}
+function pgnDe(e){
+  const d=new Date(e.t0),z=n=>String(n).padStart(2,'0');
+  const tags=[['Event',e.bot?`Contra o bot (nível ${e.bot.level} · ${BOT_NIV[e.bot.level].nome})`:'Partida entre amigos'],
+    ['Site','Xadrez do Rei Tirano'],['Date',`${d.getFullYear()}.${z(d.getMonth()+1)}.${z(d.getDate())}`],['Round','-'],
+    ['White',e.w],['Black',e.b],['Result',e.res],
+    ['UTCDate',`${d.getUTCFullYear()}.${z(d.getUTCMonth()+1)}.${z(d.getUTCDate())}`],['UTCTime',`${z(d.getUTCHours())}:${z(d.getUTCMinutes())}:${z(d.getUTCSeconds())}`],
+    ['Variant','Rei Tirano'],['TimeControl',e.tc],['Termination',e.term]];
+  let txt=tags.map(([k,v])=>`[${k} "${String(v).replace(/["\\]/g,"'")}"]`).join('\n')+'\n\n';
+  const tok=[];e.san.forEach((s,i)=>{if(i%2===0)tok.push(`${i/2+1}.`);tok.push(s);});tok.push(e.res);
+  let line='';for(const t of tok){if((line+' '+t).trim().length>80){txt+=line.trim()+'\n';line='';}line+=' '+t;}
+  return txt+line.trim()+'\n';
+}
+const nLances=e=>{const n=Math.ceil(e.san.length/2);return n+(n===1?' lance':' lances');};
+const dataHora=t=>{const d=new Date(t),z=n=>String(n).padStart(2,'0');return `${z(d.getDate())}/${z(d.getMonth()+1)}/${d.getFullYear()} ${z(d.getHours())}:${z(d.getMinutes())}`;};
+function aviso(msg){const el=$('toast');el.textContent=msg;el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),2200);}
+function copiarTexto(t){
+  const ok=()=>aviso('PGN copiado');
+  const alt=()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok();}catch(e){aviso('Não consegui copiar');}ta.remove();};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,alt);else alt();
+}
+function baixarTexto(t,nome){try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'application/x-chess-pgn'}));a.download=nome;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);}catch(e){aviso('Não consegui baixar');}}
+function renderArquivo(){
+  const ol=$('arquivo');if(!ol)return;
+  const a=lerArquivo().slice().reverse();
+  $('bArqPGN').disabled=!a.length;
+  ol.innerHTML=a.length?a.map(e=>{const cls=e.res==='1-0'?'w':e.res==='0-1'?'b':e.res==='*'?'o':'d';
+      const r=e.res==='1/2-1/2'?'½–½':e.res==='*'?'*':e.res.replace('-','–');
+      return `<li data-id="${e.id}"><span class="ares ${cls}">${r}</span><div><strong>${escH(e.w)}</strong> × <strong>${escH(e.b)}</strong><br>
+        <span class="muted">${dataHora(e.t0)} · ${nLances(e)} · ${escH(e.term)}</span></div></li>`;}).join('')
+    :'<li class="muted vazio">Nenhuma partida salva ainda. Elas entram aqui quando terminam.</li>';
+}
+function abrirArquivada(id){
+  const e=lerArquivo().find(x=>x.id===id);if(!e)return;
+  const go=()=>{
+    cancelBot();REV=false;EVCACHE.clear();CLSCACHE.clear();SECCACHE.clear();evShown=null;
+    let s=initState();const states=[s],keys=[posKey(s,allLegal(s))],moves=[];
+    for(const[from,to,promo]of e.mv){const L=allLegal(s),m=L.find(x=>x.from===from&&x.to===to&&(x.promo||'')===(promo||''));if(!m)break;
+      const r=mkRecord(s,m,L);moves.push(r.rec);s=r.n;states.push(s);keys.push(posKey(s,allLegal(s)));}
+    const winner=e.res==='1-0'?'w':e.res==='0-1'?'b':null;
+    G={states,keys,moves,result:{winner,text:e.term,kind:e.kind||'arch',dk:e.dk||'',t0:0},
+      clock:{base:0,inc:0,w:0,b:0,running:false,last:0},orient:e.bot?other(e.bot.color):'w',
+      mode:G.mode,lock:G.lock,bot:null,lastBot:G.lastBot,names:{w:e.w,b:e.b},t0:e.t0,id:e.id,fromArchive:true,scored:true};
+    if(e.ev)e.ev.forEach((x,k)=>{if(x&&k<states.length)EVCACHE.set(keyAt(k),{v:x[0],best:x[1]});});
+    refresh();selected=-1;targets=[];view=null;save();openReview();
+  };
+  if(G.moves.length&&!G.result&&!G.fromArchive){
+    modal('Abrir partida salva',`<p>A partida atual vai ser guardada como ${G.bot?'abandonada e <strong>conta como derrota contra o bot</strong>':'interrompida'}.</p>`,
+      [{label:'Cancelar'},{label:'Abrir',primary:true,fn:()=>{if(G.bot)registrarPlacar(G.bot.color);arquivarAbandono();go();}}]);
+  }else go();
+}
+function acoesArquivo(id){
+  const e=lerArquivo().find(x=>x.id===id);if(!e)return;
+  const pg=pgnDe(e),nomeArq=`rei-tirano-${new Date(e.t0).toISOString().slice(0,16).replace(/[:T]/g,'-')}.pgn`;
+  const bts=[{label:'Rever a partida',primary:true,fn:()=>abrirArquivada(id)},{label:'Copiar PGN',fn:()=>copiarTexto(pg)}];
+  if(navigator.share)bts.push({label:'Compartilhar PGN',fn:()=>navigator.share({title:`${e.w} × ${e.b}`,text:pg}).catch(()=>{})});
+  bts.push({label:'Baixar arquivo .pgn',fn:()=>baixarTexto(pg,nomeArq)},
+    {label:'Apagar esta partida',fn:()=>modal('Apagar partida',`<p>Apagar ${escH(e.w)} × ${escH(e.b)} de ${dataHora(e.t0)}?</p>`,
+      [{label:'Cancelar'},{label:'Apagar',primary:true,fn:()=>{gravarArquivo(lerArquivo().filter(x=>x.id!==id));renderArquivo();}}])},
+    {label:'Fechar'});
+  modal(`${e.w} × ${e.b}`,`<p>${dataHora(e.t0)} · ${e.bot?`contra o bot nível ${e.bot.level}`:'entre amigos'}${e.tc!=='-'?` · relógio ${e.tc.replace('+',' + ')} s`:''}<br>
+    <strong>${e.res==='1/2-1/2'?'½–½':e.res}</strong> · ${escH(e.term)} · ${nLances(e)}</p>
+    <pre class="pgnprev">${escH(pg)}</pre>`,bts,undefined,true);
+}
+
+// ---------- Xeque descoberto: uma linha de ataque sutil, da peça que dá o xeque até o rei ----------
+function renderDisc(){
+  const el=$('disc');if(!el)return;
+  const P=ply(),a=ANIM&&ANIM.ply===P&&ANIM.disc&&ANIM.disc.length&&Date.now()-ANIM.t0<2100?ANIM:null;
+  const mate=!!(a&&G.result&&G.result.winner&&P===G.states.length-1&&(G.result.kind==='mate'||/^Xeque-mate/.test(G.result.text)));
+  const k=a?a.t0+(mate?'m':''):0;
+  if(el._k===k)return;el._k=k;
+  el.classList.toggle('mate',mate); // mate: setas e DOUBLE em vermelho
+  if(!a){el.innerHTML='';return;}
+  const dp=x=>{const d=G.orient==='w'?x:63-x;return[(d&7)*100+50,(d>>3)*100+50];};
+  let h=a.disc.map(([fr,to])=>{
+    const[x1,y1]=dp(fr),[x2,y2]=dp(to),an=Math.atan2(y2-y1,x2-x1),c=Math.cos(an),s=Math.sin(an);
+    const sx=x1+c*30,sy=y1+s*30,ex=x2-c*42,ey=y2-s*42,len=Math.hypot(ex-sx,ey-sy).toFixed(1);
+    const tx=ex+c*15,ty=ey+s*15,bx=ex-c*3,by=ey-s*3;
+    const head=`${tx.toFixed(1)},${ty.toFixed(1)} ${(bx-s*9).toFixed(1)},${(by+c*9).toFixed(1)} ${(bx+s*9).toFixed(1)},${(by-c*9).toFixed(1)}`;
+    return `<line x1="${sx.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" class="dl" style="--len:${len}"/><polygon points="${head}" class="dh"/>`;
+  }).join('');
+  if(a.dbl){ // xeque duplo: escrito perto do rei (acima; se o rei estiver na fileira de cima da tela, abaixo)
+    const[kx,ky]=dp(a.disc[0][1]),x=Math.min(705,Math.max(95,kx)),y=ky<100?ky+84:ky-60;
+    h+=`<text x="${x}" y="${y}" class="dt">DOUBLE</text>`;}
+  el.innerHTML=h;
 }
 
 // ---------- Placar contra os bots (guardado só neste aparelho) ----------
@@ -1167,7 +1350,7 @@ function evDone(key,r){
     if(Math.abs(r.score)>MATE_V-1000){const plies=MATE_V-Math.abs(r.score);v={mate:Math.ceil(plies/2),winner:sc>0?'w':'b'};}
     else v={cp:sc};}
   if(sec){SECCACHE.set(key,{v});if(G){(G.secs||(G.secs={}))[key]={v};save();}if(G)render();return;}
-  EVCACHE.set(key,{v,best});
+  EVCACHE.set(key,{v,best});salvarEvNoArquivo();
   if(G){(G.evals||(G.evals={}))[key]={v,best};save();}
   if(G)render(); // render chama pump() de novo para a próxima posição da fila
 }
@@ -1328,7 +1511,8 @@ function comentario(k,inf,best,only){
     F.push(VAL[ct]===VAL[t]&&attacked(S1.b,mv.to,o)?`Troca: ${oa(t)} captura ${oa(ct)} em ${onde}.`:`Captura ${oa(ct)} em ${onde}.`);}
   else if(k<=20&&(t==='n'||t==='b')&&(mv.from>>3)===(c==='w'?7:0))F.push(`Desenvolve ${oa(t)}.`);
   else if(k<=20&&t==='p'&&[27,28,35,36].includes(mv.to))F.push('Ocupa o centro.');
-  if(/\+$/.test(mv.san))F.push('Dá xeque.');
+  if(mv.disc&&mv.disc.length){const d=mv.disc[0];F.push(`${mv.dbl?'Xeque duplo':'Xeque descoberto'}: ${oa(typ(S1.b[d]))} em ${sqName(d)} dá xeque assim que ${oa(t)} sai da frente.`);}
+  else if(/\+$/.test(mv.san))F.push('Dá xeque.');
   if(!ruim&&!mv.conv){const g=garfo(S1,mv.to,c);
     if(g.length>=2)F.push(`Garfo: ${oa(t)} ataca ${g.map(x=>x==='k'?'o rei':oa(x)).join(' e ')} ao mesmo tempo.`);
     else if(g.length===1&&g[0]!=='k')F.push(`Ataca ${oa(g[0])}.`);}
@@ -1354,7 +1538,7 @@ function comentario(k,inf,best,only){
 let REV=false;
 const REV_MS=600;
 const showCls=()=>clsOn()||REV;
-const sideName=c=>G.bot?(c===G.bot.color?'Bot':'Você'):NAME[c];
+const sideName=c=>G.bot?(c===G.bot.color?'Bot':'Você'):G.names&&G.names[c]?escH(G.names[c]):NAME[c];
 const chanceDe=c=>G.bot?(c===G.bot.color?'do bot':'sua'):'das '+NAME[c];
 // ---- Precisão, pelo método completo do Lichess ----
 // 1) chance de vitória pela fórmula deles, com a avaliação limitada a ±10 peões (mate conta como ±10);
@@ -1562,7 +1746,7 @@ const upOf0=p=>modo()==='face'?col(p)!==G.orient:passUp();
 // ---------- Render ----------
 const board=$('board'),cells=[];
 for(let d=0;d<64;d++){const el=document.createElement('div');el.className='sq';board.appendChild(el);cells.push(el);}
-board.insertAdjacentHTML('beforeend','<svg id="arrows" viewBox="0 0 800 800" aria-hidden="true"></svg><div id="fx" aria-hidden="true"></div>');
+board.insertAdjacentHTML('beforeend','<svg id="arrows" viewBox="0 0 800 800" aria-hidden="true"></svg><svg id="disc" viewBox="0 0 800 800" aria-hidden="true"></svg><div id="fx" aria-hidden="true"></div>');
 board.addEventListener('click',e=>{if(suppressClick)return;const el=e.target.closest('.sq');if(!el)return;
   if(MOVE_MODE==='drag'&&view===null)return; // só arrastar: o toque serve apenas para voltar da revisão de lances
   onSquare(+el.dataset.sq);});
@@ -1633,7 +1817,7 @@ function render(){
   const fimAnim=fimTipo&&G.result.t0&&Date.now()-G.result.t0<1800;
   const fimRei=fimTipo?kingSq(s.b,other(G.result.winner)):-1;
   // empates: ½ nos dois reis e uma animação diferente para cada tipo
-  const fimEmp=!!(G.result&&!G.result.winner&&P===G.states.length-1);
+  const fimEmp=!!(G.result&&!G.result.winner&&G.result.dk!=='open'&&P===G.states.length-1);
   const dk=fimEmp?resultDk():'';
   const empAnim=fimEmp&&G.result.t0&&Date.now()-G.result.t0<2600;
   const kW=fimEmp?kingSq(s.b,'w'):-1,kB=fimEmp?kingSq(s.b,'b'):-1;
@@ -1709,7 +1893,7 @@ function render(){
   $('nFirst').disabled=$('nPrev').disabled=P===0;
   $('nNext').disabled=$('nLast').disabled=P===n;
   $('nav').className='nav'+(view!==null?' viewing':'');
-  $('bUndo').disabled=!G.moves.length;
+  $('bUndo').disabled=!G.moves.length||!!G.fromArchive;
   $('bDraw').disabled=$('bResign').disabled=!!G.result;
   $('mode').value=G.mode;
   const face=modo()==='face';
@@ -1718,7 +1902,7 @@ function render(){
   document.documentElement.classList.toggle('locked',!!G.lock);
   $('bSound').textContent=muted?'🔇':'🔊';
   $('bLock').textContent=G.lock?'🔒':'🔓';$('bLock').classList.toggle('on',!!G.lock);
-  renderMoves();renderClocks();renderPlacar();
+  renderMoves();renderClocks();renderPlacar();renderDisc();
   const eo=$('evOpt');eo.checked=barOn();eo.disabled=!G.bot;$('evOptRow').style.opacity=G.bot?1:.5;
   const co=$('clsOpt');co.checked=clsOn();co.disabled=!G.bot;$('clsOptRow').style.opacity=G.bot?1:.5;
   renderEval();renderClsSummary();renderReview();pump();
@@ -1737,7 +1921,7 @@ function renderBar(el,c){
   if(diff>0)caps+=`<span class="adv">+${diff}</span>`;
   if(lost.length)caps+=`<span class="sep" title="Peças capturadas pelo próprio rei">⊗</span>`+lost.map(x=>`<span class="lost${x.last?' lastcap':''}">${fig(x.t)}</span>`).join('');
   el.className='bar'+(!G.result&&s.turn===c?' turn':'');
-  el.innerHTML=`<span class="sw ${c}"></span><span class="who">${NAME[c]}${G.bot?`<span class="tag">${c===G.bot.color?'Bot · '+BOT_NIV[G.bot.level].nome:'Você'}</span>`:''}</span><span class="caps">${caps}</span>`+
+  el.innerHTML=`<span class="sw ${c}"></span><span class="who">${NAME[c]}${G.bot?`<span class="tag">${c===G.bot.color?'Bot · '+BOT_NIV[G.bot.level].nome:escH(G.names&&G.names[c]||'Você')}</span>`:G.names&&G.names[c]?`<span class="tag">${escH(G.names[c])}</span>`:''}</span><span class="caps">${caps}</span>`+
     (G.clock.base?`<span class="clock" id="clk-${c}"></span>`:'');
 }
 function fmt(ms){
@@ -1775,7 +1959,7 @@ function renderMoves(){
       if(ks.length){const v=Math.floor(G.states[Math.max(...ks)].half/2); // lances completos de cada lado até aqui
         if(v>0)cnt=`<span class="cnt${v>=run.lim?' full':''}">${v}/${run.lim}</span>`;}}
     h+=`<li><span class="n">${i/2+1}.</span>${c(i+1,a)}${b?c(i+2,b):'<span></span>'}${cnt}</li>`;}
-  if(G.result)h+=`<li class="res">${G.result.winner==='w'?'1–0':G.result.winner==='b'?'0–1':'½–½'}</li>`;
+  if(G.result)h+=`<li class="res">${G.result.dk==='open'?'*':G.result.winner==='w'?'1–0':G.result.winner==='b'?'0–1':'½–½'}</li>`;
   ol.innerHTML=h||'<li class="empty">Brancas começam. Toque numa peça para ver os lances.</li>';
   const mn=$('mvNote');if(mn){mn.innerHTML=note;mn.hidden=!note;}
   const curEl=ol.querySelector('.cur');
@@ -1793,7 +1977,7 @@ function tick(){
       const w=other(t),b=cur().b;
       const wp=b.filter(p=>p&&col(p)===w&&typ(p)!=='k'),lp=b.filter(p=>p&&col(p)===t&&typ(p)!=='k');
       const draw=!wp.length||(wp.length===1&&'bn'.includes(typ(wp[0]))&&!lp.length);
-      sfx('end');G.result={kind:'time',dk:draw?'time':'',t0:Date.now(),winner:draw?null:w,text:draw?`Empate: tempo das ${NAME[t]} acabou, mas as ${NAME[w]} não têm material para dar mate`:`${NAME[w]} vencem no tempo`};registrarPlacar(G.result.winner);
+      sfx('end');G.result={kind:'time',dk:draw?'time':'',t0:Date.now(),winner:draw?null:w,text:draw?`Empate: tempo das ${NAME[t]} acabou, mas as ${NAME[w]} não têm material para dar mate`:`${NAME[w]} vencem no tempo`};registrarPlacar(G.result.winner);arquivar();
       selected=-1;targets=[];save();render();return;
     }
   }
@@ -1823,6 +2007,13 @@ $('revKeys').addEventListener('click',e=>{const li=e.target.closest('[data-k]');
 window.addEventListener('resize',()=>{if(REV)renderReview();});
 $('moveMode').value=MOVE_MODE;
 $('moveMode').onchange=e=>{MOVE_MODE=e.target.value;try{localStorage.setItem(STORE+'-mover',MOVE_MODE);}catch(_){}};
+$('arquivo').addEventListener('click',e=>{const li=e.target.closest('[data-id]');if(li)acoesArquivo(li.dataset.id);});
+$('bArqPGN').onclick=()=>{const a=lerArquivo();if(!a.length)return;const t=a.map(pgnDe).join('\n');
+  const bts=[{label:'Copiar tudo',primary:true,fn:()=>copiarTexto(t)}];
+  if(navigator.share)bts.push({label:'Compartilhar',fn:()=>navigator.share({title:'Partidas do Rei Tirano',text:t}).catch(()=>{})});
+  bts.push({label:'Baixar arquivo .pgn',fn:()=>baixarTexto(t,'rei-tirano-todas-as-partidas.pgn')},{label:'Fechar'});
+  modal('Exportar partidas',`<p>${a.length} ${a.length===1?'partida':'partidas'} em PGN.</p>`,bts,undefined,true);};
+renderArquivo();
 $('bUndo').onclick=()=>{if(REV)closeReview();undo();};
 $('bFlip').onclick=()=>{G.orient=other(G.orient);save();render();};
 $('mode').onchange=e=>{G.mode=e.target.value;if(G.mode==='auto'&&!G.result)G.orient=cur().turn;save();render();};
@@ -1853,7 +2044,15 @@ $('bNew').onclick=()=>{
   modal('Nova partida',`<p>A partida atual será descartada.${contaDerrota?` <strong>Ela conta como derrota contra o bot ${G.bot.level} · ${BOT_NIV[G.bot.level].nome}.</strong>`:''}</p>
     <label for="opp" class="flbl">Adversário</label>
     <select id="opp"><option value="friend">Um amigo, no mesmo aparelho</option><option value="bot">Bot</option></select>
+    <div id="friendOpts">
+      <label class="flbl">Jogadores</label>
+      <div class="nomes"><span class="sw w"></span><input id="nW" maxlength="30" placeholder="Brancas" autocomplete="off">
+        <button type="button" class="btn mini" id="nSwap" title="Trocar as cores" aria-label="Trocar as cores">⇅</button>
+        <span class="sw b"></span><input id="nB" maxlength="30" placeholder="Pretas" autocomplete="off"></div>
+    </div>
     <div id="botOpts">
+      <label for="nEu" class="flbl">Seu nome</label>
+      <input id="nEu" class="nome1" maxlength="30" placeholder="Você" autocomplete="off">
       <label for="lvl" class="flbl">Nível do bot</label>
       <select id="lvl">${BOT_NIV.slice(1).map((l,i)=>`<option value="${i+1}">${i+1} · ${l.nome}</option>`).join('')}</select>
       <label for="myc" class="flbl">Você joga com</label>
@@ -1872,13 +2071,18 @@ $('bNew').onclick=()=>{
     </select>`,
     [{label:'Cancelar'},{label:'Começar',primary:true,fn:()=>{const[a,b]=$('tc').value.split(',').map(Number);
       if(contaDerrota)registrarPlacar(G.bot.color);
-      let bot=null;
-      if($('opp').value==='bot'){let me=$('myc').value;if(me==='r')me=Math.random()<.5?'w':'b';bot={color:other(me),level:+$('lvl').value,myPick:$('myc').value,evalBar:$('evNew').checked,classify:$('clsNew').checked};}
-      newGame(a,b,bot);}}]);
+      arquivarAbandono(); // a partida deixada no meio também fica salva
+      let bot=null,names;
+      if($('opp').value==='bot'){let me=$('myc').value;if(me==='r')me=Math.random()<.5?'w':'b';bot={color:other(me),level:+$('lvl').value,myPick:$('myc').value,evalBar:$('evNew').checked,classify:$('clsNew').checked};
+        const eu=$('nEu').value.trim();NOMES.eu=eu;names={[me]:eu||'Você',[other(me)]:`Bot nível ${bot.level} (${BOT_NIV[bot.level].nome})`};}
+      else{const w=$('nW').value.trim(),bk=$('nB').value.trim();NOMES.w=w;NOMES.b=bk;if(w&&!NOMES.eu)NOMES.eu=w;names={w:w||'Brancas',b:bk||'Pretas'};}
+      salvarNomes();newGame(a,b,bot,names);}}]);
+  $('nW').value=NOMES.w??NOMES.eu??'';$('nB').value=NOMES.b??'';$('nEu').value=NOMES.eu??NOMES.w??'';
+  $('nSwap').onclick=()=>{const t=$('nW').value;$('nW').value=$('nB').value;$('nB').value=t;};
   const lastBot=G.bot||G.lastBot;
   if(lastBot){$('opp').value=G.bot?'bot':'friend';$('lvl').value=lastBot.level;$('myc').value=lastBot.myPick||other(lastBot.color);$('evNew').checked=!!lastBot.evalBar;$('clsNew').checked=!!lastBot.classify;}
   else{$('lvl').value='3';}
-  const sync=()=>{$('botOpts').hidden=$('opp').value!=='bot';};$('opp').onchange=sync;sync();
+  const sync=()=>{$('botOpts').hidden=$('opp').value!=='bot';$('friendOpts').hidden=$('opp').value==='bot';};$('opp').onchange=sync;sync();
   const cb=G.clock.base/60000,ci=G.clock.inc/1000,v=cb+','+ci,sel=$('tc');
   if([...sel.options].some(o=>o.value===v))sel.value=v;
 };
