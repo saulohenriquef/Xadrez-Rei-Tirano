@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez do Rei Tirano · versão 8.3 -->
+<!-- index.html · Xadrez do Rei Tirano · versão 9.6 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -23,7 +23,7 @@
 :root{
   --bg:#e4e9ee; --surface:#f6f8fa; --ink:#18212c; --muted:#5b6878; --line:#c9d2dc;
   --light:#d8dfe7; --dark:#62778f; --coord-l:#62778f; --coord-d:#d8dfe7;
-  --gold:#c3921f; --gold-soft:rgba(195,146,31,.22); --conv:#8a55d4; --conv-soft:rgba(138,85,212,.2);
+  --gold:#c3921f; --gold-soft:rgba(195,146,31,.22); --conv:#8a55d4; --conv-soft:rgba(138,85,212,.2); --dem:#1f8a8a; --dem-soft:rgba(31,138,138,.18);
   --sel:rgba(214,170,60,.55); --last:rgba(214,190,90,.36); --dot:rgba(20,30,45,.30);
   --check:210,55,40; --checkc:255,196,0; --btn:#e9eef3; --btn-ink:#18212c; --primary:#18212c; --primary-ink:#f6f8fa;
 }
@@ -31,14 +31,14 @@
   :root:not([data-theme="light"]){
     --bg:#10161e; --surface:#18212c; --ink:#e4eaf1; --muted:#95a3b3; --line:#2a3644;
     --light:#b7c3cf; --dark:#4b5f76; --coord-l:#4b5f76; --coord-d:#b7c3cf;
-    --gold:#e0b04a; --gold-soft:rgba(224,176,74,.18); --conv:#b48cf0; --conv-soft:rgba(180,140,240,.2);
+    --gold:#e0b04a; --gold-soft:rgba(224,176,74,.18); --conv:#b48cf0; --conv-soft:rgba(180,140,240,.2); --dem:#4cc4c4; --dem-soft:rgba(76,196,196,.18);
     --btn:#223040; --btn-ink:#e4eaf1; --primary:#e4eaf1; --primary-ink:#10161e;
   }
 }
 :root[data-theme="dark"]{
   --bg:#10161e; --surface:#18212c; --ink:#e4eaf1; --muted:#95a3b3; --line:#2a3644;
   --light:#b7c3cf; --dark:#4b5f76; --coord-l:#4b5f76; --coord-d:#b7c3cf;
-  --gold:#e0b04a; --gold-soft:rgba(224,176,74,.18); --conv:#b48cf0; --conv-soft:rgba(180,140,240,.2);
+  --gold:#e0b04a; --gold-soft:rgba(224,176,74,.18); --conv:#b48cf0; --conv-soft:rgba(180,140,240,.2); --dem:#4cc4c4; --dem-soft:rgba(76,196,196,.18);
   --btn:#223040; --btn-ink:#e4eaf1; --primary:#e4eaf1; --primary-ink:#10161e;
 }
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -189,6 +189,7 @@ h1 .crown{color:var(--gold)}
 #moves .n{color:var(--muted)}
 #moves .sf{color:var(--gold);font-weight:700}
 #moves .cv{color:var(--conv);font-weight:700}
+#moves .dm{color:var(--dem);font-weight:700}
 #moves .mv.cur.cv{color:#1a1307}
 #moves .mv.cur.sf{color:#1a1307}
 #moves .empty{display:block;color:var(--muted)}
@@ -223,6 +224,20 @@ details ul{padding-left:1.1em;margin:6px 0}
 .caps .b .wing path{stroke:#9aa8b6}
 .caps .lost .wing .wf{stroke:none}.caps .lost .wing .wl{stroke:rgba(0,0,0,.35)}
 .caps>span{position:relative}
+.ming{position:relative;display:inline-block;line-height:1}
+.ming .ph{visibility:hidden}
+.colm{position:absolute;left:0;top:0;width:1em;height:1em;overflow:visible;transform:translateY(.1em) scale(1.1)}
+.colm .bf,.colm .bf>*{fill:currentColor;stroke-width:1.2;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.colm .bd{fill:none;stroke-linecap:round}
+.pc.w .colm .bf,.caps .w .colm .bf{stroke:#1e1812}.pc.w .colm .bd,.caps .w .colm .bd{stroke:#1e1812}.pc.w .colm .bl,.caps .w .colm .bl{fill:#1e1812}
+.pc.b .colm .bf{stroke:rgba(255,250,240,.6)}.pc.b .colm .bd{stroke:#c9d1da}.pc.b .colm .bl{fill:#c9d1da}
+.caps .b .colm .bf{stroke:#9aa8b6}.caps .b .colm .bd{stroke:#9aa8b6}.caps .b .colm .bl{fill:#9aa8b6}
+.caps .lost .colm .bf{stroke:none}.caps .lost .colm .bd{stroke:rgba(0,0,0,.35)}.caps .lost .colm .bl{fill:rgba(0,0,0,.35)}
+.sq.demt::after{content:"";position:absolute;inset:5%;border-radius:50%;border:max(3px,.8cqw) dotted var(--dem);background:var(--dem-soft);pointer-events:none;z-index:2}
+.pc.demote{z-index:5;animation:demote .7s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes demote{0%{transform:scale(1.6) rotate(-10deg) var(--base);filter:brightness(2)}55%{transform:scale(.85) rotate(4deg) var(--base);filter:none}100%{transform:scale(1) rotate(0deg) var(--base)}}
+.burst.dem{border-color:var(--dem);animation-delay:.05s}
+@media (prefers-reduced-motion:reduce){.pc.demote{animation:none}}
 .papg{position:relative;display:inline-block;line-height:1;transform:translateY(.06em) scale(.88)}
 .tiara{position:absolute;left:0;top:0;width:1em;height:1em;overflow:visible}
 .tiara .tf{fill:currentColor;stroke-width:1.2;stroke-linejoin:round;vector-effect:non-scaling-stroke}
@@ -242,6 +257,27 @@ details ul{padding-left:1.1em;margin:6px 0}
 body.grabbing,body.grabbing *{cursor:grabbing!important}
 .pc.land{animation:land .18s ease-out both}
 @keyframes land{from{transform:scale(1.12) var(--base)}to{transform:scale(1) var(--base)}}
+.pc.arrive.epf{animation:epflip .62s cubic-bezier(.45,.05,.35,1) both}
+.pc.land.epf{animation:epflip0 .58s cubic-bezier(.45,.05,.35,1) both}
+@keyframes epflip{0%{transform:translate(calc(var(--dx)*12.5cqw),calc(var(--dy)*12.5cqw)) rotate(0deg) scale(1) var(--base)}
+  50%{transform:translate(calc(var(--dx)*6.25cqw),calc(var(--dy)*6.25cqw - 7cqw)) rotate(180deg) scale(1.15) var(--base)}
+  100%{transform:translate(0,0) rotate(360deg) scale(1) var(--base)}}
+@keyframes epflip0{0%{transform:translate(0,0) rotate(0deg) scale(1) var(--base)}50%{transform:translate(0,-6cqw) rotate(180deg) scale(1.15) var(--base)}
+  100%{transform:translate(0,0) rotate(360deg) scale(1) var(--base)}}
+.capt.eppir{animation:eppir 1s cubic-bezier(.4,.1,.3,1) both}
+@keyframes eppir{
+  0%,10%{transform:translate(0,0) rotate(0deg) scale(1,1);opacity:1}
+  22%{transform:translate(0,-1.4cqw) rotate(0deg) scale(-1,1.04);opacity:1}
+  34%{transform:translate(0,-1.9cqw) rotate(0deg) scale(1,1.04)}
+  46%{transform:translate(0,-1.9cqw) rotate(0deg) scale(-1,1.04)}
+  58%{transform:translate(0,-1.4cqw) rotate(0deg) scale(1,1)}
+  100%{transform:translate(var(--tx),var(--ty)) rotate(var(--rot)) scale(.33,.33);opacity:.92}}
+@media (prefers-reduced-motion:reduce){.capt.eppir{animation:none}}
+.fr{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:0;transform-origin:left center;
+  background:linear-gradient(90deg,#0055a4 0 33.34%,#fff 33.34% 66.67%,#ef4135 66.67%);animation:frflag .9s ease-in-out .1s both}
+@keyframes frflag{0%{opacity:0;transform:scaleX(.15)}14%{opacity:.88;transform:scaleX(1) skewY(0deg)}26%{transform:skewY(2.5deg)}38%{transform:skewY(-2deg)}
+  50%{transform:skewY(1.5deg)}62%{transform:skewY(-1deg)}78%{opacity:.88;transform:skewY(0deg)}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.pc.arrive.epf,.pc.land.epf{animation:none}.fr{display:none}}
 .pc.arrive{z-index:5;animation:arrive .17s cubic-bezier(.25,.7,.35,1) both}
 .pc.arrive.hit{animation:arriveHit .3s cubic-bezier(.25,.7,.35,1) both}
 @keyframes arrive{from{transform:translate(calc(var(--dx)*12.5cqw),calc(var(--dy)*12.5cqw)) var(--base)}to{transform:translate(0,0) var(--base)}}
@@ -453,7 +489,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <option value="face">Frente a frente: peças de cima invertidas</option>
       <option value="pass">Passar para o amigo: só as peças giram</option>
     </select></div>
-    <div class="ver">Versão 8.3</div>
+    <div class="ver">Versão 9.6</div>
   </div>
 
   <div class="panel">
@@ -481,7 +517,9 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <p><strong>Paladino</strong> (cavalo alado): peça extra, que só aparece por promoção. Em cada lance ele escolhe entre andar como torre ou saltar como cavalo. Como torre, não pula ninguém; só pula peças quando salta como cavalo. Vale 8, entre a dama e a torre.</p>
       <p><strong>Papa</strong> (bispo com tiara): outra peça extra, também só por promoção. Anda como bispo e, além disso, pode dar um passo na horizontal ou na vertical, mudando a cor da casa. <strong>Ele não captura: converte.</strong> Onde ele poderia capturar, pela diagonal ou pelo passo, ele fica no lugar e a peça inimiga passa para a cor dele, como os monges do Age of Empires. <strong>O risco:</strong> se a peça convertida estava protegida e o adversário a capturar logo no lance seguinte, o Papa morre junto (aparece † na lista de lances). Se o adversário não capturar na hora, a conversão fica valendo para sempre. Cabe ao jogador perceber se a peça está protegida: ao selecionar o Papa, todos os alvos aparecem igual, em violeta pontilhado. Depois da conversão, o Papa e a peça convertida ficam contornados em violeta enquanto o risco existir. O rei não pode ser convertido: o Papa só dá xeque normal. Conversão conta como captura para a regra dos 50/75 lances. Na lista de lances aparece em violeta com ✝, por exemplo <strong>S✝e5</strong>. Com a conversão ele fica mais forte que antes; vale cerca de 6.</p>
       <p><strong>Revisão da partida:</strong> quando a partida termina, o botão Revisar partida analisa todas as posições (contra o bot ou contra um amigo) e mostra a precisão de cada lado (baseada no Lichess, com um ajuste: cada lance perde pela chance de vitória ou pelo material entregue, o que for maior, então lances descuidados contam mesmo com a partida já decidida; erros graves e momentos decisivos pesam mais), o gráfico da avaliação, a avaliação de cada lance com um comentário curto (o que o lance fez, o que o adversário pode responder, qual era o melhor lance e como fica a partida) e o melhor lance indicado por uma seta verde, a precisão por fase do jogo, os momentos decisivos e as curiosidades das regras novas.</p>
-      <p>Notação em português: R rei, D dama, P paladino, S papa (Santo Padre), T torre, B bispo, C cavalo.</p>
+      <p><strong>Ministro</strong> (coluna romana do Senado com a coroa de louros no alto, o primeiro-ministro do reino): mais uma peça que só aparece por promoção. Anda e captura como torre e também pode dar um passo na diagonal, como o rei.</p>
+      <p><strong>Papa e Ministro são únicos:</strong> cada lado pode promover no máximo um Papa e um Ministro na partida inteira. Se ele morrer, for rebaixado ou convertido, não se promove outro. E um lado nunca tem dois ao mesmo tempo: o Papa não converte o Papa adversário, nem converte o Ministro adversário se o seu lado já tiver um.</p>
+      <p>Notação em português: R rei, D dama, P paladino, M ministro, S papa (Santo Padre), T torre, B bispo, C cavalo.</p>
     </details>
   </div>
 </div>
@@ -498,11 +536,11 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
 (()=>{
 const FILES='abcdefgh';
 const NAME={w:'Brancas',b:'Pretas'};
-const GLYPH={k:'♚',q:'♛',l:'♞',a:'♝',r:'♜',b:'♝',n:'♞',p:'♟'};
-const PT={k:'R',q:'D',l:'P',a:'S',r:'T',b:'B',n:'C'};
-const NOMEP={q:'Dama',l:'Paladino',a:'Papa',r:'Torre',b:'Bispo',n:'Cavalo'};
-const OWN={q:'a própria Dama',l:'o próprio Paladino',a:'o próprio Papa',r:'a própria Torre',b:'o próprio Bispo',n:'o próprio Cavalo',p:'o próprio Peão'};
-const VAL={p:1,n:3,b:3,r:5,a:6,l:8,q:9,k:0};
+const GLYPH={k:'♚',q:'♛',l:'♞',m:'♜',a:'♝',r:'♜',b:'♝',n:'♞',p:'♟'};
+const PT={k:'R',q:'D',l:'P',m:'M',a:'S',r:'T',b:'B',n:'C'};
+const NOMEP={q:'Dama',l:'Paladino',m:'Ministro',a:'Papa',r:'Torre',b:'Bispo',n:'Cavalo'};
+const OWN={q:'a própria Dama',l:'o próprio Paladino',m:'o próprio Ministro',a:'o próprio Papa',r:'a própria Torre',b:'o próprio Bispo',n:'o próprio Cavalo',p:'o próprio Peão'};
+const VAL={p:1,n:3,b:3,r:5,a:6,m:7,l:8,q:9,k:0};
 const STORE='xadrez-rei-tirano-v1';
 const $=id=>document.getElementById(id);
 
@@ -528,9 +566,10 @@ function attacked(b,sq,by){
   for(const df of[-1,1]) if(inB(pr,f+df)&&b[idx(pr,f+df)]===up('p')) return true;
   for(const[dr,df]of N_OFF){const rr=r+dr,ff=f+df;if(inB(rr,ff)){const p=b[idx(rr,ff)];if(p===up('n')||p===up('l'))return true;}}
   for(const[dr,df]of K_OFF){const rr=r+dr,ff=f+df;if(inB(rr,ff)&&b[idx(rr,ff)]===up('k'))return true;}
-  const slide=(dirs,a,q,x)=>{for(const[dr,df]of dirs){let rr=r+dr,ff=f+df;while(inB(rr,ff)){const p=b[idx(rr,ff)];if(p){if(p===a||p===q||p===x)return true;break;}rr+=dr;ff+=df;}}return false;};
+  const slide=(dirs,set)=>{for(const[dr,df]of dirs){let rr=r+dr,ff=f+df;while(inB(rr,ff)){const p=b[idx(rr,ff)];if(p){if(set.includes(p))return true;break;}rr+=dr;ff+=df;}}return false;};
+  for(const[dr,df]of DIAG){const rr=r+dr,ff=f+df;if(inB(rr,ff)&&b[idx(rr,ff)]===up('m'))return true;} // passo diagonal do Ministro
   for(const[dr,df]of ORTH){const rr=r+dr,ff=f+df;if(inB(rr,ff)&&b[idx(rr,ff)]===up('a'))return true;} // passo do Papa
-  return slide(DIAG,up('b'),up('q'),up('a'))||slide(ORTH,up('r'),up('q'),up('l')); // paladino ataca como torre e como cavalo
+  return slide(DIAG,up('b')+up('q')+up('a'))||slide(ORTH,up('r')+up('q')+up('l')+up('m')); // paladino e ministro atacam como torre
 }
 const kingSq=(b,c)=>b.indexOf(c==='w'?'K':'k');
 const inCheck=(s,c)=>attacked(s.b,kingSq(s.b,c),other(c));
@@ -540,7 +579,10 @@ function pseudo(s,from){
   const add=(to,x={})=>out.push({from,to,...x});
   if(t==='p'){
     const dir=c==='w'?-1:1,start=c==='w'?6:1,last=c==='w'?0:7,r1=r+dir;
-    const push=(to,cap)=>{if((to>>3)===last){for(const pr of'larbn')add(to,{promo:pr,cap});}else add(to,{cap});}; // sem promoção a dama: perdeu a dama, não tem outra
+    // sem promoção a dama; Papa e Ministro: uma promoção de cada por lado na partida, e nunca dois ao mesmo tempo
+    const pu=s.pu||'',okM=!pu.includes(c+'m')&&!b.includes(c==='w'?'M':'m'),okA=!pu.includes(c+'a')&&!b.includes(c==='w'?'A':'a');
+    const PR='l'+(okM?'m':'')+(okA?'a':'')+'rbn';
+    const push=(to,cap)=>{if((to>>3)===last){for(const pr of PR)add(to,{promo:pr,cap});}else add(to,{cap});};
     if(inB(r1,f)&&!b[idx(r1,f)]){push(idx(r1,f),false);const r2=r+2*dir;if(r===start&&!b[idx(r2,f)])add(idx(r2,f),{dbl:true});}
     for(const df of[-1,1]){const ff=f+df;if(!inB(r1,ff))continue;const to=idx(r1,ff);
       if(b[to]&&col(b[to])===en)push(to,true);else if(to===s.ep)add(to,{ep:true,cap:true});}
@@ -548,11 +590,17 @@ function pseudo(s,from){
     // Papa: anda como bispo e também dá um passo na horizontal ou vertical (troca de cor).
     // Onde capturaria, ele CONVERTE: fica parado e a peça inimiga passa para a cor dele. O rei nunca é convertido (só leva xeque).
     // Se o adversário capturar a peça convertida logo no lance seguinte, o Papa morre junto (ver apply).
-    const hit=to=>{if(typ(b[to])!=='k')add(to,{cap:true,conv:true});};
+    const hit=to=>{const tq=typ(b[to]);if(tq==='k'||tq==='a')return;if(tq==='m'&&b.includes(c==='w'?'M':'m'))return;add(to,{cap:true,conv:true});};
     for(const[dr,df]of DIAG){let rr=r+dr,ff=f+df;while(inB(rr,ff)){const to=idx(rr,ff),q=b[to];
       if(!q)add(to);else{if(col(q)===en)hit(to);break;}rr+=dr;ff+=df;}}
     for(const[dr,df]of ORTH){const rr=r+dr,ff=f+df;if(!inB(rr,ff))continue;const to=idx(rr,ff),q=b[to];
       if(!q)add(to);else if(col(q)===en)hit(to);}
+  }else if(t==='m'){
+    // Ministro: anda e captura como torre e também dá um passo na diagonal (como o rei), capturando normalmente
+    for(const[dr,df]of ORTH){let rr=r+dr,ff=f+df;while(inB(rr,ff)){const to=idx(rr,ff),q=b[to];
+      if(!q)add(to);else{if(col(q)===en)add(to,{cap:true});break;}rr+=dr;ff+=df;}}
+    for(const[dr,df]of DIAG){const rr=r+dr,ff=f+df;if(!inB(rr,ff))continue;const to=idx(rr,ff),q=b[to];
+      if(!q)add(to);else if(col(q)===en)add(to,{cap:true});}
   }else if(t==='l'){
     // Paladino: OU salta como cavalo (pode pular peças), OU desliza como torre (não pula ninguém)
     for(const[dr,df]of N_OFF){const rr=r+dr,ff=f+df;if(!inB(rr,ff))continue;const to=idx(rr,ff),q=b[to];
@@ -586,7 +634,14 @@ function apply(s,m){
   if(m.conv){ // conversão do Papa: ele não sai do lugar; a peça alvo troca de cor
     const q=b[m.to];b[m.to]=c==='w'?q.toUpperCase():q.toLowerCase();
     const cr={...s.cr};const x=m.to;if(x===63)cr.K=false;if(x===56)cr.Q=false;if(x===7)cr.k=false;if(x===0)cr.q=false;
-    return {b,turn:other(c),cr,ep:-1,half:0,full:s.full+(c==='b'?1:0),link:{to:m.to,papa:m.from}};
+    return {b,turn:other(c),cr,ep:-1,half:0,full:s.full+(c==='b'?1:0),link:{to:m.to,papa:m.from},pu:s.pu||''};
+  }
+  if(m.dem){ // poder do Ministro: ele não sai do lugar
+    const q=b[m.to];b[m.to]=m.dem==='p'?(col(q)==='w'?'P':'p'):'';
+    const cr={...s.cr};const x=m.to;if(x===63)cr.K=false;if(x===56)cr.Q=false;if(x===7)cr.k=false;if(x===0)cr.q=false;
+    // removeu a peça recém-convertida pelo Papa: o Papa morre junto, como numa captura
+    if(m.dem==='x'&&s.link&&m.to===s.link.to){const pp=b[s.link.papa];if(pp&&typ(pp)==='a'&&col(pp)!==c)b[s.link.papa]='';}
+    return {b,turn:other(c),cr,ep:-1,half:0,full:s.full+(c==='b'?1:0),pu:s.pu||''};
   }
   let captured=b[m.to]||'';
   b[m.to]=m.promo?(c==='w'?m.promo.toUpperCase():m.promo):p; b[m.from]='';
@@ -597,7 +652,8 @@ function apply(s,m){
   for(const x of[m.from,m.to]){if(x===63)cr.K=false;if(x===56)cr.Q=false;if(x===7)cr.k=false;if(x===0)cr.q=false;}
   // capturou logo a peça recém-convertida: o Papa que converteu morre junto
   if(s.link&&captured&&m.to===s.link.to){const pp=b[s.link.papa];if(pp&&typ(pp)==='a'&&col(pp)!==c)b[s.link.papa]='';}
-  return {b,turn:other(c),cr,ep:m.dbl?(m.from+m.to)/2:-1,half:(typ(p)==='p'||captured)?0:s.half+1,full:s.full+(c==='b'?1:0)};
+  const pu=(s.pu||'')+(m.promo==='a'||m.promo==='m'?c+m.promo:'');
+  return {b,turn:other(c),cr,ep:m.dbl?(m.from+m.to)/2:-1,half:(typ(p)==='p'||captured)?0:s.half+1,full:s.full+(c==='b'?1:0),pu};
 }
 
 function legalFrom(s,from){
@@ -616,7 +672,7 @@ const {N_OFF,K_OFF,DIAG,ORTH,col,typ,other,rc,idx,inB,initState,attacked,kingSq,
 // Motor do bot: busca alfa-beta com aprofundamento iterativo e quiescência
 function ENGINE(R){
   const {pseudo,apply,attacked,kingSq,col,typ,other}=R;
-  const V={p:100,n:320,b:330,r:500,a:650,l:850,q:900,k:0};
+  const V={p:100,n:320,b:330,r:500,a:650,m:680,l:850,q:900,k:0};
   const T={
     p:[0,0,0,0,0,0,0,0,50,50,50,50,50,50,50,50,10,10,20,30,30,20,10,10,5,5,10,25,25,10,5,5,0,0,0,20,20,0,0,0,5,-5,-10,0,0,-10,-5,5,5,10,10,-20,-20,10,10,5,0,0,0,0,0,0,0,0],
     n:[-50,-40,-30,-30,-30,-30,-40,-50,-40,-20,0,0,0,0,-20,-40,-30,0,10,15,15,10,0,-30,-30,5,15,20,20,15,5,-30,-30,0,15,20,20,15,0,-30,-30,5,10,15,15,10,5,-30,-40,-20,0,5,5,0,-20,-40,-50,-40,-30,-30,-30,-30,-40,-50],
@@ -628,6 +684,7 @@ function ENGINE(R){
   };
   T.l=T.r.map((v,i)=>v+Math.round(T.n[i]*.6)); // paladino: torre + centralização de cavalo
   T.a=T.b.map((v,i)=>v+Math.round(T.n[i]*.3)); // papa: bispo + um pouco de centralização
+  T.m=T.r.map((v,i)=>v+Math.round(T.n[i]*.25)); // ministro: torre + um pouco de centralização
   const MATE=100000;
   let nodes=0,deadline=0,stopped=false,canStop=false,killers=[],path=[],hist=null;
   const cdist=i=>{const r=i>>3,f=i&7;return Math.max(3-r,r-4)+Math.max(3-f,f-4);};
@@ -656,6 +713,7 @@ function ENGINE(R){
     if(m.promo)return 90000+V[m.promo];
     if(m.self)return -5000;
     if(m.conv)return 60000+V[typ(s.b[m.to])]*20; // converter vale o dobro: tira dele e dá para você
+    if(m.dem)return 58000+(m.dem==='p'?V[typ(s.b[m.to])]-100:100)*10;
     if(m.cap)return 50000+(m.ep?100:V[typ(s.b[m.to])])*10-V[typ(s.b[m.from])]/10;
     const k=killers[ply];if(k&&k[0]===m.from&&k[1]===m.to)return 40000;
     return 0;
@@ -723,7 +781,9 @@ function ENGINE(R){
 const sqName=i=>FILES[i&7]+(8-(i>>3));
 const WING=`<svg class="wing" viewBox="0 0 100 100" aria-hidden="true"><path class="wf" d="M14,88 C8,60 18,28 46,12 C62,4 82,2 98,8 C88,14 80,18 72,20 C84,22 92,26 96,32 C86,36 76,38 66,38 C78,42 86,48 88,54 C76,56 64,56 56,54 C64,60 70,66 70,72 C58,74 44,72 36,70 C38,76 34,84 14,88 Z"/><path class="wl" d="M28,66 C40,46 56,28 84,14 M34,68 C48,54 62,44 82,34 M40,70 C50,62 60,58 74,52"/></svg>`;
 const TIARA=`<svg class="tiara" viewBox="0 0 1000 1000" aria-hidden="true"><g transform="translate(0 719.5) scale(1 -1)"><path class="tf" d="M322,262 C300,330 300,470 340,575 C370,650 430,700 500,700 C570,700 630,650 660,575 C700,470 700,330 678,262 Z"/><path class="tb" d="M318,335 Q500,365 682,335 M327,447 Q500,474 673,447 M352,550 Q500,574 648,550"/><path class="tf" d="M468,735 A32,32 0 1,0 532,735 A32,32 0 1,0 468,735 Z M488,762 H512 V800 H542 V824 H512 V858 H488 V824 H458 V800 H488 Z"/></g></svg>`;
-const fig=t=>t==='l'?`<span class="palg">${GLYPH.l}\uFE0E${WING}</span>`:t==='a'?`<span class="papg">${GLYPH.a}\uFE0E${TIARA}</span>`:`${GLYPH[t]}\uFE0E`;
+// Ministro: coluna romana do Senado com a coroa de louros no alto (símbolo, sem rosto)
+const COLUNA=`<svg class="colm" viewBox="0 0 1000 1000" aria-hidden="true"><g transform="translate(0 719.5) scale(1 -1)"><g class="bf"><ellipse cx="460" cy="483" rx="20" ry="44" transform="rotate(40 460 483)"/><ellipse cx="467" cy="502" rx="20" ry="44" transform="rotate(100 467 502)"/><ellipse cx="427" cy="502" rx="20" ry="44" transform="rotate(21 427 502)"/><ellipse cx="440" cy="517" rx="20" ry="44" transform="rotate(81 440 517)"/><ellipse cx="402" cy="531" rx="20" ry="44" transform="rotate(2 402 531)"/><ellipse cx="419" cy="541" rx="20" ry="44" transform="rotate(62 419 541)"/><ellipse cx="387" cy="566" rx="20" ry="44" transform="rotate(-17 387 566)"/><ellipse cx="406" cy="570" rx="20" ry="44" transform="rotate(43 406 570)"/><ellipse cx="385" cy="604" rx="20" ry="44" transform="rotate(-36 385 604)"/><ellipse cx="405" cy="602" rx="20" ry="44" transform="rotate(24 405 602)"/><ellipse cx="395" cy="641" rx="20" ry="44" transform="rotate(-55 395 641)"/><ellipse cx="413" cy="633" rx="20" ry="44" transform="rotate(5 413 633)"/><ellipse cx="417" cy="673" rx="20" ry="44" transform="rotate(-74 417 673)"/><ellipse cx="431" cy="659" rx="20" ry="44" transform="rotate(-14 431 659)"/><ellipse cx="447" cy="695" rx="20" ry="44" transform="rotate(-93 447 695)"/><ellipse cx="456" cy="678" rx="20" ry="44" transform="rotate(-33 456 678)"/><ellipse cx="484" cy="707" rx="20" ry="44" transform="rotate(-112 484 707)"/><ellipse cx="487" cy="687" rx="20" ry="44" transform="rotate(-52 487 687)"/><ellipse cx="540" cy="483" rx="20" ry="44" transform="rotate(-40 540 483)"/><ellipse cx="533" cy="502" rx="20" ry="44" transform="rotate(-100 533 502)"/><ellipse cx="573" cy="502" rx="20" ry="44" transform="rotate(-21 573 502)"/><ellipse cx="560" cy="517" rx="20" ry="44" transform="rotate(-81 560 517)"/><ellipse cx="598" cy="531" rx="20" ry="44" transform="rotate(-2 598 531)"/><ellipse cx="581" cy="541" rx="20" ry="44" transform="rotate(-62 581 541)"/><ellipse cx="613" cy="566" rx="20" ry="44" transform="rotate(17 613 566)"/><ellipse cx="594" cy="570" rx="20" ry="44" transform="rotate(-43 594 570)"/><ellipse cx="615" cy="604" rx="20" ry="44" transform="rotate(36 615 604)"/><ellipse cx="595" cy="602" rx="20" ry="44" transform="rotate(-24 595 602)"/><ellipse cx="605" cy="641" rx="20" ry="44" transform="rotate(55 605 641)"/><ellipse cx="587" cy="633" rx="20" ry="44" transform="rotate(-5 587 633)"/><ellipse cx="583" cy="673" rx="20" ry="44" transform="rotate(74 583 673)"/><ellipse cx="569" cy="659" rx="20" ry="44" transform="rotate(14 569 659)"/><ellipse cx="553" cy="695" rx="20" ry="44" transform="rotate(93 553 695)"/><ellipse cx="544" cy="678" rx="20" ry="44" transform="rotate(33 544 678)"/><ellipse cx="516" cy="707" rx="20" ry="44" transform="rotate(112 516 707)"/><ellipse cx="513" cy="687" rx="20" ry="44" transform="rotate(52 513 687)"/><path d="M456,428 L544,428 L538,478 L462,478 Z"/><path d="M180,0 L820,0 L820,58 L772,58 L762,110 L238,110 L228,58 L180,58 Z"/><path d="M322,110 L678,110 L660,380 L340,380 Z"/><path d="M266,380 L734,380 L734,428 L266,428 Z"/><path d="M300,404 m-32,0 a32,32 0 1,0 64,0 a32,32 0 1,0 -64,0 M700,404 m-32,0 a32,32 0 1,0 64,0 a32,32 0 1,0 -64,0"/></g><path class="bd" d="M402,138 L407,354 M467,138 L469,354 M533,138 L531,354 M598,138 L593,354" stroke-width="18"/><path class="bl" d="M300,404 m-10,0 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0 M700,404 m-10,0 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0"/></g></svg>`;
+const fig=t=>t==='m'?`<span class="ming"><span class="ph">${GLYPH.m}\uFE0E</span>${COLUNA}</span>`:t==='l'?`<span class="palg">${GLYPH.l}\uFE0E${WING}</span>`:t==='a'?`<span class="papg">${GLYPH.a}\uFE0E${TIARA}</span>`:`${GLYPH[t]}\uFE0E`;
 const glyph=(p,up,extra='',style='')=>`<span class="pc ${col(p)}${up?' up':''}${extra}"${style?` style="${style}"`:''}>${fig(typ(p))}</span>`;
 
 function san(s,m,legal){
@@ -739,7 +799,7 @@ function san(s,m,legal){
         dis=!sf?FILES[m.from&7]:!sr?String(8-(m.from>>3)):sqName(m.from);
       }
     }
-    str=PT[t]+dis+(m.self?'⊗':m.conv?'✝':m.cap?'x':'')+sqName(m.to);
+    str=PT[t]+dis+(m.self?'⊗':m.conv?'✝':m.dem==='p'?'↓':m.dem==='x'?'✕':m.cap?'x':'')+sqName(m.to);
   }
   if(s.link&&m.cap&&!m.conv&&m.to===s.link.to)str+='†'; // o Papa morreu junto
   const n=apply(s,m);
@@ -749,7 +809,7 @@ function san(s,m,legal){
 
 function posKey(s,legal){
   const epOk=legal.some(m=>m.ep);
-  return s.b.map(x=>x||'.').join('')+s.turn+(s.cr.K?'K':'')+(s.cr.Q?'Q':'')+(s.cr.k?'k':'')+(s.cr.q?'q':'')+(epOk?'e'+s.ep:'')+(s.link?'L'+s.link.to+'.'+s.link.papa:'');
+  return s.b.map(x=>x||'.').join('')+s.turn+(s.cr.K?'K':'')+(s.cr.Q?'Q':'')+(s.cr.k?'k':'')+(s.cr.q?'q':'')+(epOk?'e'+s.ep:'')+(s.link?'L'+s.link.to+'.'+s.link.papa:'')+(s.pu?'u'+s.pu:'');
 }
 function insufficient(b){
   const pcs=[];b.forEach((p,i)=>{if(p&&typ(p)!=='k')pcs.push([typ(p),i]);});
@@ -766,7 +826,7 @@ try{muted=localStorage.getItem(STORE+'-mute')==='1';}catch(e){}
 function ac(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();decodificar();}if(AC.state==='suspended')AC.resume();return AC;}
 // ---------- Sons de arquivo (pasta sons/ ao lado do index.html) ----------
 // Se existir sons/<nome>.mp3 ou .wav, ele toca no lugar do som sintetizado.
-const SOM_ARQ={martyr:'papa-morre',convert:'conversao',move:'lance',capture:'captura',castle:'roque',promote:'promocao',check:'xeque',mate:'mate',resign:'resignar',end:'fim',self:'autocaptura'};
+const SOM_ARQ={demote:'rebaixar',martyr:'papa-morre',convert:'conversao',move:'lance',capture:'captura',castle:'roque',promote:'promocao',check:'xeque',mate:'mate',resign:'resignar',end:'fim',self:'autocaptura'};
 const RAW={},BUFS={},FALHAS={};
 async function carregarSons(){
   if(location.protocol==='file:')return renderSndInfo(); // arquivo avulso: não há pasta para ler
@@ -865,6 +925,8 @@ function sfxRaw(kind){
       knock(t,.85,1600,bus());thump(t,120,70,.08,.25);
       noise(t+.06,.16,'bandpass',700,2200,2.5,.18,.06);
       knock(t+.2,.9,1150,bus());thump(t+.2,110,60,.1,.3);break;
+    case'demote': // carimbo: batida seca e duas notas descendo
+      knock(t,1,900,bus());thump(t,170,55,.3,.5);tone(t+.09,494,.25,.06,'triangle',bus());tone(t+.22,330,.4,.06,'triangle',bus());break;
     case'martyr': // o Papa morre junto: sino grave descendo
       bell(t,392,1.2,.09);bell(t+.16,262,1.5,.08);thump(t,110,55,.3,.35);break;
     case'convert': // coro curto que sobe e brilho: a peça muda de lado
@@ -889,7 +951,7 @@ function sfxRaw(kind){
 
 // ---------- Estado da partida ----------
 let G=null,selected=-1,targets=[],legalNow=[],modalOpen=false,view=null,ANIM=null;
-const ANIM_MS=900;const cellHTML=[],cellBadge=[];
+const ANIM_MS=1100;const cellHTML=[],cellBadge=[];
 const modo=()=>G.bot?'normal':G.mode;
 const passUp=()=>modo()==='pass'&&!G.result&&cur().turn!==G.orient;
 const ply=()=>view===null?G.states.length-1:view;
@@ -947,21 +1009,22 @@ function claimMenu(t){
 
 function doMove(m,opt={}){
   const s=cur(),sanStr=san(s,m,legalNow);
-  const captured=m.conv?'':m.ep?(s.turn==='w'?'p':'P'):(s.b[m.to]||''); // convertida não sai do tabuleiro
+  const captured=m.conv||m.dem==='p'?'':m.ep?(s.turn==='w'?'p':'P'):(s.b[m.to]||''); // convertida ou rebaixada não sai do tabuleiro
+  const dem=m.dem==='p'?s.b[m.to]:'',cass=m.dem==='x';
   const conv=m.conv?s.b[m.to]:'';
   const c=G.clock;
   if(c.base){const now=Date.now();if(c.running)c[s.turn]-=now-c.last;c[s.turn]+=c.inc;c.running=true;c.last=now;}
   G.states.push(apply(s,m));
   const capSq=m.ep?m.to+(s.turn==='w'?8:-8):m.to; // no en passant, o peão capturado estava em outra casa
-  const papaSq=s.link&&captured&&m.to===s.link.to&&s.b[s.link.papa]&&typ(s.b[s.link.papa])==='a'?s.link.papa:-1;
+  const papaSq=s.link&&captured&&!m.conv&&m.to===s.link.to&&s.b[s.link.papa]&&typ(s.b[s.link.papa])==='a'?s.link.papa:-1;
   G.moves.push({san:sanStr,self:!!m.self,from:m.from,to:m.to,promo:m.promo||'',captured,capSq,conv,
-    papa:papaSq>=0?s.b[papaSq]:'',papaSq,by:s.turn});
-  ANIM={ply:G.states.length-1,t0:Date.now(),from:m.from,to:m.to,cap:!!captured,conv:!!m.conv,drag:!!opt.drag,
+    papa:papaSq>=0?s.b[papaSq]:'',papaSq,dem,cass,by:s.turn});
+  ANIM={ply:G.states.length-1,t0:Date.now(),from:m.from,to:m.to,cap:!!captured,conv:!!m.conv,dem:m.dem||'',ep:!!m.ep,drag:!!opt.drag,
     rook:m.castle?{K:[63,61],Q:[56,59],k:[7,5],q:[0,3]}[m.castle]:null};
   selected=-1;targets=[];view=null;
   evaluate();
   { const n=cur(),chk=inCheck(n,n.turn);
-    sfx(m.conv?'convert':m.self?'self':m.promo?'promote':m.castle?'castle':captured?'capture':'move');
+    sfx(m.conv?'convert':m.dem==='p'?'demote':m.self?'self':m.promo?'promote':m.castle?'castle':captured?'capture':'move');
     if(papaSq>=0)setTimeout(()=>sfx('martyr'),160);
     if(!G.result&&chk)setTimeout(()=>sfx('check'),110); }
   if(modo()==='auto'&&!G.result)G.orient=cur().turn;
@@ -1065,7 +1128,7 @@ const EVCACHE=new Map(),CLSCACHE=new Map(),SECCACHE=new Map();
 const barOn=()=>!!(G&&G.bot&&G.bot.evalBar);
 const clsOn=()=>!!(G&&G.bot&&G.bot.classify);
 const anOn=()=>barOn()||clsOn()||REV;
-const posK=st=>st.b.map(x=>x||'.').join('')+st.turn+(st.cr.K?'K':'')+(st.cr.Q?'Q':'')+(st.cr.k?'k':'')+(st.cr.q?'q':'')+st.ep+(st.link?'L'+st.link.to+'.'+st.link.papa:'');
+const posK=st=>st.b.map(x=>x||'.').join('')+st.turn+(st.cr.K?'K':'')+(st.cr.Q?'Q':'')+(st.cr.k?'k':'')+(st.cr.q?'q':'')+st.ep+(st.link?'L'+st.link.to+'.'+st.link.papa:'')+(st.pu?'u'+st.pu:'');
 const keyAt=k=>posK(G.states[k])+'|'+k;
 function nextPly(){
   const N=G.states.length-1,P=ply(),need=k=>!EVCACHE.has(keyAt(k));
@@ -1212,7 +1275,7 @@ function renderEval(){
 
 // ---------- Comentários dos lances (revisão) ----------
 // Frases curtas montadas a partir do próprio lance, da resposta que o motor daria e do melhor lance.
-const NOMEPC={p:'peão',n:'cavalo',b:'bispo',r:'torre',q:'dama',l:'Paladino',a:'Papa',k:'rei'};
+const NOMEPC={p:'peão',n:'cavalo',b:'bispo',r:'torre',q:'dama',l:'Paladino',a:'Papa',m:'Ministro',k:'rei'};
 const oa=t=>(t==='r'||t==='q'?'a ':'o ')+NOMEPC[t];         // "o cavalo", "a torre"
 const doa=t=>(t==='r'||t==='q'?'da ':'do ')+NOMEPC[t];       // "do cavalo", "da dama"
 const proprio=t=>(t==='r'||t==='q'?'a própria ':'o próprio ')+NOMEPC[t];
@@ -1228,6 +1291,8 @@ function efeitoDe(st,m,sanTxt){ // o que um lance faz, para "o melhor era X, …
   const alvo=m.ep?'p':st.b[m.to]&&col(st.b[m.to])!==col(st.b[m.from])?typ(st.b[m.to]):null;
   let e='';
   if(m.conv)e=`, convertendo ${oa(alvo)}`;
+  else if(m.dem==='p')e=`, rebaixando ${oa(alvo)} a peão`;
+  else if(m.dem==='x')e=', removendo o peão';
   else if(m.self)e=`, comendo ${proprio(alvo)}`;
   else if(alvo)e=`, capturando ${oa(alvo)}`;
   else if(m.promo)e=`, promovendo a ${NOMEPC[m.promo]}`;
@@ -1253,6 +1318,8 @@ function comentario(k,inf,best,only){
   if(/#$/.test(mv.san))F.push('Xeque-mate!');
   else if(mv.conv){F.push(`O Papa converte ${oa(typ(mv.conv))} em ${onde}.`);
     if(attacked(S1.b,mv.to,o))F.push(`Conversão arriscada: se as ${NAME[o]} capturarem a peça agora, o Papa morre junto.`);}
+  else if(mv.dem)F.push(`O Ministro rebaixa ${oa(typ(mv.dem))} em ${onde} a peão.`);
+  else if(mv.cass)F.push(`O Ministro remove o peão desprotegido em ${onde}.`);
   else if(mv.self)F.push(`O rei come ${proprio(typ(mv.captured))} em ${onde} (regra do Rei Tirano).`);
   else if(mv.papa)F.push('Captura a peça recém-convertida e o Papa morre junto.');
   else if(mv.san.startsWith('O-O'))F.push('Roque: o rei vai para a segurança e a torre entra em jogo.');
@@ -1270,6 +1337,7 @@ function comentario(k,inf,best,only){
   else if(inf.id==='miss')F.push(`As ${NAME[o]} tinham acabado de errar e havia como punir.`);
   else if(ruim){const v=inf.b.v,r=respostaDe(k);
     if(v.mate!==undefined&&v.winner===o&&v.mate>0)F.push(`Agora as ${NAME[o]} têm mate em ${v.mate}${r?`, começando com ${r.san}`:''}.`);
+    else if(r&&r.m.dem==='p')F.push(`Agora ${r.san} rebaixa ${oa(r.alvo)} a peão.`);
     else if(r&&r.alvo&&r.alvo!=='p'&&!r.conv)F.push(`Agora ${r.san} ganha ${oa(r.alvo)}.`);
     else if(r&&r.conv)F.push(`Agora o Papa adversário converte ${oa(r.alvo)} com ${r.san}.`);
     else if(r)F.push(`A resposta forte é ${r.san}.`);}
@@ -1455,7 +1523,8 @@ function confirmSelf(m){
 }
 function askPromo(ms,opt={}){
   const c=cur().turn;
-  modal('Promover peão','<div class="promo">'+['l','a','r','b','n'].map(x=>
+  const PRO=['l','m','a','r','b','n'].filter(x=>ms.some(m=>m.promo===x)); // só as peças permitidas agora
+  modal('Promover peão','<div class="promo">'+PRO.map(x=>
     `<button data-p="${x}" aria-label="${NOMEP[x]}" title="${NOMEP[x]}">${glyph(c==='w'?x.toUpperCase():x)}</button>`).join('')+'</div>',
     [{label:'Cancelar'}],c);
   $('mBody').querySelectorAll('button[data-p]').forEach(b=>b.onclick=()=>{closeModal();doMove(ms.find(m=>m.promo===b.dataset.p),opt);});
@@ -1583,23 +1652,25 @@ function render(){
     if(DRAG&&DRAG.active&&sq===DRAG.from)cls+=' dragsrc';
     if(DRAG&&DRAG.active&&sq===DRAG.over)cls+=' dragover';
     if(sq===chk)cls+=fimTipo==='mate'?' check mate':' check';
-    const t=tset.get(sq);if(t)cls+=t.self?' self':t.conv?' convt':(s.b[sq]?' cap':' dot');
+    const t=tset.get(sq);if(t)cls+=t.self?' self':t.conv?' convt':t.dem?' demt':(s.b[sq]?' cap':' dot');
     if(s.link&&(sq===s.link.to||sq===s.link.papa))cls+=' linked'; // vínculo ativo: se a convertida for capturada agora, o Papa morre junto
     el.className=cls;el.dataset.sq=sq;
     const p=s.b[sq];let extra='',style='';
-    if(anim&&anim.conv&&p&&sq===anim.to){extra=' conv';} // a peça convertida brilha e troca de cor
+    if(anim&&anim.dem==='p'&&p&&sq===anim.to){extra=' demote';} // carimbo: a peça vira peão
+    else if(anim&&anim.dem&&p&&sq===anim.from){extra=' preach';} // o Ministro fica no lugar
+    else if(anim&&anim.conv&&p&&sq===anim.to){extra=' conv';} // a peça convertida brilha e troca de cor
     else if(anim&&anim.conv&&p&&sq===anim.from){extra=' preach';} // o Papa fica no lugar
-    else if(anim&&anim.drag&&p&&sq===anim.to){extra=' land';} // solta pelo arrasto: só um assentar
+    else if(anim&&anim.drag&&p&&sq===anim.to){extra=anim.ep?' land epf':' land';} // solta pelo arrasto: só um assentar (ou a cambalhota do en passant)
     else if(anim&&p&&(sq===anim.to||(anim.rook&&sq===anim.rook[1]))){ // a peça desliza da casa de origem
       const from=sq===anim.to?anim.from:anim.rook[0],[fc,fr]=dpos(from),[tc,tr]=dpos(sq);
-      extra=sq===anim.to&&anim.cap?' arrive hit':' arrive';style=`--dx:${fc-tc};--dy:${fr-tr}`;}
+      extra=sq===anim.to&&anim.ep?' arrive epf':sq===anim.to&&anim.cap?' arrive hit':' arrive';style=`--dx:${fc-tc};--dy:${fr-tr}`;}
     if(p&&sq===fimRei&&fimTipo==='mate')extra+=fimAnim?' mated topple':' mated';
     if(p&&empAnim&&(sq===kW||sq===kB)){
       if(dk==='agree'){ // reverência: cada rei se inclina na direção do outro
         const o=sq===kW?kB:kW,[c1]=dpos(sq),[c2]=dpos(o);extra+=' bow';style=(style?style+';':'')+`--bowdir:${c2>=c1?1:-1}`;}
       if(dk==='stale'&&sq===staleK)extra+=' shake'; // "não tenho para onde ir"
     }
-    let h=p?glyph(p,upOf(p),extra,style):'';
+    let h=(anim&&anim.ep&&sq===capSq?'<span class="fr"></span>':'')+(p?glyph(p,upOf(p),extra,style):''); // en passant: bandeira da França na casa do peão capturado
     if(fimEmp&&p&&(sq===kW||sq===kB))h+=`<span class="half${upOf(p)?' up':''}"><i class="${empAnim?'pop':''}">½</i></span>`;
     if(dk==='fifty'&&empAnim&&p&&(sq===kW||sq===kB))h+=`<span class="hglass"><svg viewBox="0 0 24 32"><path class="hgf" d="M3,2 H21 M3,30 H21"/><path class="hgb" d="M5,2 C5,10 11,13 12,16 C11,19 5,22 5,30 H19 C19,22 13,19 12,16 C13,13 19,10 19,2 Z"/><path class="hgs" d="M8,27 H16 L12,21 Z M9,7 H15 L12,11 Z"/></svg></span>`;
     if((dk==='rep'||dk==='rep5')&&empAnim&&p&&last&&sq===last.to)for(let i=0;i<(dk==='rep5'?5:3);i++)h+=`<span class="echo" style="--i:${i}">${glyph(p,upOf(p))}</span>`; // déjà-vu: a posição se repetiu
@@ -1609,9 +1680,11 @@ function render(){
       // canto inferior esquerdo, do ponto de vista de quem está em pé na casa (peças invertidas usam o canto oposto)
       const cp=last.captured,att=s.b[sq]||(last.by==='w'?'P':'p'),up=upOf(att);
       const pos=up?'--tx:3.75cqw;--ty:-3.75cqw;--rot:105deg':'--tx:-3.75cqw;--ty:3.75cqw;--rot:-75deg';
-      h+=`<span class="capt${anim?' knock':''}" style="${pos}">${glyph(cp,false)}</span>`;
-      if(anim)h+=`<span class="burst${last.self?' gold':''}"></span>`;}
+      const ep=last.capSq!=null&&last.capSq!==last.to; // só no en passant o peão capturado fica fora da casa de chegada
+      h+=`<span class="capt${anim?(ep?' eppir':' knock'):''}" style="${pos}">${glyph(cp,false)}</span>`;
+      if(anim&&!ep)h+=`<span class="burst${last.self?' gold':''}"></span>`;}
     if(anim&&anim.conv&&sq===anim.to)h+=`<span class="burst conv"></span><span class="burst conv b2"></span>`;
+    if(anim&&anim.dem==='p'&&sq===anim.to)h+=`<span class="burst dem"></span>`;
     if(last&&last.papaSq===sq&&last.papa){ // o Papa morreu junto: fica tombado no canto da casa dele até o próximo lance
       const up=upOf(last.papa),pos=up?'--tx:3.75cqw;--ty:-3.75cqw;--rot:105deg':'--tx:-3.75cqw;--ty:3.75cqw;--rot:-75deg';
       h+=`<span class="capt${anim?' knock late':''}" style="${pos}">${glyph(last.papa,false)}</span>`;
@@ -1696,7 +1769,7 @@ function renderMoves(){
   const ol=$('moves');let h='';
   for(let i=0;i<G.moves.length;i+=2){const a=G.moves[i],b=G.moves[i+1];
     const P=ply(),cl=showCls(),c=(k,m)=>{const id=cl?finalCls(k):null;
-      return `<span class="mv${m.self?' sf':''}${m.conv?' cv':''}${P===k?' cur':''}" data-ply="${k}">${m.san}${id?clsBadge(id,'clb-s'):''}${repSet&&repSet.has(k)?LOOPI:''}</span>`;};
+      return `<span class="mv${m.self?' sf':''}${m.conv?' cv':''}${m.dem||m.cass?' dm':''}${P===k?' cur':''}" data-ply="${k}">${m.san}${id?clsBadge(id,'clb-s'):''}${repSet&&repSet.has(k)?LOOPI:''}</span>`;};
     let cnt='';
     if(run){const ks=[i+1,i+2].filter(k=>k<=N&&k>=run.from);
       if(ks.length){const v=Math.floor(G.states[Math.max(...ks)].half/2); // lances completos de cada lado até aqui
