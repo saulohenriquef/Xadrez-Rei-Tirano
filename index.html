@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez do Rei Tirano · versão 10.1 -->
+<!-- index.html · Xadrez do Rei Tirano · versão 11.0 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -171,6 +171,14 @@ h1 .crown{color:var(--gold)}
 #disc.mate .dh{fill:rgb(var(--check));filter:drop-shadow(0 0 4px rgba(var(--check),.85))}
 #disc.mate .dt{fill:rgb(var(--check))}
 @media (prefers-reduced-motion:reduce){#disc{display:none}}
+.onlinebar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 2px 0;padding:6px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-size:.88rem}
+.onlinebar[hidden]{display:none}
+.onlinebar .est{color:var(--muted);display:flex;align-items:center;gap:5px;margin-right:auto}
+.dot{width:8px;height:8px;border-radius:50%;background:#c9a227;display:inline-block}.dot.ok{background:#3c9d5a}.dot.bad{background:rgb(var(--check))}
+.opt.online{display:flex;gap:8px;flex-wrap:wrap}
+.opt.online input{flex:1;min-width:220px;font:inherit;font-size:.85rem;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.codigo{font:800 2.2rem/1 Figtree,system-ui,sans-serif;letter-spacing:.18em;text-align:center;padding:14px 0;color:var(--ink)}
+.codein{text-transform:uppercase;letter-spacing:.15em;font-weight:700}
 .status{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 2px 8px;min-height:36px}
 #statusText{font-weight:600}
 #statusText.over{font-family:Spectral,Georgia,serif;font-size:1.15rem;font-weight:700}
@@ -237,7 +245,7 @@ details ul{padding-left:1.1em;margin:6px 0}
 .card .btns.stack .btn{text-align:left;padding:11px 12px}
 .card .btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:14px}
 .flbl{display:block;font-weight:600;margin:12px 0 6px}
-#botOpts[hidden]{display:none}
+#botOpts[hidden],#friendOpts[hidden],#onlineOpts[hidden]{display:none}
 .card select{font:inherit;width:100%;padding:10px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
 .promo{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .promo button{aspect-ratio:1;border-radius:10px;border:1px solid var(--line);background:var(--light);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
@@ -452,6 +460,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
   </div>
   <div id="barBottom" class="bar"></div>
 
+  <div id="onlineBar" class="onlinebar" hidden></div>
   <div class="status">
     <div id="statusText" aria-live="polite"></div>
     <button class="btn gold" id="bReview" hidden>Revisar partida</button>
@@ -509,6 +518,8 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
   <div class="panel">
     <label class="opt" id="evOptRow"><input type="checkbox" id="evOpt"> Barra de avaliação (contra o bot)</label>
     <label class="opt" id="clsOptRow"><input type="checkbox" id="clsOpt"> Avaliação dos lances (contra o bot)</label>
+    <label class="optlbl" for="dbUrl" style="margin-top:12px">Jogar online (Firebase)</label>
+    <div class="opt online"><input id="dbUrl" placeholder="https://seu-projeto-default-rtdb.firebaseio.com" autocomplete="off" spellcheck="false"><button class="btn mini" id="bJoin">Entrar numa sala</button></div>
     <label class="optlbl" for="moveMode" style="margin-top:12px">Mover as peças</label>
     <div class="opt"><select id="moveMode">
       <option value="both">Tocar ou arrastar</option>
@@ -522,7 +533,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <option value="face">Frente a frente: peças de cima invertidas</option>
       <option value="pass">Passar para o amigo: só as peças giram</option>
     </select></div>
-    <div class="ver">Versão 10.1</div>
+    <div class="ver">Versão 11.0</div>
   </div>
 
   <div class="panel">
@@ -552,6 +563,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <p><strong>Revisão da partida:</strong> quando a partida termina, o botão Revisar partida analisa todas as posições (contra o bot ou contra um amigo) e mostra a precisão de cada lado (baseada no Lichess, com um ajuste: cada lance perde pela chance de vitória ou pelo material entregue, o que for maior, então lances descuidados contam mesmo com a partida já decidida; erros graves e momentos decisivos pesam mais), o gráfico da avaliação, a avaliação de cada lance com um comentário curto (o que o lance fez, o que o adversário pode responder, qual era o melhor lance e como fica a partida) e o melhor lance indicado por uma seta verde, a precisão por fase do jogo, os momentos decisivos e as curiosidades das regras novas.</p>
       <p><strong>Ministro</strong> (coluna romana do Senado com a coroa de louros no alto, o primeiro-ministro do reino): mais uma peça que só aparece por promoção. Anda e captura como torre e também pode dar um passo na diagonal, como o rei.</p>
       <p><strong>Papa e Ministro são únicos:</strong> cada lado pode promover no máximo um Papa e um Ministro na partida inteira. Se ele morrer, for rebaixado ou convertido, não se promove outro. E um lado nunca tem dois ao mesmo tempo: o Papa não converte o Papa adversário, nem converte o Ministro adversário se o seu lado já tiver um.</p>
+      <p><strong>Jogo online:</strong> com o endereço do Firebase configurado nas opções, crie a partida em Nova partida → Um amigo online e mande o link. Cada um joga no seu aparelho; não dá para voltar lance, e propostas de empate, reivindicações e resignação vão para o outro lado. Funciona no app do GitHub (o link do artefato do claude.ai bloqueia a conexão).</p>
       <p>Notação em português: R rei, D dama, P paladino, M ministro, S papa (Santo Padre), T torre, B bispo, C cavalo.</p>
     </details>
   </div>
@@ -997,7 +1009,7 @@ function sfxRaw(kind){
 // ---------- Estado da partida ----------
 let G=null,selected=-1,targets=[],legalNow=[],modalOpen=false,view=null,ANIM=null;
 const ANIM_MS=1100;const cellHTML=[],cellBadge=[];
-const modo=()=>G.bot?'normal':G.mode;
+const modo=()=>G.bot||G.online?'normal':G.mode;
 const passUp=()=>modo()==='pass'&&!G.result&&cur().turn!==G.orient;
 const ply=()=>view===null?G.states.length-1:view;
 const cur=()=>G.states[G.states.length-1];
@@ -1005,7 +1017,7 @@ const refresh=()=>{legalNow=allLegal(cur());};
 const countKey=k=>G.keys.filter(x=>x===k).length;
 
 function newGame(baseMin=0,incSec=0,bot=null,names=null){
-  REV=false;
+  REV=false;if(ES){ES.close();ES=null;}SALA=null;pendentes=[];
   if(G)cancelBot();
   EVCACHE.clear();CLSCACHE.clear();SECCACHE.clear();evShown=null;
   const prev=G,s0=initState(),lg=allLegal(s0);
@@ -1034,7 +1046,7 @@ function resolveClaim(by,kind,withMove){
   const n=kind==='rep'?countKey(G.keys[G.keys.length-1]):cur().half;
   const ok=kind==='rep'?n>=3:n>=100;
   const motivo=kind==='rep'?'posição repetida 3 vezes':'50 lances sem captura nem movimento de peão';
-  if(ok){end(null,`Empate reivindicado pelas ${NAME[by]}: ${motivo}`,'end',kind==='rep'?'rep':'fifty');save();render();return;}
+  if(ok){const tx=`Empate reivindicado pelas ${NAME[by]}: ${motivo}`,dkk=kind==='rep'?'rep':'fifty';if(G.online)enviarFim(null,tx,'end',dkk);else end(null,tx,'end',dkk);save();render();return;}
   const det=kind==='rep'
     ?`A posição ${withMove?'depois do lance':'atual'} apareceu ${n} ${n===1?'vez':'vezes'} na partida. São necessárias 3.`
     :`Desde a última captura ou movimento de peão foram ${Math.floor(n/2)} lances de cada lado (${n} meios-lances). São necessários 50.`;
@@ -1074,6 +1086,7 @@ function doMove(m,opt={}){
   if(c.base){const now=Date.now();if(c.running)c[s.turn]-=now-c.last;c[s.turn]+=c.inc;c.running=true;c.last=now;}
   G.states.push(n);
   G.moves.push(rec);
+  if(G.online&&!opt.remote)enviarLance(m); // online: manda o lance para a sala
   ANIM={ply:G.states.length-1,t0:Date.now(),from:m.from,to:m.to,cap:!!captured,disc:(rec.dbl?rec.ck:rec.disc).map(x=>[x,kingSq(n.b,n.turn)]),dbl:rec.dbl,conv:!!m.conv,dem:m.dem||'',ep:!!m.ep,drag:!!opt.drag,
     rook:m.castle?{K:[63,61],Q:[56,59],k:[7,5],q:[0,3]}[m.castle]:null};
   selected=-1;targets=[];view=null;
@@ -1088,7 +1101,7 @@ function doMove(m,opt={}){
   setTimeout(maybeBot,30);
 }
 function undo(){
-  if(!G.moves.length||G.fromArchive)return;
+  if(!G.moves.length||G.fromArchive||G.online)return;
   cancelBot();
   const pop=()=>{G.states.pop();G.keys.pop();G.moves.pop();};
   pop();
@@ -1116,7 +1129,7 @@ function arquivar(over){ // grava (ou atualiza) a partida atual
   if(!G||!G.moves.length||G.fromArchive)return;
   if(!G.id)G.id='p'+(G.t0||Date.now());
   const e={id:G.id,t0:G.t0||Date.now(),t1:Date.now(),w:nomeDe('w'),b:nomeDe('b'),
-    bot:G.bot?{color:G.bot.color,level:G.bot.level}:null,
+    bot:G.bot?{color:G.bot.color,level:G.bot.level}:null,online:!!G.online,
     tc:G.clock.base?`${G.clock.base/1000}+${G.clock.inc/1000}`:'-',
     res:over?over.res:(G.result?resPGN(G.result.winner):'*'),
     term:over?over.term:(G.result?G.result.text:'Partida interrompida'),
@@ -1142,7 +1155,7 @@ function salvarEvNoArquivo(){ // guarda a análise junto da partida salva, para 
 }
 function pgnDe(e){
   const d=new Date(e.t0),z=n=>String(n).padStart(2,'0');
-  const tags=[['Event',e.bot?`Contra o bot (nível ${e.bot.level} · ${BOT_NIV[e.bot.level].nome})`:'Partida entre amigos'],
+  const tags=[['Event',e.bot?`Contra o bot (nível ${e.bot.level} · ${BOT_NIV[e.bot.level].nome})`:e.online?'Partida online':'Partida entre amigos'],
     ['Site','Xadrez do Rei Tirano'],['Date',`${d.getFullYear()}.${z(d.getMonth()+1)}.${z(d.getDate())}`],['Round','-'],
     ['White',e.w],['Black',e.b],['Result',e.res],
     ['UTCDate',`${d.getUTCFullYear()}.${z(d.getUTCMonth()+1)}.${z(d.getUTCDate())}`],['UTCTime',`${z(d.getUTCHours())}:${z(d.getUTCMinutes())}:${z(d.getUTCSeconds())}`],
@@ -1199,7 +1212,7 @@ function acoesArquivo(id){
     {label:'Apagar esta partida',fn:()=>modal('Apagar partida',`<p>Apagar ${escH(e.w)} × ${escH(e.b)} de ${dataHora(e.t0)}?</p>`,
       [{label:'Cancelar'},{label:'Apagar',primary:true,fn:()=>{gravarArquivo(lerArquivo().filter(x=>x.id!==id));renderArquivo();}}])},
     {label:'Fechar'});
-  modal(`${e.w} × ${e.b}`,`<p>${dataHora(e.t0)} · ${e.bot?`contra o bot nível ${e.bot.level}`:'entre amigos'}${e.tc!=='-'?` · relógio ${e.tc.replace('+',' + ')} s`:''}<br>
+  modal(`${e.w} × ${e.b}`,`<p>${dataHora(e.t0)} · ${e.bot?`contra o bot nível ${e.bot.level}`:e.online?'online':'entre amigos'}${e.tc!=='-'?` · relógio ${e.tc.replace('+',' + ')} s`:''}<br>
     <strong>${e.res==='1/2-1/2'?'½–½':e.res}</strong> · ${escH(e.term)} · ${nLances(e)}</p>
     <pre class="pgnprev">${escH(pg)}</pre>`,bts,undefined,true);
 }
@@ -1225,6 +1238,169 @@ function renderDisc(){
     const[kx,ky]=dp(a.disc[0][1]),x=Math.min(705,Math.max(95,kx)),y=ky<100?ky+84:ky-60;
     h+=`<text x="${x}" y="${y}" class="dt">DOUBLE</text>`;}
   el.innerHTML=h;
+}
+
+// ---------- Jogo online pelo Firebase (Realtime Database, pela API REST: não precisa de biblioteca) ----------
+// Cada sala fica em salas/CODIGO: jogadores, relógio, lances (um por índice), proposta de empate, fim e revanche.
+const ONL_KEY=STORE+'-online';
+let ONL=(()=>{try{const o=JSON.parse(localStorage.getItem(ONL_KEY));if(o&&typeof o==='object')return o;}catch(e){}return {};})();
+if(!ONL.pid){ONL.pid=Math.random().toString(36).slice(2,10)+Date.now().toString(36);}
+function salvarOnl(){try{localStorage.setItem(ONL_KEY,JSON.stringify(ONL));}catch(e){}}
+salvarOnl();
+const ALFA='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sem I, O, 0 e 1, que se confundem
+const novoCodigo=()=>Array.from({length:5},()=>ALFA[Math.random()*ALFA.length|0]).join('');
+const normDb=u=>{u=String(u||'').trim();if(!u)return '';if(!/^https?:\/\//.test(u))u='https://'+u;return u.replace(/\/+$/,'');};
+const dbBase=()=>normDb(G&&G.online&&G.online.db||ONL.db);
+async function fb(method,path,val){
+  const r=await fetch(`${dbBase()}/${path}.json`,{method,body:val===undefined?undefined:JSON.stringify(val)});
+  if(!r.ok)throw new Error('HTTP '+r.status);return r.json();
+}
+let ES=null,SALA=null,onlEstado='',pendentes=[],enviando=false,ofertaVista=null,revancheVista=null;
+const remoteTurn=()=>!!(G&&G.online&&!G.result&&(G.online.waiting||cur().turn!==G.online.me));
+function setAt(obj,path,data){ // aplica um evento do Firebase (put) num espelho local da sala
+  const parts=path.split('/').filter(Boolean);
+  if(!parts.length)return data;
+  obj=obj&&typeof obj==='object'?obj:{};let o=obj;
+  for(let i=0;i<parts.length-1;i++){if(!o[parts[i]]||typeof o[parts[i]]!=='object')o[parts[i]]={};o=o[parts[i]];}
+  if(data===null)delete o[parts[parts.length-1]];else o[parts[parts.length-1]]=data;
+  return obj;
+}
+function ouvirSala(){
+  if(ES){ES.close();ES=null;}
+  if(!G||!G.online)return;
+  try{ES=new EventSource(`${dbBase()}/salas/${G.online.code}.json`);}catch(e){onlEstado='erro';render();return;}
+  onlEstado='conectando';
+  const onEv=e=>{let m;try{m=JSON.parse(e.data);}catch(_){return;}
+    if(e.type==='put')SALA=setAt(SALA,m.path,m.data);
+    else for(const k in m.data||{})SALA=setAt(SALA,(m.path==='/'?'':m.path)+'/'+k,m.data[k]);
+    onlEstado='ok';syncSala();};
+  ES.addEventListener('put',onEv);ES.addEventListener('patch',onEv);
+  ES.addEventListener('keep-alive',()=>{onlEstado='ok';});
+  ES.onopen=()=>{onlEstado='ok';render();};
+  ES.onerror=()=>{onlEstado='reconectando';renderOnline();};
+}
+const arr=o=>o?Object.keys(o).map(Number).filter(n=>!isNaN(n)).sort((a,b)=>a-b).map(k=>o[k]):[];
+function syncSala(){
+  if(!G||!G.online||!SALA)return;
+  const on=G.online;
+  // jogadores
+  if(on.waiting&&SALA.brancas&&SALA.pretas){on.waiting=false;G.names={w:SALA.brancas.nome,b:SALA.pretas.nome};G.t0=Date.now();
+    aviso(`${G.names[other(on.me)]} entrou na sala`);sfx('move');}
+  if(SALA.brancas&&SALA.pretas)G.names={w:SALA.brancas.nome,b:SALA.pretas.nome};
+  // lances que ainda não estão no tabuleiro
+  const L=SALA.lances||{};
+  while(L[G.moves.length]&&!G.result){
+    const x=L[G.moves.length],s=cur(),lg=allLegal(s);
+    const m=lg.find(y=>y.from===x.f&&y.to===x.t&&(y.promo||'')===(x.p||''));
+    if(!m){aviso('Lance inválido recebido. Sala dessincronizada.');break;}
+    legalNow=lg;doMove(m,{remote:true});
+    if(G.clock.base&&x.wt!=null){G.clock.w=x.wt;G.clock.b=x.bt;G.clock.last=Date.now();G.clock.running=true;}
+  }
+  // proposta de empate do adversário
+  if(SALA.oferta&&SALA.oferta.de!==on.me&&!G.result&&ofertaVista!==SALA.oferta.n){ofertaVista=SALA.oferta.n;
+    modal('Proposta de empate',`<p>${escH(nomeDe(SALA.oferta.de))} propõe empate.</p>`,
+      [{label:'Recusar',fn:()=>{fb('DELETE',`salas/${on.code}/oferta`).catch(()=>{});}},
+       {label:'Aceitar empate',primary:true,fn:()=>{enviarFim(null,'Empate por acordo','end','agree');fb('DELETE',`salas/${on.code}/oferta`).catch(()=>{});}}]);}
+  if(!SALA.oferta&&on.ofertei){on.ofertei=false;if(!G.result&&!SALA.fim)aviso('Proposta de empate recusada');}
+  // fim decidido do outro lado (resignação, acordo, reivindicação, tempo)
+  if(SALA.fim&&!G.result){const f=SALA.fim;endQuiet=false;
+    end(f.res==='1-0'?'w':f.res==='0-1'?'b':null,f.texto,f.kind||'end',f.dk||'');
+    if(G.clock.base&&f.wt!=null){G.clock.w=f.wt;G.clock.b=f.bt;}}
+  // revanche
+  if(SALA.revanche&&SALA.revanche.por!==ONL.pid&&revancheVista!==SALA.revanche.code){revancheVista=SALA.revanche.code;
+    modal('Revanche',`<p>${escH(nomeDe(other(on.me)))} quer a revanche, com as cores trocadas.</p>`,
+      [{label:'Agora não'},{label:'Jogar a revanche',primary:true,fn:()=>entrarSala(SALA.revanche.code,on.db,nomeDe(on.me))}]);}
+  save();render();
+}
+async function enviar(){ // fila de envios: tenta de novo até conseguir
+  if(enviando||!pendentes.length)return;enviando=true;
+  while(pendentes.length){const[p,v,mt]=pendentes[0];
+    try{await fb(mt||'PUT',p,v);pendentes.shift();}
+    catch(e){onlEstado='reconectando';renderOnline();await new Promise(r=>setTimeout(r,2000));}}
+  enviando=false;
+}
+function mandar(path,val,method){pendentes.push([path,val,method]);enviar();}
+function enviarLance(m){
+  const on=G.online,k=G.moves.length-1;
+  mandar(`salas/${on.code}/lances/${k}`,{f:m.from,t:m.to,p:m.promo||'',wt:G.clock.w,bt:G.clock.b,ts:{'.sv':'timestamp'}});
+}
+function enviarFim(w,texto,kind,dk){
+  if(!G.result)end(w,texto,kind||'end',dk||'');
+  if(G&&G.online)mandar(`salas/${G.online.code}/fim`,{res:w==='w'?'1-0':w==='b'?'0-1':'1/2-1/2',texto,kind:kind||'end',dk:dk||'',wt:G.clock.w,bt:G.clock.b});
+  save();render();
+}
+function linkConvite(code){
+  const u=new URL(location.href);u.search='';u.hash='';
+  u.searchParams.set('sala',code);u.searchParams.set('db',normDb(G&&G.online&&G.online.db||ONL.db).replace(/^https:\/\//,''));
+  return u.toString();
+}
+function convidar(){
+  if(!G||!G.online)return;const code=G.online.code,link=linkConvite(code);
+  const bts=[];
+  if(navigator.share)bts.push({label:'Enviar convite',primary:true,fn:()=>navigator.share({title:'Xadrez do Rei Tirano',text:`Bora jogar? Sala ${code}`,url:link}).catch(()=>{})});
+  bts.push({label:'Copiar link',primary:!navigator.share,fn:()=>{copiarTexto(link);}},{label:'Fechar'});
+  modal('Convidar para a sala',`<p>Mande o link para o seu amigo. Ou ele pode tocar em <strong>Entrar numa sala</strong> nas opções e digitar o código:</p>
+    <div class="codigo">${code}</div>`,bts,undefined,true);
+}
+async function criarSala(nome,cor,tc){
+  ONL.db=normDb(ONL.db);salvarOnl();
+  if(!ONL.db){aviso('Configure o endereço do Firebase nas opções');return;}
+  const code=novoCodigo(),me=cor==='r'?(Math.random()<.5?'w':'b'):cor,eu={nome:nome||'Eu',id:ONL.pid};
+  const sala={criada:{'.sv':'timestamp'},versao:'11.0',tc:{base:tc[0],inc:tc[1]},brancas:me==='w'?eu:null,pretas:me==='b'?eu:null};
+  try{await fb('PUT',`salas/${code}`,sala);}
+  catch(e){modal('Não deu para criar a sala',`<p>O Firebase não respondeu (${escH(e.message)}). Confira o endereço do banco e as regras. No link do artefato do claude.ai o jogo online não funciona: use o app do GitHub.</p>`,[{label:'OK',primary:true}]);return;}
+  arquivarAbandono();
+  newGame(tc[0],tc[1],null,{w:me==='w'?eu.nome:'…',b:me==='b'?eu.nome:'…'});
+  G.online={code,me,db:ONL.db,waiting:true};G.orient=me;SALA=null;ofertaVista=revancheVista=null;
+  save();ouvirSala();render();convidar();
+  return code;
+}
+async function entrarSala(code,db,nome){
+  code=String(code||'').trim().toUpperCase();if(db)ONL.db=normDb(db);salvarOnl();
+  if(!ONL.db){aviso('Configure o endereço do Firebase nas opções');return;}
+  let sala;
+  try{sala=await fb('GET',`salas/${code}`);}catch(e){modal('Sem conexão',`<p>Não consegui falar com o Firebase (${escH(e.message)}).</p>`,[{label:'OK',primary:true}]);return;}
+  if(!sala){modal('Sala não encontrada',`<p>Não existe sala com o código <strong>${escH(code)}</strong>.</p>`,[{label:'OK',primary:true}]);return;}
+  let me=sala.brancas&&sala.brancas.id===ONL.pid?'w':sala.pretas&&sala.pretas.id===ONL.pid?'b':null; // voltando para a mesma sala
+  const eu={nome:nome||'Eu',id:ONL.pid};
+  if(!me){if(!sala.pretas)me='b';else if(!sala.brancas)me='w';
+    else{modal('Sala cheia',`<p>A sala ${code} já tem dois jogadores.</p>`,[{label:'OK',primary:true}]);return;}
+    try{await fb('PUT',`salas/${code}/${me==='w'?'brancas':'pretas'}`,eu);}catch(e){aviso('Não consegui entrar na sala');return;}
+    sala[me==='w'?'brancas':'pretas']=eu;}
+  arquivarAbandono();
+  const tc=sala.tc||{base:0,inc:0};
+  newGame(tc.base||0,tc.inc||0,null,{w:sala.brancas?sala.brancas.nome:'…',b:sala.pretas?sala.pretas.nome:'…'});
+  G.online={code,me,db:ONL.db,waiting:!(sala.brancas&&sala.pretas)};G.orient=me;SALA=null;ofertaVista=revancheVista=null;
+  save();ouvirSala();render();
+}
+function pedirRevanche(){
+  if(!G||!G.online)return;const on=G.online,old=on.code,nome=nomeDe(on.me),tc=[G.clock.base/60000,G.clock.inc/1000];
+  criarSala(nome,other(on.me),tc).then(code=>{if(code)fb('PUT',`salas/${old}/revanche`,{code,por:ONL.pid}).catch(()=>{});});
+}
+function renderOnline(){
+  const bar=$('onlineBar');if(!bar)return;
+  if(!G||!G.online){bar.hidden=true;return;}
+  bar.hidden=false;const on=G.online;
+  const est=onlEstado==='ok'?'<span class="dot ok"></span>conectado':onlEstado==='erro'?'<span class="dot bad"></span>sem conexão':'<span class="dot"></span>conectando…';
+  bar.innerHTML=`<span>Sala <strong>${on.code}</strong></span><span class="est">${est}</span>`+
+    (on.waiting&&!G.result?'<button class="btn mini" id="bConv">Convidar</button>':'')+
+    (G.result?'<button class="btn mini" id="bRev2">Revanche</button>':'');
+  const bc=$('bConv');if(bc)bc.onclick=convidar;const br=$('bRev2');if(br)br.onclick=pedirRevanche;
+}
+function abrirEntrar(){
+  modal('Entrar numa sala',`<label class="flbl" for="jCode">Código da sala</label><input id="jCode" class="nome1 codein" maxlength="5" autocomplete="off" placeholder="K7Q2M">
+    <label class="flbl" for="jNome">Seu nome</label><input id="jNome" class="nome1" maxlength="30" autocomplete="off">`,
+    [{label:'Cancelar'},{label:'Entrar',primary:true,fn:()=>{const n=$('jNome').value.trim();NOMES.eu=n||NOMES.eu;salvarNomes();entrarSala($('jCode').value,null,n);}}]);
+  $('jNome').value=NOMES.eu||'';
+}
+function conviteNoLink(){ // abriu o app por um link de convite
+  const q=new URLSearchParams(location.search),code=q.get('sala'),db=q.get('db');
+  if(!code)return;
+  try{history.replaceState(null,'',location.pathname);}catch(e){}
+  if(G&&G.online&&G.online.code===code.toUpperCase()){ouvirSala();return;}
+  modal('Convite para jogar',`<p>Entrar na sala <strong>${escH(code.toUpperCase())}</strong>?</p><label class="flbl" for="jNome">Seu nome</label><input id="jNome" class="nome1" maxlength="30" autocomplete="off">`,
+    [{label:'Agora não'},{label:'Entrar',primary:true,fn:()=>{const n=$('jNome').value.trim();NOMES.eu=n||NOMES.eu;salvarNomes();entrarSala(code,db,n);}}]);
+  $('jNome').value=NOMES.eu||'';
 }
 
 // ---------- Placar contra os bots (guardado só neste aparelho) ----------
@@ -1683,7 +1859,7 @@ function select(sq){selected=sq;targets=legalNow.filter(m=>m.from===sq);}
 function onSquare(sq){
   if(modalOpen||REV)return;
   if(view!==null){view=null;selected=-1;targets=[];return render();}
-  if(G.result||botTurn())return;
+  if(G.result||botTurn()||remoteTurn())return;
   const s=cur(),p=s.b[sq];
   if(selected>=0){
     const ms=targets.filter(m=>m.to===sq);
@@ -1768,7 +1944,7 @@ function moveGhost(x,y){
 board.addEventListener('pointerdown',e=>{
   if(MOVE_MODE==='tap'||e.button>0||!G)return;
   const el=e.target.closest('.sq');if(!el)return;
-  if(modalOpen||REV||view!==null||G.result||botTurn())return;
+  if(modalOpen||REV||view!==null||G.result||botTurn()||remoteTurn())return;
   const sq=+el.dataset.sq,s=cur(),p=s.b[sq];
   if(!p||col(p)!==s.turn)return; // só começa arrasto numa peça de quem joga
   DRAG={from:sq,p,x0:e.clientX,y0:e.clientY,active:false,over:-1,pid:e.pointerId,touch:e.pointerType!=='mouse',sz:board.getBoundingClientRect().width/8};
@@ -1887,13 +2063,15 @@ function render(){
   const st=$('statusText');
   if(view!==null){st.className='review';st.textContent=P===0?'Revendo: posição inicial':`Revendo o lance ${Math.ceil(P/2)}${P%2?'.':'...'} ${G.moves[P-1].san}`;}
   else if(G.result){st.className='over';st.textContent=G.result.text;}
+  else if(G.online&&G.online.waiting){st.className='';st.innerHTML=`Esperando o adversário entrar na sala <strong>${G.online.code}</strong>…`;}
+  else if(G.online&&cur().turn!==G.online.me){st.className='';st.innerHTML=`Vez de ${escH(nomeDe(s.turn))} (${NAME[s.turn]})`+(chk>=0?' · <b>Xeque!</b>':'');}
   else if(botTurn()){st.className='';st.innerHTML=`Bot pensando…`+(chk>=0?' · <b>Xeque!</b>':'');}
   else{st.className='';st.innerHTML=`Vez das ${NAME[s.turn]}`+(chk>=0?' · <b>Xeque!</b>':'')+(G.claim?' · <span style="color:var(--gold)">reivindicação declarada, faça o lance</span>':'');}
   const n=G.states.length-1;
   $('nFirst').disabled=$('nPrev').disabled=P===0;
   $('nNext').disabled=$('nLast').disabled=P===n;
   $('nav').className='nav'+(view!==null?' viewing':'');
-  $('bUndo').disabled=!G.moves.length||!!G.fromArchive;
+  $('bUndo').disabled=!G.moves.length||!!G.fromArchive||!!G.online;
   $('bDraw').disabled=$('bResign').disabled=!!G.result;
   $('mode').value=G.mode;
   const face=modo()==='face';
@@ -1902,7 +2080,7 @@ function render(){
   document.documentElement.classList.toggle('locked',!!G.lock);
   $('bSound').textContent=muted?'🔇':'🔊';
   $('bLock').textContent=G.lock?'🔒':'🔓';$('bLock').classList.toggle('on',!!G.lock);
-  renderMoves();renderClocks();renderPlacar();renderDisc();
+  renderMoves();renderClocks();renderPlacar();renderDisc();renderOnline();
   const eo=$('evOpt');eo.checked=barOn();eo.disabled=!G.bot;$('evOptRow').style.opacity=G.bot?1:.5;
   const co=$('clsOpt');co.checked=clsOn();co.disabled=!G.bot;$('clsOptRow').style.opacity=G.bot?1:.5;
   renderEval();renderClsSummary();renderReview();pump();
@@ -1978,6 +2156,7 @@ function tick(){
       const wp=b.filter(p=>p&&col(p)===w&&typ(p)!=='k'),lp=b.filter(p=>p&&col(p)===t&&typ(p)!=='k');
       const draw=!wp.length||(wp.length===1&&'bn'.includes(typ(wp[0]))&&!lp.length);
       sfx('end');G.result={kind:'time',dk:draw?'time':'',t0:Date.now(),winner:draw?null:w,text:draw?`Empate: tempo das ${NAME[t]} acabou, mas as ${NAME[w]} não têm material para dar mate`:`${NAME[w]} vencem no tempo`};registrarPlacar(G.result.winner);arquivar();
+      if(G.online)mandar(`salas/${G.online.code}/fim`,{res:resPGN(G.result.winner),texto:G.result.text,kind:'time',dk:G.result.dk||''});
       selected=-1;targets=[];save();render();return;
     }
   }
@@ -2014,6 +2193,9 @@ $('bArqPGN').onclick=()=>{const a=lerArquivo();if(!a.length)return;const t=a.map
   bts.push({label:'Baixar arquivo .pgn',fn:()=>baixarTexto(t,'rei-tirano-todas-as-partidas.pgn')},{label:'Fechar'});
   modal('Exportar partidas',`<p>${a.length} ${a.length===1?'partida':'partidas'} em PGN.</p>`,bts,undefined,true);};
 renderArquivo();
+$('dbUrl').value=ONL.db||'';
+$('dbUrl').onchange=e=>{ONL.db=normDb(e.target.value);e.target.value=ONL.db;salvarOnl();};
+$('bJoin').onclick=abrirEntrar;
 $('bUndo').onclick=()=>{if(REV)closeReview();undo();};
 $('bFlip').onclick=()=>{G.orient=other(G.orient);save();render();};
 $('mode').onchange=e=>{G.mode=e.target.value;if(G.mode==='auto'&&!G.result)G.orient=cur().turn;save();render();};
@@ -2021,6 +2203,8 @@ $('bLock').onclick=()=>{G.lock=!G.lock;if(G.lock)$('barTop').scrollIntoView({blo
 document.addEventListener('touchmove',e=>{if(!G||!G.lock)return;if(e.target.closest('#moves,.card'))return;e.preventDefault();},{passive:false});
 $('board').addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
 $('bDraw').onclick=()=>{
+  if(G.online){if(G.online.waiting)return;const me=G.online.me;
+    if(cur().turn!==me){modal('Empate','<p>Você pode propor empate agora; reivindicar só na sua vez.</p>',[{label:'Cancelar'},{label:'Propor empate',primary:true,fn:()=>offerDraw(me)}]);return;}}
   if(botTurn()){modal('Aguarde','<p>O bot está pensando. Você pode propor ou reivindicar empate na sua vez.</p>',[{label:'OK',primary:true}]);return;}
   const t=cur().turn;
   if(G.claim){modal('Reivindicação declarada',`<p>As ${NAME[t]} já declararam uma reivindicação. Faça o lance para o app conferir.</p>`,[{label:'OK',primary:true}],t);return;}
@@ -2030,12 +2214,14 @@ $('bDraw').onclick=()=>{
     {label:'Cancelar'}],t,true);
 };
 function offerDraw(t){
+  if(G.online){G.online.ofertei=true;mandar(`salas/${G.online.code}/oferta`,{de:G.online.me,n:Date.now()});save();aviso('Proposta de empate enviada');return;}
   if(G.bot){modal('Proposta de empate','<p>O bot recusou. Ele joga até o fim.</p>',[{label:'OK',primary:true}]);return;}
   modal('Proposta de empate',`<p>As ${NAME[t]} propõem empate. As ${NAME[other(t)]} aceitam?</p>`,
     [{label:'Recusar'},{label:'Aceitar empate',primary:true,fn:()=>{end(null,'Empate por acordo','end','agree');save();render();}}],other(t));
 }
 $('bResign').onclick=()=>{
-  const t=G.bot?other(G.bot.color):cur().turn;
+  const t=G.online?G.online.me:G.bot?other(G.bot.color):cur().turn;
+  if(G.online){modal('Resignar',`<p>Resignar a partida?</p>`,[{label:'Continuar jogando'},{label:'Resignar',primary:true,fn:()=>enviarFim(other(t),`${NAME[t]} resignaram. ${NAME[other(t)]} vencem`,'resign')}]);return;}
   modal('Resignar',`<p>As ${NAME[t]} resignam?</p>`,
     [{label:'Continuar jogando'},{label:'Resignar',primary:true,fn:()=>{end(other(t),`${NAME[t]} resignaram. ${NAME[other(t)]} vencem`,'resign');save();render();}}],t);
 };
@@ -2043,7 +2229,13 @@ $('bNew').onclick=()=>{
   const contaDerrota=!!(G.bot&&!G.result&&!G.scored&&G.moves.length);
   modal('Nova partida',`<p>A partida atual será descartada.${contaDerrota?` <strong>Ela conta como derrota contra o bot ${G.bot.level} · ${BOT_NIV[G.bot.level].nome}.</strong>`:''}</p>
     <label for="opp" class="flbl">Adversário</label>
-    <select id="opp"><option value="friend">Um amigo, no mesmo aparelho</option><option value="bot">Bot</option></select>
+    <select id="opp"><option value="friend">Um amigo, no mesmo aparelho</option><option value="online">Um amigo online, pela internet</option><option value="bot">Bot</option></select>
+    <div id="onlineOpts">
+      <label for="nOn" class="flbl">Seu nome</label><input id="nOn" class="nome1" maxlength="30" autocomplete="off">
+      <label for="oCor" class="flbl">Você joga com</label>
+      <select id="oCor"><option value="w">Brancas</option><option value="b">Pretas</option><option value="r">Sorteio</option></select>
+      <p class="muted">Cria uma sala e gera um link para o seu amigo entrar.</p>
+    </div>
     <div id="friendOpts">
       <label class="flbl">Jogadores</label>
       <div class="nomes"><span class="sw w"></span><input id="nW" maxlength="30" placeholder="Brancas" autocomplete="off">
@@ -2071,18 +2263,20 @@ $('bNew').onclick=()=>{
     </select>`,
     [{label:'Cancelar'},{label:'Começar',primary:true,fn:()=>{const[a,b]=$('tc').value.split(',').map(Number);
       if(contaDerrota)registrarPlacar(G.bot.color);
+      if($('opp').value==='online'){const n=$('nOn').value.trim();NOMES.eu=n||NOMES.eu;salvarNomes();criarSala(n||'Eu',$('oCor').value,[a,b]);return;}
       arquivarAbandono(); // a partida deixada no meio também fica salva
       let bot=null,names;
       if($('opp').value==='bot'){let me=$('myc').value;if(me==='r')me=Math.random()<.5?'w':'b';bot={color:other(me),level:+$('lvl').value,myPick:$('myc').value,evalBar:$('evNew').checked,classify:$('clsNew').checked};
         const eu=$('nEu').value.trim();NOMES.eu=eu;names={[me]:eu||'Você',[other(me)]:`Bot nível ${bot.level} (${BOT_NIV[bot.level].nome})`};}
       else{const w=$('nW').value.trim(),bk=$('nB').value.trim();NOMES.w=w;NOMES.b=bk;if(w&&!NOMES.eu)NOMES.eu=w;names={w:w||'Brancas',b:bk||'Pretas'};}
       salvarNomes();newGame(a,b,bot,names);}}]);
+  $('nOn').value=NOMES.eu??'';
   $('nW').value=NOMES.w??NOMES.eu??'';$('nB').value=NOMES.b??'';$('nEu').value=NOMES.eu??NOMES.w??'';
   $('nSwap').onclick=()=>{const t=$('nW').value;$('nW').value=$('nB').value;$('nB').value=t;};
   const lastBot=G.bot||G.lastBot;
   if(lastBot){$('opp').value=G.bot?'bot':'friend';$('lvl').value=lastBot.level;$('myc').value=lastBot.myPick||other(lastBot.color);$('evNew').checked=!!lastBot.evalBar;$('clsNew').checked=!!lastBot.classify;}
   else{$('lvl').value='3';}
-  const sync=()=>{$('botOpts').hidden=$('opp').value!=='bot';$('friendOpts').hidden=$('opp').value==='bot';};$('opp').onchange=sync;sync();
+  const sync=()=>{const o=$('opp').value;$('botOpts').hidden=o!=='bot';$('friendOpts').hidden=o!=='friend';$('onlineOpts').hidden=o!=='online';};$('opp').onchange=sync;sync();
   const cb=G.clock.base/60000,ci=G.clock.inc/1000,v=cb+','+ci,sel=$('tc');
   if([...sel.options].some(o=>o.value===v))sel.value=v;
 };
@@ -2095,7 +2289,8 @@ function load(){
     if(!g.mode)g.mode=g.autoflip?'auto':'normal';G=g;G.clock.last=Date.now();if(G.evals)for(const k in G.evals)EVCACHE.set(k,G.evals[k]);if(G.secs)for(const k in G.secs)SECCACHE.set(k,G.secs[k]);refresh();return true;
   }catch(e){return false;}
 }
-if(load()){render();setTimeout(maybeBot,300);}else newGame(0,0);
+if(load()){render();setTimeout(maybeBot,300);if(G.online&&!G.result)ouvirSala();}else newGame(0,0);
+conviteNoLink();
 })();
 </script>
 <script>
