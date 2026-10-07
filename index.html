@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez do Rei Tirano · versão 11.0 -->
+<!-- index.html · Xadrez do Rei Tirano · versão 11.1 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -174,7 +174,7 @@ h1 .crown{color:var(--gold)}
 .onlinebar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 2px 0;padding:6px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-size:.88rem}
 .onlinebar[hidden]{display:none}
 .onlinebar .est{color:var(--muted);display:flex;align-items:center;gap:5px;margin-right:auto}
-.dot{width:8px;height:8px;border-radius:50%;background:#c9a227;display:inline-block}.dot.ok{background:#3c9d5a}.dot.bad{background:rgb(var(--check))}
+.ondot{width:8px;height:8px;border-radius:50%;background:#c9a227;display:inline-block}.ondot.ok{background:#3c9d5a}.ondot.bad{background:rgb(var(--check))}
 .opt.online{display:flex;gap:8px;flex-wrap:wrap}
 .opt.online input{flex:1;min-width:220px;font:inherit;font-size:.85rem;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
 .codigo{font:800 2.2rem/1 Figtree,system-ui,sans-serif;letter-spacing:.18em;text-align:center;padding:14px 0;color:var(--ink)}
@@ -533,7 +533,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <option value="face">Frente a frente: peças de cima invertidas</option>
       <option value="pass">Passar para o amigo: só as peças giram</option>
     </select></div>
-    <div class="ver">Versão 11.0</div>
+    <div class="ver">Versão 11.1</div>
   </div>
 
   <div class="panel">
@@ -1381,7 +1381,7 @@ function renderOnline(){
   const bar=$('onlineBar');if(!bar)return;
   if(!G||!G.online){bar.hidden=true;return;}
   bar.hidden=false;const on=G.online;
-  const est=onlEstado==='ok'?'<span class="dot ok"></span>conectado':onlEstado==='erro'?'<span class="dot bad"></span>sem conexão':'<span class="dot"></span>conectando…';
+  const est=onlEstado==='ok'?'<span class="ondot ok"></span>conectado':onlEstado==='erro'?'<span class="ondot bad"></span>sem conexão':'<span class="ondot"></span>conectando…';
   bar.innerHTML=`<span>Sala <strong>${on.code}</strong></span><span class="est">${est}</span>`+
     (on.waiting&&!G.result?'<button class="btn mini" id="bConv">Convidar</button>':'')+
     (G.result?'<button class="btn mini" id="bRev2">Revanche</button>':'');
