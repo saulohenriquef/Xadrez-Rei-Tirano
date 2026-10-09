@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez do Rei Tirano · versão 11.1 -->
+<!-- index.html · Xadrez do Rei Tirano · versão 11.2 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -68,8 +68,10 @@ h1 .crown{color:var(--gold)}
 .clock.on{background:var(--primary);color:var(--primary-ink)}
 .clock.low.on{background:rgb(var(--check));color:#fff}
 
-.boardbox{margin:10px auto;width:100%;max-width:max(300px,min(560px,calc(100vh - 290px)))}
-#board{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));aspect-ratio:1/1;width:100%;border-radius:6px;overflow:hidden;container-type:inline-size;box-shadow:0 1px 0 var(--line),0 10px 28px -14px rgba(10,20,35,.55);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.boardbox{margin:10px auto;width:100%;max-width:max(300px,min(560px,calc(100vh - 290px)));overflow-x:hidden;overflow-x:clip}
+#board>.sq:nth-child(1){border-top-left-radius:6px}#board>.sq:nth-child(8){border-top-right-radius:6px}
+#board>.sq:nth-child(57){border-bottom-left-radius:6px}#board>.sq:nth-child(64){border-bottom-right-radius:6px}
+#board{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));aspect-ratio:1/1;width:100%;border-radius:6px;container-type:inline-size;box-shadow:0 1px 0 var(--line),0 10px 28px -14px rgba(10,20,35,.55);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .sq{position:relative;min-width:0;min-height:0;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;cursor:pointer;background-color:var(--light)}
 .sq.dk{background-color:var(--dark)}
 .sq.last{background-image:linear-gradient(var(--last),var(--last))}
@@ -247,9 +249,16 @@ details ul{padding-left:1.1em;margin:6px 0}
 .flbl{display:block;font-weight:600;margin:12px 0 6px}
 #botOpts[hidden],#friendOpts[hidden],#onlineOpts[hidden]{display:none}
 .card select{font:inherit;width:100%;padding:10px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
-.promo{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
-.promo button{aspect-ratio:1;border-radius:10px;border:1px solid var(--line);background:var(--light);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
-.promo .pc{font-size:1.95rem;--base:none;transform:none}
+.promo{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.promo button{position:relative;aspect-ratio:1/.92;border-radius:12px;border:1px solid var(--line);background:var(--light);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:4px 0 6px;font:inherit}
+.promo button:not(:disabled):hover{border-color:var(--gold)}
+.promo .pnm{font:700 .74rem/1 Figtree,system-ui,sans-serif;color:#2a3644}
+.promo button.off{cursor:not-allowed;background:var(--btn);border:1px dashed var(--muted)}
+.promo button.off .pc,.promo button.off .pnm{opacity:.3;filter:grayscale(1)}
+.promo button.off .pnm{color:var(--muted)}
+.promo .lock{position:absolute;top:7px;right:7px;width:15px;height:15px;color:var(--muted)}
+.card .promonote{margin:10px 0 0;font-size:.8rem;color:var(--muted)}
+.promo .pc{font-size:2.9rem;--base:none;transform:none}
 .palg{position:relative;display:inline-block;line-height:1;transform:translate(-.17em,.12em) scale(.86)}
 .wing{position:absolute;left:.48em;top:-.3em;width:.78em;height:.78em;z-index:-1;overflow:visible}
 .wing .wf{fill:currentColor;stroke-width:1.2;stroke-linejoin:round;vector-effect:non-scaling-stroke}
@@ -313,6 +322,99 @@ body.grabbing,body.grabbing *{cursor:grabbing!important}
 @keyframes frflag{0%{opacity:0;transform:scaleX(.15)}14%{opacity:.88;transform:scaleX(1) skewY(0deg)}26%{transform:skewY(2.5deg)}38%{transform:skewY(-2deg)}
   50%{transform:skewY(1.5deg)}62%{transform:skewY(-1deg)}78%{opacity:.88;transform:skewY(0deg)}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.pc.arrive.epf,.pc.land.epf{animation:none}.fr{display:none}}
+/* ---- promoção: o peão chega, some num clarão e a peça nova entra do seu jeito ---- */
+.ppawn{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:5;pointer-events:none;opacity:0;
+  animation:ppawn .38s cubic-bezier(.25,.7,.35,1) both}
+@keyframes ppawn{0%{opacity:1;transform:translate(calc(var(--dx)*12.5cqw),calc(var(--dy)*12.5cqw)) scale(1,1);filter:none}
+  42%{opacity:1;transform:translate(0,0) scale(1,1);filter:none}
+  68%{opacity:1;transform:translate(0,0) scale(1.16,1.16);filter:brightness(2.4) drop-shadow(0 0 6px #fff)}
+  100%{opacity:0;transform:translate(0,0) scale(.55,.55);filter:brightness(3) drop-shadow(0 0 0 #fff)}}
+.pc.promoin{z-index:6}
+/* Paladino: voa até a casa batendo as asas */
+.pc.pr-l{animation:prFly 1s cubic-bezier(.25,.6,.35,1) .22s both}
+@keyframes prFly{0%{opacity:0;transform:var(--base) translate(-25%,-160%) rotate(-14deg) scale(.8,.8)}
+  15%{opacity:1}
+  55%{transform:var(--base) translate(6%,-22%) rotate(7deg) scale(1.02,1.02)}
+  72%{transform:var(--base) translate(0,3%) rotate(-2deg) scale(1.04,.93)}
+  85%{transform:var(--base) translate(0,-4%) rotate(0deg) scale(.99,1.02)}
+  100%{opacity:1;transform:var(--base) translate(0,0) rotate(0deg) scale(1,1)}}
+.pc.pr-l .wing{transform-origin:14% 88%;animation:flap .17s ease-in-out .3s 4}
+@keyframes flap{0%,100%{transform:scale(1,1) skewX(0deg)}50%{transform:scale(1,.42) skewX(-10deg)}}
+.feathers{position:absolute;inset:0;z-index:7;pointer-events:none}
+.feathers i{position:absolute;left:calc(50% + var(--x));top:-12%;width:21%;height:50%;margin-left:-10.5%;opacity:0;animation:feather .66s ease-in-out var(--d) both}
+.feathers svg{display:block;width:100%;height:100%;overflow:visible}
+.feathers .fv{stroke-width:1}.feathers .fq{fill:none;stroke-width:.7}
+.feathers.w .fv{fill:#fbf7ee;stroke:#1e1812}.feathers.w .fq{stroke:#1e1812}
+.feathers.b .fv{fill:#1d1712;stroke:rgba(255,250,240,.7)}.feathers.b .fq{stroke:rgba(255,250,240,.7)}
+@keyframes feather{0%{opacity:0;transform:translate(0,0) rotate(var(--r))}18%{opacity:.95}
+  55%{transform:translate(22%,95%) rotate(calc(var(--r) + 28deg))}100%{opacity:0;transform:translate(-14%,175%) rotate(calc(var(--r) - 12deg))}}
+/* Ministro: recebe a coroa de louros, que pousa no alto da coluna */
+.pc.pr-m{animation:prMin .95s ease-out .22s both}
+@keyframes prMin{0%{opacity:0;transform:var(--base) translate(0,8%) scale(.75,.75);filter:brightness(1) drop-shadow(0 0 0 rgba(240,200,80,0))}
+  25%{opacity:1;transform:var(--base) translate(0,0) scale(1.05,1.05)}
+  35%{transform:var(--base) translate(0,0) scale(1,1)}
+  62%{filter:brightness(1.15) drop-shadow(0 0 8px rgba(240,200,80,.95))}
+  100%{opacity:1;transform:var(--base) translate(0,0) scale(1,1);filter:brightness(1) drop-shadow(0 0 0 rgba(240,200,80,0))}}
+.wreath{position:absolute;inset:0;z-index:7;pointer-events:none;display:flex;align-items:center;justify-content:center}
+.wreath svg{width:78%;height:78%;overflow:visible;opacity:0;filter:drop-shadow(0 0 4px rgba(240,190,60,.85));animation:wreath 1.05s cubic-bezier(.33,.4,.3,1) .14s both}
+.wreath .wrl{fill:#e0b04a;stroke:#6b4d12;stroke-width:.8}.wreath .wrs{fill:none;stroke:#7a5a14;stroke-width:1.6}.wreath .wrr{fill:none;stroke:#c3921f;stroke-width:2.4;stroke-linecap:round}
+@keyframes wreath{0%{opacity:0;transform:translateY(-185%) rotate(-110deg) scale(1.15,1.15)}12%{opacity:1}
+  55%{opacity:1;transform:translateY(-36%) rotate(0deg) scale(.42,.42)}
+  72%{opacity:1;transform:translateY(-36%) rotate(0deg) scale(.42,.42);filter:brightness(1.35) drop-shadow(0 0 9px rgba(255,220,110,1))}
+  100%{opacity:0;transform:translateY(-36%) rotate(0deg) scale(.38,.38)}}
+/* Papa: fumaça branca, como na eleição do papa, e ele surge com um brilho dourado */
+.pc.pr-a{animation:prPapa 1.05s ease-out .22s both}
+@keyframes prPapa{0%,30%{opacity:0;transform:var(--base) translate(0,5%) scale(.92,.92);filter:brightness(1) drop-shadow(0 0 0 rgba(255,226,140,0))}
+  62%{opacity:1;transform:var(--base) translate(0,0) scale(1.03,1.03);filter:brightness(1.15) drop-shadow(0 0 10px rgba(255,226,140,.95))}
+  100%{opacity:1;transform:var(--base) translate(0,0) scale(1,1);filter:brightness(1) drop-shadow(0 0 0 rgba(255,226,140,0))}}
+.smoke{position:absolute;inset:0;z-index:7;pointer-events:none}
+.smoke i{position:absolute;left:calc(50% + var(--x));top:var(--y);width:var(--s);height:var(--s);margin:calc(var(--s) / -2) 0 0 calc(var(--s) / -2);border-radius:50%;
+  background:radial-gradient(circle at 44% 40%,#fff 0,rgba(250,250,250,.97) 32%,rgba(214,216,220,.72) 56%,rgba(196,199,204,0) 72%);
+  filter:drop-shadow(0 1px 2.5px rgba(0,0,0,.3));opacity:0;animation:puff var(--t) ease-out var(--d) both}
+@keyframes puff{0%{opacity:0;transform:translate(0,12%) scale(.3,.3)}22%{opacity:.96}100%{opacity:0;transform:translate(var(--dr),-150%) scale(1.55,1.55)}}
+/* Torre: sobe do chão tremendo e levantando poeira */
+.pc.pr-r{animation:prRook .82s cubic-bezier(.3,.6,.4,1) .22s both}
+@keyframes prRook{0%{transform:var(--base) translateX(0) translate(0,22%) scale(1,0) translate(0,-22%)}
+  14%{transform:var(--base) translateX(-2.5%) translate(0,22%) scale(1,.28) translate(0,-22%)}
+  28%{transform:var(--base) translateX(2.5%) translate(0,22%) scale(1,.6) translate(0,-22%)}
+  42%{transform:var(--base) translateX(-2.5%) translate(0,22%) scale(1,.92) translate(0,-22%)}
+  54%{transform:var(--base) translateX(2%) translate(0,22%) scale(1,1.1) translate(0,-22%)}
+  66%{transform:var(--base) translateX(-1%) translate(0,22%) scale(1,.94) translate(0,-22%)}
+  80%{transform:var(--base) translateX(.5%) translate(0,22%) scale(1,1.03) translate(0,-22%)}
+  100%{transform:var(--base) translateX(0) translate(0,22%) scale(1,1) translate(0,-22%)}}
+.dust{position:absolute;inset:0;z-index:4;pointer-events:none}
+.dust i{position:absolute;left:27%;top:50%;width:46%;height:32%;border-radius:50%;
+  background:radial-gradient(ellipse at center,rgba(222,205,172,1) 0,rgba(196,176,140,.78) 40%,rgba(186,165,128,0) 70%);
+  filter:drop-shadow(0 1px 1.5px rgba(60,45,20,.28));opacity:0;animation:dustp var(--t,.62s) ease-out var(--d) both}
+.dust.small i{left:32%;top:55%;width:36%;height:24%}
+@keyframes dustp{0%{opacity:0;transform:translate(0,0) scale(.45,.45)}25%{opacity:1}100%{opacity:0;transform:translate(calc(var(--x) * 130%),-42%) scale(1.8,1.8)}}
+/* Bispo: as diagonais acendem (#pfx) e ele aparece num brilho */
+.pc.pr-b{animation:prBishop .78s ease-out .22s both}
+@keyframes prBishop{0%{opacity:0;transform:var(--base) scale(.55,.55);filter:brightness(2.4) drop-shadow(0 0 8px rgba(255,226,140,1))}
+  35%{opacity:1;transform:var(--base) scale(1.08,1.08)}
+  55%{transform:var(--base) scale(1,1);filter:brightness(1.3) drop-shadow(0 0 7px rgba(255,210,100,.95))}
+  100%{opacity:1;transform:var(--base) scale(1,1);filter:brightness(1) drop-shadow(0 0 0 rgba(255,210,100,0))}}
+.burst.holy{border-color:rgba(255,214,110,.95);animation-delay:.24s}
+#pfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:8}
+#pfx .ray{fill:none;stroke-width:9;stroke-linecap:round;stroke-dasharray:var(--len);stroke-dashoffset:var(--len);
+  filter:drop-shadow(0 0 5px rgba(255,200,80,.9));animation:ray .95s ease-out .3s both}
+@keyframes ray{0%{stroke-dashoffset:var(--len);opacity:0}8%{opacity:1}45%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:0;opacity:0}}
+/* Cavalo: empina e dá dois pulinhos de galope */
+.pc.pr-n{animation:prKnight 1s cubic-bezier(.3,.6,.4,1) .22s both}
+@keyframes prKnight{
+  0%{opacity:0;transform:var(--base) translateY(0) translate(30%,22%) rotate(0deg) translate(-30%,-22%) scale(.5,.5)}
+  18%{opacity:1;transform:var(--base) translateY(0) translate(30%,22%) rotate(0deg) translate(-30%,-22%) scale(1.06,1.06)}
+  26%{transform:var(--base) translateY(0) translate(30%,22%) rotate(0deg) translate(-30%,-22%) scale(1,1)}
+  46%{transform:var(--base) translateY(0) translate(30%,22%) rotate(22deg) translate(-30%,-22%) scale(1,1)}
+  56%{transform:var(--base) translateY(0) translate(30%,22%) rotate(18deg) translate(-30%,-22%) scale(1,1)}
+  68%{transform:var(--base) translateY(0) translate(30%,22%) rotate(-4deg) translate(-30%,-22%) scale(1,1)}
+  78%{transform:var(--base) translateY(-9%) translate(30%,22%) rotate(0deg) translate(-30%,-22%) scale(1,1)}
+  87%{transform:var(--base) translateY(0) translate(30%,22%) rotate(0deg) translate(-30%,-22%) scale(1,1)}
+  93%{transform:var(--base) translateY(-3%) translate(30%,22%) rotate(0deg) translate(-30%,-22%) scale(1,1)}
+  100%{opacity:1;transform:var(--base) translateY(0) translate(30%,22%) rotate(0deg) translate(-30%,-22%) scale(1,1)}}
+.smoke.up,.dust.up,.feathers.up,.wreath.up{transform:rotate(180deg)}
+@media (prefers-reduced-motion:reduce){.pc.promoin,.pc.pr-l .wing{animation:none}.ppawn,.smoke,.dust,.feathers,.wreath,#pfx{display:none}}
+
 .pc.arrive{z-index:5;animation:arrive .17s cubic-bezier(.25,.7,.35,1) both}
 .pc.arrive.hit{animation:arriveHit .3s cubic-bezier(.25,.7,.35,1) both}
 @keyframes arrive{from{transform:translate(calc(var(--dx)*12.5cqw),calc(var(--dy)*12.5cqw)) var(--base)}to{transform:translate(0,0) var(--base)}}
@@ -533,7 +635,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <option value="face">Frente a frente: peças de cima invertidas</option>
       <option value="pass">Passar para o amigo: só as peças giram</option>
     </select></div>
-    <div class="ver">Versão 11.1</div>
+    <div class="ver">Versão 11.2</div>
   </div>
 
   <div class="panel">
@@ -550,7 +652,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       </ul>
       <p>Todo o resto segue as regras atuais da FIDE:</p>
       <ul>
-        <li>Roque, en passant e promoção com escolha da peça, <strong>exceto a dama</strong>: o peão promove a paladino, papa, torre, bispo ou cavalo. Trocou ou perdeu a dama, não tem outra.</li>
+        <li>Roque, en passant e promoção com escolha da peça, <strong>exceto a dama</strong>: o peão promove a paladino, ministro, papa, torre, bispo ou cavalo, e cada peça nova chega com uma animação própria. Trocou ou perdeu a dama, não tem outra. Quando Papa ou Ministro não podem ser escolhidos, aparecem apagados na janela de promoção.</li>
         <li>Xeque-mate vence; afogamento é empate.</li>
         <li>Empate automático por material insuficiente, 5 repetições da mesma posição ou 75 lances de cada lado sem captura nem movimento de peão.</li>
         <li>Empate por 3 repetições ou por 50 lances de cada lado sem captura nem movimento de peão só por reivindicação, como no tabuleiro físico: o app não avisa. Na sua vez, toque em Empate → Reivindicar e diga se a posição já está no tabuleiro ou se vai acontecer com o seu próximo lance. O app confere: se estiver certo, é empate; se não, a partida segue, o lance declarado fica valendo e, com relógio, o adversário ganha 2 minutos.</li>
@@ -1008,7 +1110,7 @@ function sfxRaw(kind){
 
 // ---------- Estado da partida ----------
 let G=null,selected=-1,targets=[],legalNow=[],modalOpen=false,view=null,ANIM=null;
-const ANIM_MS=1100;const cellHTML=[],cellBadge=[];
+const ANIM_MS=1600;const cellHTML=[],cellBadge=[];
 const modo=()=>G.bot||G.online?'normal':G.mode;
 const passUp=()=>modo()==='pass'&&!G.result&&cur().turn!==G.orient;
 const ply=()=>view===null?G.states.length-1:view;
@@ -1087,7 +1189,7 @@ function doMove(m,opt={}){
   G.states.push(n);
   G.moves.push(rec);
   if(G.online&&!opt.remote)enviarLance(m); // online: manda o lance para a sala
-  ANIM={ply:G.states.length-1,t0:Date.now(),from:m.from,to:m.to,cap:!!captured,disc:(rec.dbl?rec.ck:rec.disc).map(x=>[x,kingSq(n.b,n.turn)]),dbl:rec.dbl,conv:!!m.conv,dem:m.dem||'',ep:!!m.ep,drag:!!opt.drag,
+  ANIM={ply:G.states.length-1,t0:Date.now(),from:m.from,to:m.to,cap:!!captured,promo:m.promo||'',disc:(rec.dbl?rec.ck:rec.disc).map(x=>[x,kingSq(n.b,n.turn)]),dbl:rec.dbl,conv:!!m.conv,dem:m.dem||'',ep:!!m.ep,drag:!!opt.drag,
     rook:m.castle?{K:[63,61],Q:[56,59],k:[7,5],q:[0,3]}[m.castle]:null};
   selected=-1;targets=[];view=null;
   evaluate();
@@ -1468,7 +1570,8 @@ function runLocal(req){
 }
 function botResult(id,r){
   if(id!==botToken||!pendingReq)return; // pedido cancelado (voltar, nova partida, fim)
-  const wait=Math.max(0,450-(Date.now()-pendingReq.t0)); // nunca responde instantâneo demais
+  const lm=G.moves[G.moves.length-1],minW=lm&&lm.promo?1350:450; // depois de uma promoção, espera a animação terminar
+  const wait=Math.max(0,minW-(Date.now()-pendingReq.t0)); // nunca responde instantâneo demais
   setTimeout(()=>{
     if(id!==botToken)return;
     botBusy=false;pendingReq=null;
@@ -1864,7 +1967,7 @@ function onSquare(sq){
   if(selected>=0){
     const ms=targets.filter(m=>m.to===sq);
     if(ms.length){
-      if(ms[0].self)return confirmSelf(ms[0]);
+      if(ms[0].self&&!legalNow.every(x=>x.self))return confirmSelf(ms[0]); // se comer a própria peça é a única saída, não pede confirmação
       if(ms[0].promo)return askPromo(ms);
       return doMove(ms[0]);
     }
@@ -1881,13 +1984,16 @@ function confirmSelf(m){
      {label:'Selecionar a peça',fn:()=>{select(m.to);render();}},
      {label:'Capturar',primary:true,fn:()=>doMove(m)}],s.turn);
 }
+const LOCKI=`<svg class="lock" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.6 7.2V5.1a3.4 3.4 0 0 1 6.8 0v2.1" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><rect x="3" y="7" width="10" height="7.6" rx="1.7" fill="currentColor"/></svg>`;
 function askPromo(ms,opt={}){
-  const c=cur().turn;
-  const PRO=['l','m','a','r','b','n'].filter(x=>ms.some(m=>m.promo===x)); // só as peças permitidas agora
-  modal('Promover peão','<div class="promo">'+PRO.map(x=>
-    `<button data-p="${x}" aria-label="${NOMEP[x]}" title="${NOMEP[x]}">${glyph(c==='w'?x.toUpperCase():x)}</button>`).join('')+'</div>',
+  const s=cur(),c=s.turn,ok=new Set(ms.map(m=>m.promo));
+  // a dama não existe na promoção; Papa e Ministro aparecem apagados quando não podem ser escolhidos
+  const tiles=['l','m','a','r','b','n'].map(x=>{const on=ok.has(x);
+    return `<button data-p="${x}"${on?'':' disabled aria-disabled="true" class="off"'} aria-label="${NOMEP[x]}${on?'':' (indisponível)'}" title="${NOMEP[x]}${on?'':' · indisponível'}">${glyph(c==='w'?x.toUpperCase():x)}<span class="pnm">${NOMEP[x]}</span>${on?'':LOCKI}</button>`;}).join('');
+  const why=['m','a'].filter(x=>!ok.has(x)).map(x=>`${NOMEP[x]}: ${s.b.includes(c==='w'?x.toUpperCase():x)?'já está no tabuleiro':'já foi promovido nesta partida'}`);
+  modal('Promover peão',`<div class="promo">${tiles}</div>`+(why.length?`<p class="promonote">${why.join(' · ')}. Só um de cada por lado.</p>`:''),
     [{label:'Cancelar'}],c);
-  $('mBody').querySelectorAll('button[data-p]').forEach(b=>b.onclick=()=>{closeModal();doMove(ms.find(m=>m.promo===b.dataset.p),opt);});
+  $('mBody').querySelectorAll('button[data-p]:not([disabled])').forEach(b=>b.onclick=()=>{closeModal();doMove(ms.find(m=>m.promo===b.dataset.p),opt);});
 }
 function modal(title,body,buttons,who,stack){
   document.querySelector('#modal .card').classList.toggle('up',(modo()==='face'&&who===other(G.orient))||passUp());
@@ -1919,10 +2025,40 @@ function renderFx(dk,anim,fimEmp){
   const el=$('fx');if(el&&el._h!==fx){el.innerHTML=fx;el._h=fx;}
 }
 const upOf0=p=>modo()==='face'?col(p)!==G.orient:passUp();
+
+// ---------- Promoção: cada peça nova chega com uma animação que tem a ver com ela ----------
+// Paladino voa e solta penas · Ministro recebe a coroa de louros · Papa: fumaça branca (habemus papam)
+// Torre sobe do chão levantando poeira · Bispo acende as suas diagonais · Cavalo empina e galopa
+const FEATHER_SVG=`<svg viewBox="0 0 20 50" aria-hidden="true"><path class="fv" d="M10,3 C17,9 18,23 14,37 C12.5,41 11,44 10,47 C9,44 7.5,41 6,37 C2,23 3,9 10,3 Z"/><path class="fq" d="M10,49 L10,6 M10,16 L14.5,12 M10,23 L15.5,19 M10,30 L15,26.5 M10,18 L5.5,14 M10,25 L4.6,21 M10,32 L5,28.5"/></svg>`;
+const WREATH_SVG=`<svg viewBox="0 0 100 100" aria-hidden="true"><g class="wrs"><polyline points="42.9,83.3 38.4,81.9 34.0,80.0 30.0,77.5 26.4,74.5 23.2,70.9 20.6,67.0 18.5,62.7 17.0,58.2 16.2,53.6 16.0,48.8 16.5,44.1 17.7,39.5 19.4,35.1 21.8,31.0 24.7,27.2 28.1,24.0 32.0,21.2 36.2,18.9 40.6,17.3"/><polyline points="57.1,83.3 61.6,81.9 66.0,80.0 70.0,77.5 73.6,74.5 76.8,70.9 79.4,67.0 81.5,62.7 83.0,58.2 83.8,53.6 84.0,48.8 83.5,44.1 82.3,39.5 80.6,35.1 78.2,31.0 75.3,27.2 71.9,24.0 68.0,21.2 63.8,18.9 59.4,17.3"/></g><g class="wrl"><ellipse cx="35.0" cy="86.4" rx="3.9" ry="8.6" transform="rotate(-220 35.0 86.4)"/><ellipse cx="38.2" cy="76.5" rx="3.9" ry="8.6" transform="rotate(-284 38.2 76.5)"/><ellipse cx="26.1" cy="81.2" rx="3.9" ry="8.6" transform="rotate(-205 26.1 81.2)"/><ellipse cx="31.8" cy="72.5" rx="3.9" ry="8.6" transform="rotate(-269 31.8 72.5)"/><ellipse cx="18.9" cy="74.0" rx="3.9" ry="8.6" transform="rotate(-190 18.9 74.0)"/><ellipse cx="26.6" cy="67.0" rx="3.9" ry="8.6" transform="rotate(-254 26.6 67.0)"/><ellipse cx="13.7" cy="65.1" rx="3.9" ry="8.6" transform="rotate(-175 13.7 65.1)"/><ellipse cx="23.0" cy="60.4" rx="3.9" ry="8.6" transform="rotate(-239 23.0 60.4)"/><ellipse cx="11.0" cy="55.2" rx="3.9" ry="8.6" transform="rotate(-160 11.0 55.2)"/><ellipse cx="21.2" cy="53.1" rx="3.9" ry="8.6" transform="rotate(-224 21.2 53.1)"/><ellipse cx="11.0" cy="45.0" rx="3.9" ry="8.6" transform="rotate(-145 11.0 45.0)"/><ellipse cx="21.4" cy="45.5" rx="3.9" ry="8.6" transform="rotate(-209 21.4 45.5)"/><ellipse cx="13.6" cy="35.0" rx="3.9" ry="8.6" transform="rotate(-130 13.6 35.0)"/><ellipse cx="23.5" cy="38.2" rx="3.9" ry="8.6" transform="rotate(-194 23.5 38.2)"/><ellipse cx="18.8" cy="26.1" rx="3.9" ry="8.6" transform="rotate(-115 18.8 26.1)"/><ellipse cx="27.5" cy="31.8" rx="3.9" ry="8.6" transform="rotate(-179 27.5 31.8)"/><ellipse cx="26.0" cy="18.9" rx="3.9" ry="8.6" transform="rotate(-100 26.0 18.9)"/><ellipse cx="33.0" cy="26.6" rx="3.9" ry="8.6" transform="rotate(-164 33.0 26.6)"/><ellipse cx="34.9" cy="13.7" rx="3.9" ry="8.6" transform="rotate(-85 34.9 13.7)"/><ellipse cx="39.6" cy="23.0" rx="3.9" ry="8.6" transform="rotate(-149 39.6 23.0)"/><ellipse cx="65.0" cy="86.4" rx="3.9" ry="8.6" transform="rotate(220 65.0 86.4)"/><ellipse cx="61.8" cy="76.5" rx="3.9" ry="8.6" transform="rotate(284 61.8 76.5)"/><ellipse cx="73.9" cy="81.2" rx="3.9" ry="8.6" transform="rotate(205 73.9 81.2)"/><ellipse cx="68.2" cy="72.5" rx="3.9" ry="8.6" transform="rotate(269 68.2 72.5)"/><ellipse cx="81.1" cy="74.0" rx="3.9" ry="8.6" transform="rotate(190 81.1 74.0)"/><ellipse cx="73.4" cy="67.0" rx="3.9" ry="8.6" transform="rotate(254 73.4 67.0)"/><ellipse cx="86.3" cy="65.1" rx="3.9" ry="8.6" transform="rotate(175 86.3 65.1)"/><ellipse cx="77.0" cy="60.4" rx="3.9" ry="8.6" transform="rotate(239 77.0 60.4)"/><ellipse cx="89.0" cy="55.2" rx="3.9" ry="8.6" transform="rotate(160 89.0 55.2)"/><ellipse cx="78.8" cy="53.1" rx="3.9" ry="8.6" transform="rotate(224 78.8 53.1)"/><ellipse cx="89.0" cy="45.0" rx="3.9" ry="8.6" transform="rotate(145 89.0 45.0)"/><ellipse cx="78.6" cy="45.5" rx="3.9" ry="8.6" transform="rotate(209 78.6 45.5)"/><ellipse cx="86.4" cy="35.0" rx="3.9" ry="8.6" transform="rotate(130 86.4 35.0)"/><ellipse cx="76.5" cy="38.2" rx="3.9" ry="8.6" transform="rotate(194 76.5 38.2)"/><ellipse cx="81.2" cy="26.1" rx="3.9" ry="8.6" transform="rotate(115 81.2 26.1)"/><ellipse cx="72.5" cy="31.8" rx="3.9" ry="8.6" transform="rotate(179 72.5 31.8)"/><ellipse cx="74.0" cy="18.9" rx="3.9" ry="8.6" transform="rotate(100 74.0 18.9)"/><ellipse cx="67.0" cy="26.6" rx="3.9" ry="8.6" transform="rotate(164 67.0 26.6)"/><ellipse cx="65.1" cy="13.7" rx="3.9" ry="8.6" transform="rotate(85 65.1 13.7)"/><ellipse cx="60.4" cy="23.0" rx="3.9" ry="8.6" transform="rotate(149 60.4 23.0)"/></g><g class="wrr"><path d="M50,86 C44,92 38,97 33,99 M50,86 C56,92 62,97 67,99" /></g></svg>`;
+const PUFFS=[[-14,58,52,.12,.72,-18],[14,60,48,.18,.74,22],[0,50,58,.26,.78,6],[-20,40,46,.38,.72,-26],[18,42,50,.48,.76,24],[2,34,56,.6,.72,-4]];
+function promoFxHTML(t,c,up){
+  if(t==='a')return `<span class="smoke${up}">${PUFFS.map(([x,y,sz,d,tt,dr])=>`<i style="--x:${x}%;--y:${y}%;--s:${sz}%;--d:${d}s;--t:${tt}s;--dr:${dr}%"></i>`).join('')}</span>`;
+  if(t==='m')return `<span class="wreath${up}">${WREATH_SVG}</span>`;
+  if(t==='l')return `<span class="feathers ${c}${up}">${[[26,-35,.42],[-30,25,.55],[8,-10,.68]].map(([x,r,d])=>`<i style="--x:${x}%;--r:${r}deg;--d:${d}s">${FEATHER_SVG}</i>`).join('')}</span>`;
+  if(t==='r')return `<span class="dust${up}">${[[-1,.3],[1,.3],[-.55,.46],[.55,.46]].map(([x,d])=>`<i style="--x:${x};--d:${d}s"></i>`).join('')}</span>`;
+  if(t==='n')return `<span class="dust small${up}">${[[-.8,.9],[.8,.9]].map(([x,d])=>`<i style="--x:${x};--d:${d}s;--t:.42s"></i>`).join('')}</span>`;
+  if(t==='b')return '<span class="burst holy"></span>';
+  return '';
+}
+function renderPromoFx(){ // raios de luz pelas diagonais do bispo recém-promovido
+  const el=$('pfx');if(!el)return;
+  const P=ply(),a=ANIM&&ANIM.ply===P&&ANIM.promo==='b'&&Date.now()-ANIM.t0<1500?ANIM:null,k=a?a.t0:0;
+  if(el._k===k)return;el._k=k;
+  if(!a){el.innerHTML='';return;}
+  const d=G.orient==='w'?a.to:63-a.to,X=(d&7)*100+50,Y=(d>>3)*100+50;let defs='',lines='';
+  [[1,1],[-1,1],[1,-1],[-1,-1]].forEach(([ux,uy],i)=>{
+    const t=Math.min(ux>0?(800-X):X,uy>0?(800-Y):Y);if(t<=60)return; // até a borda do tabuleiro (nenhum raio quando a casa já está na borda daquele lado)
+    const sx=X+ux*30,sy=Y+uy*30,ex=X+ux*t,ey=Y+uy*t,len=Math.hypot(ex-sx,ey-sy).toFixed(1);
+    defs+=`<linearGradient id="prg${i}" gradientUnits="userSpaceOnUse" x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}"><stop offset="0" stop-color="#ffcf4d" stop-opacity=".95"/><stop offset=".55" stop-color="#ffe08a" stop-opacity=".55"/><stop offset="1" stop-color="#fff0c0" stop-opacity="0"/></linearGradient>`;
+    lines+=`<line x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}" class="ray" stroke="url(#prg${i})" style="--len:${len}"/>`;});
+  el.innerHTML=`<defs>${defs}</defs>${lines}`;
+}
+
 // ---------- Render ----------
 const board=$('board'),cells=[];
 for(let d=0;d<64;d++){const el=document.createElement('div');el.className='sq';board.appendChild(el);cells.push(el);}
-board.insertAdjacentHTML('beforeend','<svg id="arrows" viewBox="0 0 800 800" aria-hidden="true"></svg><svg id="disc" viewBox="0 0 800 800" aria-hidden="true"></svg><div id="fx" aria-hidden="true"></div>');
+board.insertAdjacentHTML('beforeend','<svg id="arrows" viewBox="0 0 800 800" aria-hidden="true"></svg><svg id="disc" viewBox="0 0 800 800" aria-hidden="true"></svg><svg id="pfx" viewBox="0 0 800 800" aria-hidden="true"></svg><div id="fx" aria-hidden="true"></div>');
 board.addEventListener('click',e=>{if(suppressClick)return;const el=e.target.closest('.sq');if(!el)return;
   if(MOVE_MODE==='drag'&&view===null)return; // só arrastar: o toque serve apenas para voltar da revisão de lances
   onSquare(+el.dataset.sq);});
@@ -2015,11 +2151,14 @@ function render(){
     const t=tset.get(sq);if(t)cls+=t.self?' self':t.conv?' convt':t.dem?' demt':(s.b[sq]?' cap':' dot');
     if(s.link&&(sq===s.link.to||sq===s.link.papa))cls+=' linked'; // vínculo ativo: se a convertida for capturada agora, o Papa morre junto
     el.className=cls;el.dataset.sq=sq;
-    const p=s.b[sq];let extra='',style='';
+    const p=s.b[sq];let extra='',style='',promoHere=false,pdx=0,pdy=0;
     if(anim&&anim.dem==='p'&&p&&sq===anim.to){extra=' demote';} // carimbo: a peça vira peão
     else if(anim&&anim.dem&&p&&sq===anim.from){extra=' preach';} // o Ministro fica no lugar
     else if(anim&&anim.conv&&p&&sq===anim.to){extra=' conv';} // a peça convertida brilha e troca de cor
     else if(anim&&anim.conv&&p&&sq===anim.from){extra=' preach';} // o Papa fica no lugar
+    else if(anim&&anim.promo&&p&&sq===anim.to){ // promoção: o peão chega e se transforma, cada peça do seu jeito
+      extra=' promoin pr-'+anim.promo;promoHere=true;
+      if(!anim.drag){const[fc,fr]=dpos(anim.from),[tc,tr]=dpos(sq);pdx=fc-tc;pdy=fr-tr;}}
     else if(anim&&anim.drag&&p&&sq===anim.to){extra=anim.ep?' land epf':' land';} // solta pelo arrasto: só um assentar (ou a cambalhota do en passant)
     else if(anim&&p&&(sq===anim.to||(anim.rook&&sq===anim.rook[1]))){ // a peça desliza da casa de origem
       const from=sq===anim.to?anim.from:anim.rook[0],[fc,fr]=dpos(from),[tc,tr]=dpos(sq);
@@ -2031,6 +2170,7 @@ function render(){
       if(dk==='stale'&&sq===staleK)extra+=' shake'; // "não tenho para onde ir"
     }
     let h=(anim&&anim.ep&&sq===capSq?'<span class="fr"></span>':'')+(p?glyph(p,upOf(p),extra,style):''); // en passant: bandeira da França na casa do peão capturado
+    if(promoHere)h+=`<span class="ppawn" style="--dx:${pdx};--dy:${pdy}">${glyph(last.by==='w'?'P':'p',upOf(p))}</span>`+promoFxHTML(anim.promo,col(p),upOf(p)?' up':'');
     if(fimEmp&&p&&(sq===kW||sq===kB))h+=`<span class="half${upOf(p)?' up':''}"><i class="${empAnim?'pop':''}">½</i></span>`;
     if(dk==='fifty'&&empAnim&&p&&(sq===kW||sq===kB))h+=`<span class="hglass"><svg viewBox="0 0 24 32"><path class="hgf" d="M3,2 H21 M3,30 H21"/><path class="hgb" d="M5,2 C5,10 11,13 12,16 C11,19 5,22 5,30 H19 C19,22 13,19 12,16 C13,13 19,10 19,2 Z"/><path class="hgs" d="M8,27 H16 L12,21 Z M9,7 H15 L12,11 Z"/></svg></span>`;
     if((dk==='rep'||dk==='rep5')&&empAnim&&p&&last&&sq===last.to)for(let i=0;i<(dk==='rep5'?5:3);i++)h+=`<span class="echo" style="--i:${i}">${glyph(p,upOf(p))}</span>`; // déjà-vu: a posição se repetiu
@@ -2080,7 +2220,7 @@ function render(){
   document.documentElement.classList.toggle('locked',!!G.lock);
   $('bSound').textContent=muted?'🔇':'🔊';
   $('bLock').textContent=G.lock?'🔒':'🔓';$('bLock').classList.toggle('on',!!G.lock);
-  renderMoves();renderClocks();renderPlacar();renderDisc();renderOnline();
+  renderMoves();renderClocks();renderPlacar();renderDisc();renderPromoFx();renderOnline();
   const eo=$('evOpt');eo.checked=barOn();eo.disabled=!G.bot;$('evOptRow').style.opacity=G.bot?1:.5;
   const co=$('clsOpt');co.checked=clsOn();co.disabled=!G.bot;$('clsOptRow').style.opacity=G.bot?1:.5;
   renderEval();renderClsSummary();renderReview();pump();
