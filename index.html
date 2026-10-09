@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez do Rei Tirano · versão 11.2 -->
+<!-- index.html · Xadrez do Rei Tirano · versão 11.8 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -20,6 +20,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Spectral:wght@600;700&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Symbols+2&text=%E2%99%9A%E2%99%9B%E2%99%9C%E2%99%9D%E2%99%9E%E2%99%9F&display=block" rel="stylesheet">
 <style>
+/* peças: Noto Sans Symbols 2 (SIL Open Font License 1.1), só ♚♛♜♝♞♟, embutida para ficar igual em todo aparelho e funcionar sem internet.
+   Medidas verticais iguais às da versão que o Google entrega (sobe 767, desce 49): as peças ficam centradas nas casas, como sempre ficaram no celular */
+@font-face{font-family:"Pecas Rei Tirano";src:url(data:font/woff;base64,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) format("woff");font-display:block}
 :root{
   --bg:#e4e9ee; --surface:#f6f8fa; --ink:#18212c; --muted:#5b6878; --line:#c9d2dc;
   --light:#d8dfe7; --dark:#62778f; --coord-l:#62778f; --coord-d:#d8dfe7;
@@ -57,7 +60,7 @@ h1 .crown{color:var(--gold)}
 .sw.w{background:#f7f3ea}.sw.b{background:#1d1712}
 .who{font-weight:700;white-space:nowrap;display:flex;flex-direction:column;line-height:1.15}
 .who .tag{font-weight:600;font-size:.72rem;color:var(--muted)}
-.caps{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:0 1px;font-family:"Noto Sans Symbols 2","Segoe UI Symbol","DejaVu Sans",serif;font-size:1.05rem;line-height:1.2}
+.caps{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:0 1px;font-family:"Pecas Rei Tirano","Noto Sans Symbols 2","Segoe UI Symbol","DejaVu Sans",serif;font-size:1.05rem;line-height:1.2}
 .caps .w{color:#f7f3ea;text-shadow:0 0 1px #222,1px 0 0 #222,-1px 0 0 #222,0 1px 0 #222,0 -1px 0 #222}
 .caps .b{color:#1d1712}
 :root:not([data-theme="light"]) .caps .b{color:#1d1712;text-shadow:0 0 1px #9aa8b6}
@@ -94,7 +97,7 @@ h1 .crown{color:var(--gold)}
 .burst.conv.b2{animation-delay:.18s}
 @media (prefers-reduced-motion:reduce){.pc.conv,.pc.preach{animation:none}}
 .sq.self::after{content:"";position:absolute;inset:5%;border-radius:50%;border:max(3px,.8cqw) dashed var(--gold);background:var(--gold-soft);pointer-events:none;z-index:2}
-.pc{position:relative;z-index:1;font-family:"Noto Sans Symbols 2","Segoe UI Symbol","DejaVu Sans",serif;font-size:min(10vw,56px);font-size:10.4cqw;line-height:1;--base:translateY(-3%);transform:var(--base);pointer-events:none}
+.pc{position:relative;z-index:1;font-family:"Pecas Rei Tirano","Noto Sans Symbols 2","Segoe UI Symbol","DejaVu Sans",serif;font-size:min(10vw,56px);font-size:10.4cqw;line-height:1;--base:translateY(-3%);transform:var(--base);pointer-events:none}
 .pc.w{color:#fbf7ee;text-shadow:1px 0 0 #1e1812,-1px 0 0 #1e1812,0 1px 0 #1e1812,0 -1px 0 #1e1812,1px 1px 0 #1e1812,-1px -1px 0 #1e1812,1px -1px 0 #1e1812,-1px 1px 0 #1e1812,0 3px 4px rgba(0,0,0,.3)}
 .pc.b{color:#1d1712;text-shadow:0 0 1px rgba(255,250,240,.45),0 3px 4px rgba(0,0,0,.3)}
 .co{position:absolute;font-size:max(9px,2.1cqw);font-weight:700;line-height:1;pointer-events:none;z-index:1}
@@ -194,6 +197,22 @@ h1 .crown{color:var(--gold)}
 #moves .mv:hover{background:var(--btn)}
 #moves .mv.cur{background:var(--gold);color:#1a1307}
 .controls{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:6px 0 14px}
+/* painel de comandos (vez, setas, Voltar, Girar, Empate, Resignar, Nova): nos modos frente a frente gira para quem está em cima, na vez dele */
+.cmd{display:flow-root;margin:10px 0 14px;position:relative;z-index:2}
+.cmd>.status{margin-top:0}.cmd>.controls{margin-bottom:0}
+.cmd.up{transform:rotate(180deg)}
+/* vira como uma placa sobre o eixo horizontal: deita, fica de lado e levanta virada para o outro jogador, sem invadir a barra nem os painéis */
+.cmd.spinup{animation:cmdUp .5s linear both}
+.cmd.spindn{animation:cmdDn .5s linear both}
+@keyframes cmdUp{0%{transform:perspective(1600px) rotateZ(0deg) rotateX(0deg);animation-timing-function:cubic-bezier(.5,0,.9,.6)}
+  50%{transform:perspective(1600px) rotateZ(0deg) rotateX(90deg)}
+  50.01%{transform:perspective(1600px) rotateZ(180deg) rotateX(90deg);animation-timing-function:cubic-bezier(.1,.4,.5,1)}
+  100%{transform:perspective(1600px) rotateZ(180deg) rotateX(0deg)}}
+@keyframes cmdDn{0%{transform:perspective(1600px) rotateZ(180deg) rotateX(0deg);animation-timing-function:cubic-bezier(.5,0,.9,.6)}
+  50%{transform:perspective(1600px) rotateZ(180deg) rotateX(90deg)}
+  50.01%{transform:perspective(1600px) rotateZ(360deg) rotateX(90deg);animation-timing-function:cubic-bezier(.1,.4,.5,1)}
+  100%{transform:perspective(1600px) rotateZ(360deg) rotateX(0deg)}}
+@media (prefers-reduced-motion:reduce){.cmd.spinup,.cmd.spindn{animation:none}}
 .btn{font:inherit;font-weight:600;font-size:.9rem;border:1px solid var(--line);background:var(--btn);color:var(--btn-ink);border-radius:9px;padding:10px 6px;cursor:pointer;touch-action:manipulation}
 .btn:hover{border-color:var(--muted)}
 .btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
@@ -291,6 +310,19 @@ details ul{padding-left:1.1em;margin:6px 0}
 .caps .b .tiara path{stroke:#9aa8b6}
 .caps .lost .tiara .tf{stroke:none}.caps .lost .tiara .tb{stroke:rgba(0,0,0,.35)}
 .pc.up{--base:rotate(180deg) translateY(-3%)}
+/* torres e cavalos com a cor da casa onde começaram (só visual, discreto): uma cópia da peça, na outra cor, recortada só nos dentes da torre ou só nas orelhas do cavalo */
+.mkg{position:relative;display:inline-block;line-height:1}
+/* a cópia sobe .3em (com o mesmo tanto de respiro em cima) para o recorte alcançar as pontas das orelhas, que passam do alto da caixa */
+.mko{position:absolute;left:0;top:-.3em;padding-top:.3em;line-height:1;pointer-events:none}
+/* recortes em em; o app mede no aparelho onde a peça foi desenhada e ajusta --mk-r e --mk-n (ver calibrarMarcas) */
+.mko.mtop{clip-path:var(--mk-r,inset(0 0 .8315em 0))} /* torre: só os três dentes lá no alto, sem a faixa de baixo */
+.mko.mears{clip-path:var(--mk-n,polygon(.32em .3395em,.6em .3395em,.6em .5015em,.537em .5115em,.427em .4895em,.335em .5455em,.32em .5455em))} /* cavalo: as duas orelhas, seguindo a base delas */
+.pc.w .mko{color:#1d1712;text-shadow:0 0 1px rgba(255,250,240,.45)}
+.pc.b .mko{color:#fbf7ee;text-shadow:1px 0 0 #1e1812,-1px 0 0 #1e1812,0 1px 0 #1e1812,0 -1px 0 #1e1812,1px 1px 0 #1e1812,-1px -1px 0 #1e1812,1px -1px 0 #1e1812,-1px 1px 0 #1e1812} /* mantém o contorno: a orelha continua com forma de orelha */
+.caps .w .mko{color:#1d1712;text-shadow:0 0 1px #9aa8b6}
+.caps .b .mko{color:#f7f3ea;text-shadow:0 0 1px #222,1px 0 0 #222,-1px 0 0 #222,0 1px 0 #222,0 -1px 0 #222}
+.caps .lost .mko{display:none}
+#verMarcas{margin-top:2px}#verMarcas:empty{display:none}
 /* ---- animações de lance e captura ---- */
 .sq.dragsrc .pc{opacity:.28}
 .sq.dragover{box-shadow:inset 0 0 0 max(3px,.6cqw) rgba(255,255,255,.85)}
@@ -536,7 +568,7 @@ body.grabbing,body.grabbing *{cursor:grabbing!important}
 @media (prefers-reduced-motion:no-preference){.card.up{animation:none}}
 .nav .btn.on{background:var(--gold);border-color:var(--gold);color:#1a1307}
 html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100%}
-.opt select{font:inherit;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);flex:1}
+.opt select{font:inherit;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);flex:1;min-width:0}
 .sndtest{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .sndtest .btn{padding:8px 4px;font-size:.82rem}
 .sndtest .btn.arq{border-color:var(--gold);box-shadow:inset 0 -3px 0 var(--gold)}
@@ -563,6 +595,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
   <div id="barBottom" class="bar"></div>
 
   <div id="onlineBar" class="onlinebar" hidden></div>
+  <div id="cmd" class="cmd">
   <div class="status">
     <div id="statusText" aria-live="polite"></div>
     <button class="btn gold" id="bReview" hidden>Revisar partida</button>
@@ -597,6 +630,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
     <button class="btn" id="bDraw"><span>½</span>Empate</button>
     <button class="btn" id="bResign"><span>⚑</span>Resignar</button>
     <button class="btn" id="bNew"><span>＋</span>Nova</button>
+  </div>
   </div>
 
   <div class="panel">
@@ -633,9 +667,10 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <option value="normal">Tabuleiro fixo</option>
       <option value="auto">Girar o tabuleiro a cada lance</option>
       <option value="face">Frente a frente: peças de cima invertidas</option>
-      <option value="pass">Passar para o amigo: só as peças giram</option>
+      <option value="pass">Frente a frente: todas as peças giram</option>
     </select></div>
-    <div class="ver">Versão 11.2</div>
+    <div class="ver">Versão 11.8</div>
+    <div class="ver" id="verMarcas"></div>
   </div>
 
   <div class="panel">
@@ -666,6 +701,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <p><strong>Ministro</strong> (coluna romana do Senado com a coroa de louros no alto, o primeiro-ministro do reino): mais uma peça que só aparece por promoção. Anda e captura como torre e também pode dar um passo na diagonal, como o rei.</p>
       <p><strong>Papa e Ministro são únicos:</strong> cada lado pode promover no máximo um Papa e um Ministro na partida inteira. Se ele morrer, for rebaixado ou convertido, não se promove outro. E um lado nunca tem dois ao mesmo tempo: o Papa não converte o Papa adversário, nem converte o Ministro adversário se o seu lado já tiver um.</p>
       <p><strong>Jogo online:</strong> com o endereço do Firebase configurado nas opções, crie a partida em Nova partida → Um amigo online e mande o link. Cada um joga no seu aparelho; não dá para voltar lance, e propostas de empate, reivindicações e resignação vão para o outro lado. Funciona no app do GitHub (o link do artefato do claude.ai bloqueia a conexão).</p>
+      <p><strong>Torres e cavalos:</strong> cada torre tem os dentes lá do alto, e cada cavalo as orelhas, da cor da casa onde começou a partida. A torre branca de a1 (casa escura) tem os dentes pretos e a torre preta de a8 (casa clara), os dentes brancos. O cavalo branco de g1 tem as orelhas pretas e o cavalo preto de g8, as orelhas brancas. A marca acompanha a peça a partida toda. É só visual: não muda nenhuma regra, nem a notação, nem a contagem de repetições para o empate.</p>
       <p>Notação em português: R rei, D dama, P paladino, M ministro, S papa (Santo Padre), T torre, B bispo, C cavalo.</p>
     </details>
   </div>
@@ -942,8 +978,64 @@ const WING=`<svg class="wing" viewBox="0 0 100 100" aria-hidden="true"><path cla
 const TIARA=`<svg class="tiara" viewBox="0 0 1000 1000" aria-hidden="true"><g transform="translate(0 719.5) scale(1 -1)"><path class="tf" d="M322,262 C300,330 300,470 340,575 C370,650 430,700 500,700 C570,700 630,650 660,575 C700,470 700,330 678,262 Z"/><path class="tb" d="M318,335 Q500,365 682,335 M327,447 Q500,474 673,447 M352,550 Q500,574 648,550"/><path class="tf" d="M468,735 A32,32 0 1,0 532,735 A32,32 0 1,0 468,735 Z M488,762 H512 V800 H542 V824 H512 V858 H488 V824 H458 V800 H488 Z"/></g></svg>`;
 // Ministro: coluna romana do Senado com a coroa de louros no alto (símbolo, sem rosto)
 const COLUNA=`<svg class="colm" viewBox="0 0 1000 1000" aria-hidden="true"><g transform="translate(0 719.5) scale(1 -1)"><g class="bf"><ellipse cx="460" cy="483" rx="20" ry="44" transform="rotate(40 460 483)"/><ellipse cx="467" cy="502" rx="20" ry="44" transform="rotate(100 467 502)"/><ellipse cx="427" cy="502" rx="20" ry="44" transform="rotate(21 427 502)"/><ellipse cx="440" cy="517" rx="20" ry="44" transform="rotate(81 440 517)"/><ellipse cx="402" cy="531" rx="20" ry="44" transform="rotate(2 402 531)"/><ellipse cx="419" cy="541" rx="20" ry="44" transform="rotate(62 419 541)"/><ellipse cx="387" cy="566" rx="20" ry="44" transform="rotate(-17 387 566)"/><ellipse cx="406" cy="570" rx="20" ry="44" transform="rotate(43 406 570)"/><ellipse cx="385" cy="604" rx="20" ry="44" transform="rotate(-36 385 604)"/><ellipse cx="405" cy="602" rx="20" ry="44" transform="rotate(24 405 602)"/><ellipse cx="395" cy="641" rx="20" ry="44" transform="rotate(-55 395 641)"/><ellipse cx="413" cy="633" rx="20" ry="44" transform="rotate(5 413 633)"/><ellipse cx="417" cy="673" rx="20" ry="44" transform="rotate(-74 417 673)"/><ellipse cx="431" cy="659" rx="20" ry="44" transform="rotate(-14 431 659)"/><ellipse cx="447" cy="695" rx="20" ry="44" transform="rotate(-93 447 695)"/><ellipse cx="456" cy="678" rx="20" ry="44" transform="rotate(-33 456 678)"/><ellipse cx="484" cy="707" rx="20" ry="44" transform="rotate(-112 484 707)"/><ellipse cx="487" cy="687" rx="20" ry="44" transform="rotate(-52 487 687)"/><ellipse cx="540" cy="483" rx="20" ry="44" transform="rotate(-40 540 483)"/><ellipse cx="533" cy="502" rx="20" ry="44" transform="rotate(-100 533 502)"/><ellipse cx="573" cy="502" rx="20" ry="44" transform="rotate(-21 573 502)"/><ellipse cx="560" cy="517" rx="20" ry="44" transform="rotate(-81 560 517)"/><ellipse cx="598" cy="531" rx="20" ry="44" transform="rotate(-2 598 531)"/><ellipse cx="581" cy="541" rx="20" ry="44" transform="rotate(-62 581 541)"/><ellipse cx="613" cy="566" rx="20" ry="44" transform="rotate(17 613 566)"/><ellipse cx="594" cy="570" rx="20" ry="44" transform="rotate(-43 594 570)"/><ellipse cx="615" cy="604" rx="20" ry="44" transform="rotate(36 615 604)"/><ellipse cx="595" cy="602" rx="20" ry="44" transform="rotate(-24 595 602)"/><ellipse cx="605" cy="641" rx="20" ry="44" transform="rotate(55 605 641)"/><ellipse cx="587" cy="633" rx="20" ry="44" transform="rotate(-5 587 633)"/><ellipse cx="583" cy="673" rx="20" ry="44" transform="rotate(74 583 673)"/><ellipse cx="569" cy="659" rx="20" ry="44" transform="rotate(14 569 659)"/><ellipse cx="553" cy="695" rx="20" ry="44" transform="rotate(93 553 695)"/><ellipse cx="544" cy="678" rx="20" ry="44" transform="rotate(33 544 678)"/><ellipse cx="516" cy="707" rx="20" ry="44" transform="rotate(112 516 707)"/><ellipse cx="513" cy="687" rx="20" ry="44" transform="rotate(52 513 687)"/><path d="M456,428 L544,428 L538,478 L462,478 Z"/><path d="M180,0 L820,0 L820,58 L772,58 L762,110 L238,110 L228,58 L180,58 Z"/><path d="M322,110 L678,110 L660,380 L340,380 Z"/><path d="M266,380 L734,380 L734,428 L266,428 Z"/><path d="M300,404 m-32,0 a32,32 0 1,0 64,0 a32,32 0 1,0 -64,0 M700,404 m-32,0 a32,32 0 1,0 64,0 a32,32 0 1,0 -64,0"/></g><path class="bd" d="M402,138 L407,354 M467,138 L469,354 M533,138 L531,354 M598,138 L593,354" stroke-width="18"/><path class="bl" d="M300,404 m-10,0 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0 M700,404 m-10,0 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0"/></g></svg>`;
-const fig=t=>t==='m'?`<span class="ming"><span class="ph">${GLYPH.m}\uFE0E</span>${COLUNA}</span>`:t==='l'?`<span class="palg">${GLYPH.l}\uFE0E${WING}</span>`:t==='a'?`<span class="papg">${GLYPH.a}\uFE0E${TIARA}</span>`:`${GLYPH[t]}\uFE0E`;
-const glyph=(p,up,extra='',style='')=>`<span class="pc ${col(p)}${up?' up':''}${extra}"${style?` style="${style}"`:''}>${fig(typ(p))}</span>`;
+const fig=(t,mk)=>t==='m'?`<span class="ming"><span class="ph">${GLYPH.m}\uFE0E</span>${COLUNA}</span>`:t==='l'?`<span class="palg">${GLYPH.l}\uFE0E${WING}</span>`:t==='a'?`<span class="papg">${GLYPH.a}\uFE0E${TIARA}</span>`
+  :mk&&(t==='r'||t==='n')?`<span class="mkg">${GLYPH[t]}\uFE0E<span class="mko ${t==='r'?'mtop':'mears'}" aria-hidden="true">${GLYPH[t]}\uFE0E</span></span>`:`${GLYPH[t]}\uFE0E`;
+const glyph=(p,up,extra='',style='',mk=false)=>`<span class="pc ${col(p)}${up?' up':''}${extra}"${style?` style="${style}"`:''}>${fig(typ(p),mk)}</span>`;
+
+// ---------- Torres e cavalos com a cor da casa onde começaram (só visual) ----------
+// A torre leva nos dentes do alto, e o cavalo nas orelhas, a cor da casa onde começou a partida; se é a mesma cor da peça, não aparece nada.
+// Nada disso entra nas regras, na notação ou na contagem de repetições: a origem de cada peça é refeita a partir dos lances, só para desenhar.
+const casaClara=i=>(((i>>3)+(i&7))&1)===0;
+let ORIG_C=null;
+function origens(){ // origens()[k][casa] = casa inicial da torre ou do cavalo que está ali antes do lance k (-1: nenhuma)
+  const M=G.moves,s0=G.states[0];
+  if(ORIG_C&&ORIG_C.m===M&&ORIG_C.n===M.length&&ORIG_C.u===M[M.length-1]&&ORIG_C.s0===s0)return ORIG_C.v;
+  let o=s0.b.map((p,i)=>p&&(typ(p)==='r'||typ(p)==='n')?i:-1);const v=[o];
+  for(let k=0;k<M.length;k++){const m=M[k],pk=G.states[k].b[m.from];o=o.slice();
+    if(m.conv){}                                       // o Papa converte sem sair do lugar: a peça convertida continua com a origem dela
+    else if(m.dem||m.cass)o[m.to]=-1;                  // rebaixada ou retirada (partidas antigas, do poder antigo do Ministro)
+    else{
+      o[m.to]=m.promo?-1:o[m.from];o[m.from]=-1;       // quem anda leva a origem; quem foi capturado perde a dele
+      if(m.capSq!=null&&m.capSq!==m.to)o[m.capSq]=-1;  // en passant
+      if(pk&&typ(pk)==='k'&&Math.abs(m.to-m.from)===2){const t={62:[63,61],58:[56,59],6:[7,5],2:[0,3]}[m.to];if(t){o[t[1]]=o[t[0]];o[t[0]]=-1;}} // roque: a torre leva a dela
+    }
+    v.push(o);}
+  ORIG_C={m:M,n:M.length,u:M[M.length-1],s0,v};return v;
+}
+const marcada=(p,org)=>org>=0&&!!p&&(typ(p)==='r'||typ(p)==='n')&&(casaClara(org)?'w':'b')!==col(p);
+// Onde a peça cai dentro da casa depende da fonte que o aparelho usa de verdade (com outra fonte ela pode ficar mais baixa).
+// Mede no próprio aparelho a linha de base e o desenho da torre e do cavalo, e ajusta o recorte do alto da torre e das orelhas.
+// Desenho das peças (fonte embutida): torre com 0,719 em de altura e o alto 0,14 em abaixo do alto da caixa; cavalo com 0,767 em de altura, de 0,16 a 0,84 em na horizontal.
+function calibrarMarcas(){
+  try{
+    // mede dentro do próprio tabuleiro, no tamanho real das peças (o arredondamento de pixel muda com o tamanho, e os dentes têm 1 ponto de altura)
+    const t=document.createElement('div');t.style.cssText='position:absolute;left:0;top:0;visibility:hidden;pointer-events:none';
+    t.innerHTML='<span class="pc w" style="transform:none"><span class="mkg">♜︎<i style="display:inline-block;width:0;height:0"></i></span></span>';
+    ($('board')||document.body).appendChild(t);
+    const pc=t.firstChild,g=pc.firstChild,pr=g.querySelector('i'),F=parseFloat(getComputedStyle(pc).fontSize)||40,gb=g.getBoundingClientRect();
+    const base=(pr.getBoundingClientRect().bottom-gb.top)/F,adv=gb.width/F; // linha de base dentro da caixa de 1 em (no tamanho real), e a largura da peça
+    // o desenho da peça em relação à linha de base é medido grande (200 px), onde a medida é precisa; tudo em em
+    const C=200,ctx=document.createElement('canvas').getContext('2d');ctx.font=C+'px '+getComputedStyle(pc).fontFamily;
+    const r=ctx.measureText('♜︎'),n=ctx.measureText('♞︎');t.remove();
+    const rT=base-r.actualBoundingBoxAscent/C,rH=(r.actualBoundingBoxAscent+r.actualBoundingBoxDescent)/C;
+    const nT=base-n.actualBoundingBoxAscent/C,nH=(n.actualBoundingBoxAscent+n.actualBoundingBoxDescent)/C;
+    const nL=-n.actualBoundingBoxLeft/C,nW=(n.actualBoundingBoxLeft+n.actualBoundingBoxRight)/C;
+    if(![base,adv,rT,rH,nT,nH,nL,nW].every(Number.isFinite)||rH<.3||nH<.3||nW<.3||adv<.3)return; // medida estranha: fica o recorte padrão
+    const cr=rT+.0396*rH,em=v=>(+v.toFixed(4))+'em'; // torre: só os dentes (até 0,029 em na fonte embutida)
+    // orelhas: os pontos medidos na fonte embutida, levados para o desenho medido aqui (+.3em porque a cópia começa .3em acima)
+    const ORE=[[.32,-.1],[.6,-.1],[.6,.062],[.537,.072],[.427,.05],[.335,.106],[.32,.106]];
+    const pts=ORE.map(([x,y])=>em(nL+(x-.16)/.68*nW)+' '+em(nT+(y+.0475)/.767*nH+.3)).join(',');
+    const st=document.documentElement.style;
+    st.setProperty('--mk-r',`inset(0 0 ${em(1-cr)} 0)`);
+    st.setProperty('--mk-n',`polygon(${pts})`);
+    const dy=rT-.14,el=$('verMarcas');
+    if(el)el.textContent=Math.abs(dy)>.04?`Peças com a fonte do aparelho: marcas ajustadas em ${dy>0?'+':''}${Math.round(dy*100)}%`:'';
+  }catch(e){}
+}
+calibrarMarcas();
+if(document.fonts){const c=()=>calibrarMarcas();document.fonts.ready.then(c);if(document.fonts.addEventListener)document.fonts.addEventListener('loadingdone',c);
+  if(document.fonts.load)document.fonts.load('200px "Pecas Rei Tirano"','♜♞').then(c,c);}
+{let rz=0;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(calibrarMarcas,150);});} // o tabuleiro mudou de tamanho: mede de novo
 
 function san(s,m,legal){
   const p=s.b[m.from],t=typ(p);let str;
@@ -1113,6 +1205,8 @@ let G=null,selected=-1,targets=[],legalNow=[],modalOpen=false,view=null,ANIM=nul
 const ANIM_MS=1600;const cellHTML=[],cellBadge=[];
 const modo=()=>G.bot||G.online?'normal':G.mode;
 const passUp=()=>modo()==='pass'&&!G.result&&cur().turn!==G.orient;
+const frente=()=>modo()==='face'||modo()==='pass'; // os dois modos frente a frente
+const cmdUp=()=>frente()&&!G.result&&cur().turn!==G.orient; // painel de comandos virado para o jogador de cima, na vez dele (vale a vez real, não a posição vista no histórico)
 const ply=()=>view===null?G.states.length-1:view;
 const cur=()=>G.states[G.states.length-1];
 const refresh=()=>{legalNow=allLegal(cur());};
@@ -1996,7 +2090,8 @@ function askPromo(ms,opt={}){
   $('mBody').querySelectorAll('button[data-p]:not([disabled])').forEach(b=>b.onclick=()=>{closeModal();doMove(ms.find(m=>m.promo===b.dataset.p),opt);});
 }
 function modal(title,body,buttons,who,stack){
-  document.querySelector('#modal .card').classList.toggle('up',(modo()==='face'&&who===other(G.orient))||passUp());
+  // frente a frente: a janela vira para quem tem de responder (who); sem who, fica para o jogador de baixo
+  document.querySelector('#modal .card').classList.toggle('up',frente()&&!!who&&who!==G.orient);
   $('mTitle').textContent=title;$('mBody').innerHTML=body;
   const bx=$('mBtns');bx.innerHTML='';bx.classList.toggle('stack',!!stack);
   buttons.forEach(b=>{const el=document.createElement('button');el.className='btn'+(b.primary?' primary':'');el.textContent=b.label;
@@ -2093,7 +2188,7 @@ board.addEventListener('pointermove',e=>{
     if(selected!==DRAG.from){select(DRAG.from);render();}
     ghost=document.createElement('div');ghost.className='ghost'+(DRAG.touch?' big':'');
     ghost.style.width=ghost.style.height=DRAG.sz+'px';ghost.style.fontSize=(DRAG.sz*.832)+'px';
-    ghost.innerHTML=glyph(DRAG.p,upOf0(DRAG.p));document.body.appendChild(ghost);
+    ghost.innerHTML=glyph(DRAG.p,upOf0(DRAG.p),'','',marcada(DRAG.p,origens()[G.states.length-1][DRAG.from]));document.body.appendChild(ghost);
     document.body.classList.add('grabbing');if(DRAG.touch)board.classList.add('touchdrag');
   }
   moveGhost(e.clientX,e.clientY);
@@ -2118,6 +2213,7 @@ board.addEventListener('pointercancel',e=>{if(DRAG&&e.pointerId===DRAG.pid){DRAG
 
 function render(){
   const P=ply(),s=G.states[P],last=G.moves[P-1];
+  const OR=origens(),OP=OR[P]; // de onde veio cada torre e cavalo (para os dentes da torre e as orelhas)
   const chk=inCheck(s,s.turn)?kingSq(s.b,s.turn):-1;
   const tset=new Map(view===null?targets.map(m=>[m.to,m]):[]);
   const anim=ANIM&&ANIM.ply===P&&Date.now()-ANIM.t0<ANIM_MS?ANIM:null;
@@ -2169,11 +2265,11 @@ function render(){
         const o=sq===kW?kB:kW,[c1]=dpos(sq),[c2]=dpos(o);extra+=' bow';style=(style?style+';':'')+`--bowdir:${c2>=c1?1:-1}`;}
       if(dk==='stale'&&sq===staleK)extra+=' shake'; // "não tenho para onde ir"
     }
-    let h=(anim&&anim.ep&&sq===capSq?'<span class="fr"></span>':'')+(p?glyph(p,upOf(p),extra,style):''); // en passant: bandeira da França na casa do peão capturado
+    let h=(anim&&anim.ep&&sq===capSq?'<span class="fr"></span>':'')+(p?glyph(p,upOf(p),extra,style,marcada(p,OP[sq])):''); // en passant: bandeira da França na casa do peão capturado
     if(promoHere)h+=`<span class="ppawn" style="--dx:${pdx};--dy:${pdy}">${glyph(last.by==='w'?'P':'p',upOf(p))}</span>`+promoFxHTML(anim.promo,col(p),upOf(p)?' up':'');
     if(fimEmp&&p&&(sq===kW||sq===kB))h+=`<span class="half${upOf(p)?' up':''}"><i class="${empAnim?'pop':''}">½</i></span>`;
     if(dk==='fifty'&&empAnim&&p&&(sq===kW||sq===kB))h+=`<span class="hglass"><svg viewBox="0 0 24 32"><path class="hgf" d="M3,2 H21 M3,30 H21"/><path class="hgb" d="M5,2 C5,10 11,13 12,16 C11,19 5,22 5,30 H19 C19,22 13,19 12,16 C13,13 19,10 19,2 Z"/><path class="hgs" d="M8,27 H16 L12,21 Z M9,7 H15 L12,11 Z"/></svg></span>`;
-    if((dk==='rep'||dk==='rep5')&&empAnim&&p&&last&&sq===last.to)for(let i=0;i<(dk==='rep5'?5:3);i++)h+=`<span class="echo" style="--i:${i}">${glyph(p,upOf(p))}</span>`; // déjà-vu: a posição se repetiu
+    if((dk==='rep'||dk==='rep5')&&empAnim&&p&&last&&sq===last.to)for(let i=0;i<(dk==='rep5'?5:3);i++)h+=`<span class="echo" style="--i:${i}">${glyph(p,upOf(p),'','',marcada(p,OP[sq]))}</span>`; // déjà-vu: a posição se repetiu
     if(staleN.has(sq))h+=`<span class="nox" style="--i:${staleN.get(sq)}">✕</span>`;
     if(sq===fimRei&&fimTipo==='resign')h+=`<span class="flag${upOf(p)?' up':''}"><svg viewBox="0 0 40 40" class="${fimAnim?'raise':''}"><line x1="9" y1="38" x2="9" y2="3" class="pole"/><path class="cloth" d="M9,4 C15,1.5 21,7 32,4.5 L32,19 C21,21.5 15,16 9,18.5 Z"/></svg></span>`;
     if(sq===capSq){ // peça capturada pequena e tombada no canto, até o próximo lance
@@ -2181,7 +2277,7 @@ function render(){
       const cp=last.captured,att=s.b[sq]||(last.by==='w'?'P':'p'),up=upOf(att);
       const pos=up?'--tx:3.75cqw;--ty:-3.75cqw;--rot:105deg':'--tx:-3.75cqw;--ty:3.75cqw;--rot:-75deg';
       const ep=last.capSq!=null&&last.capSq!==last.to; // só no en passant o peão capturado fica fora da casa de chegada
-      h+=`<span class="capt${anim?(ep?' eppir':' knock'):''}" style="${pos}">${glyph(cp,false)}</span>`;
+      h+=`<span class="capt${anim?(ep?' eppir':' knock'):''}" style="${pos}">${glyph(cp,false,'','',marcada(cp,OR[P-1][sq]))}</span>`;
       if(anim&&!ep)h+=`<span class="burst${last.self?' gold':''}"></span>`;}
     if(anim&&anim.conv&&sq===anim.to)h+=`<span class="burst conv"></span><span class="burst conv b2"></span>`;
     if(anim&&anim.dem==='p'&&sq===anim.to)h+=`<span class="burst dem"></span>`;
@@ -2217,6 +2313,7 @@ function render(){
   const face=modo()==='face';
   $('mode').disabled=!!G.bot;
   $('barTop').classList.toggle('up',face||passUp());
+  renderCmd();
   document.documentElement.classList.toggle('locked',!!G.lock);
   $('bSound').textContent=muted?'🔇':'🔊';
   $('bLock').textContent=G.lock?'🔒':'🔓';$('bLock').classList.toggle('on',!!G.lock);
@@ -2225,17 +2322,26 @@ function render(){
   const co=$('clsOpt');co.checked=clsOn();co.disabled=!G.bot;$('clsOptRow').style.opacity=G.bot?1:.5;
   renderEval();renderClsSummary();renderReview();pump();
 }
+let cmdEra=null; // orientação já desenhada do painel de comandos (null: ainda não desenhado, entra sem animação)
+function renderCmd(){
+  const up=cmdUp(),el=$('cmd');if(up===cmdEra)return;
+  el.classList.toggle('up',up);
+  if(cmdEra!==null){el.classList.remove('spinup','spindn');void el.offsetWidth;el.classList.add(up?'spinup':'spindn');} // vira como uma placa, sempre no mesmo sentido
+  cmdEra=up;
+}
+$('cmd').addEventListener('animationend',e=>{if(e.target.id==='cmd')e.target.classList.remove('spinup','spindn');}); // terminado o giro, fica só o rotate(180deg) simples (texto nítido)
 function renderBar(el,c){
   const s=cur();
   const byVal=(a,b)=>VAL[b]-VAL[a];
   const lm=G.moves[G.moves.length-1];
-  const item=m=>({t:typ(m.captured),last:m===lm});
+  const OR=origens(),mv=G.moves.map((m,k)=>[m,k]);
+  const item=([m,k])=>({t:typ(m.captured),last:m===lm,mk:marcada(m.captured,OR[k][m.capSq??m.to])}); // a torre e o cavalo capturados aparecem com os dentes e as orelhas que tinham
   const byV=(a,b)=>VAL[b.t]-VAL[a.t];
-  const took=G.moves.filter(m=>m.by===c&&m.captured&&!m.self).flatMap(m=>m.papa?[item(m),{t:'a',last:m===lm}]:[item(m)]).sort(byV);
-  const lost=G.moves.filter(m=>m.by===c&&m.self).map(item).sort(byV);
+  const took=mv.filter(([m])=>m.by===c&&m.captured&&!m.self).flatMap(x=>x[0].papa?[item(x),{t:'a',last:x[0]===lm}]:[item(x)]).sort(byV);
+  const lost=mv.filter(([m])=>m.by===c&&m.self).map(item).sort(byV);
   const diff=material(s.b,c)-material(s.b,other(c));
   const oc=other(c);
-  let caps=took.map(x=>`<span class="${oc}${x.last?' lastcap':''}">${fig(x.t)}</span>`).join('');
+  let caps=took.map(x=>`<span class="${oc}${x.last?' lastcap':''}">${fig(x.t,x.mk)}</span>`).join('');
   if(diff>0)caps+=`<span class="adv">+${diff}</span>`;
   if(lost.length)caps+=`<span class="sep" title="Peças capturadas pelo próprio rei">⊗</span>`+lost.map(x=>`<span class="lost${x.last?' lastcap':''}">${fig(x.t)}</span>`).join('');
   el.className='bar'+(!G.result&&s.turn===c?' turn':'');
@@ -2409,7 +2515,7 @@ $('bNew').onclick=()=>{
       if($('opp').value==='bot'){let me=$('myc').value;if(me==='r')me=Math.random()<.5?'w':'b';bot={color:other(me),level:+$('lvl').value,myPick:$('myc').value,evalBar:$('evNew').checked,classify:$('clsNew').checked};
         const eu=$('nEu').value.trim();NOMES.eu=eu;names={[me]:eu||'Você',[other(me)]:`Bot nível ${bot.level} (${BOT_NIV[bot.level].nome})`};}
       else{const w=$('nW').value.trim(),bk=$('nB').value.trim();NOMES.w=w;NOMES.b=bk;if(w&&!NOMES.eu)NOMES.eu=w;names={w:w||'Brancas',b:bk||'Pretas'};}
-      salvarNomes();newGame(a,b,bot,names);}}]);
+      salvarNomes();newGame(a,b,bot,names);}}],cmdUp()?other(G.orient):undefined); // tocou em Nova no painel virado: a janela vira junto
   $('nOn').value=NOMES.eu??'';
   $('nW').value=NOMES.w??NOMES.eu??'';$('nB').value=NOMES.b??'';$('nEu').value=NOMES.eu??NOMES.w??'';
   $('nSwap').onclick=()=>{const t=$('nW').value;$('nW').value=$('nB').value;$('nB').value=t;};
