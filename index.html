@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez do Rei Tirano · versão 11.8 -->
+<!-- index.html · Xadrez do Rei Tirano · versão 12.1 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -49,6 +49,12 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
 .wrap{max-width:580px;margin:0 auto;padding:14px 14px 28px}
+/* zoom do tabuleiro (botões de lupa, quando sobra tela, como no tablet): o tabuleiro cresce e as barras e os controles crescem junto;
+   título e painéis de baixo ficam do tamanho de sempre */
+html.zoomed .wrap{max-width:var(--wrapw,580px)}
+html.zoomed .wrap>header,html.zoomed .wrap>.panel{max-width:552px;margin-left:auto;margin-right:auto}
+html.zoomed .boardbox{max-width:var(--tab,560px)}
+html.zoomed #barTop,html.zoomed #barBottom,html.zoomed #onlineBar,html.zoomed .evalbar,html.zoomed #cmd>.status,html.zoomed #nav,html.zoomed #cmd>.controls{zoom:var(--zs,1)}
 header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:4px 2px 12px}
 h1{font-family:Spectral,Georgia,serif;font-weight:700;font-size:1.55rem;line-height:1.1;margin:0;letter-spacing:-.01em}
 h1 .crown{color:var(--gold)}
@@ -189,8 +195,10 @@ h1 .crown{color:var(--gold)}
 #statusText.over{font-family:Spectral,Georgia,serif;font-size:1.15rem;font-weight:700}
 #statusText b{color:rgb(var(--check))}
 
-.nav{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:0 0 6px}
+.nav{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px;margin:0 0 6px} /* os botões visíveis dividem a fileira */
 .nav .btn{font-size:1.15rem;padding:8px 6px}
+.nav .btn[hidden]{display:none}
+.zi{width:1.1em;height:1.1em;display:block;margin:0 auto;fill:none;stroke:currentColor;stroke-width:2.3;stroke-linecap:round}
 .nav.viewing .btn{border-color:var(--gold)}
 #statusText.review{color:var(--gold)}
 #moves .mv{cursor:pointer;border-radius:5px;padding:0 4px}
@@ -608,6 +616,8 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
     <button class="btn" id="nLast" aria-label="Posição atual">⏭</button>
     <button class="btn" id="bSound" aria-label="Som" title="Som">🔊</button>
     <button class="btn" id="bLock" aria-label="Travar rolagem da tela" title="Travar rolagem da tela">🔓</button>
+    <button class="btn" id="bZoomOut" aria-label="Diminuir o tabuleiro" title="Diminuir o tabuleiro" hidden><svg class="zi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.4 15.4 21 21M7.6 10.5h5.8"/></svg></button>
+    <button class="btn" id="bZoomIn" aria-label="Aumentar o tabuleiro" title="Aumentar o tabuleiro" hidden><svg class="zi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.4 15.4 21 21M7.6 10.5h5.8M10.5 7.6v5.8"/></svg></button>
   </div>
   <div class="panel review" id="review" hidden>
     <div class="phead"><h2>Revisão da partida</h2><button class="btn mini" id="revClose">Fechar</button></div>
@@ -662,6 +672,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <option value="tap">Só tocar: a peça e depois a casa</option>
       <option value="drag">Só arrastar</option>
     </select></div>
+    <label class="opt"><input type="checkbox" id="confXeque"> Pedir confirmação quando o rei em xeque for comer peça própria</label>
     <label class="optlbl" for="mode" style="margin-top:12px">Jogar contra um amigo</label>
     <div class="opt"><select id="mode">
       <option value="normal">Tabuleiro fixo</option>
@@ -669,7 +680,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <option value="face">Frente a frente: peças de cima invertidas</option>
       <option value="pass">Frente a frente: todas as peças giram</option>
     </select></div>
-    <div class="ver">Versão 11.8</div>
+    <div class="ver">Versão 12.1</div>
     <div class="ver" id="verMarcas"></div>
   </div>
 
@@ -681,6 +692,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       </div>
       <ul>
         <li>Vale inclusive para sair de um xeque, se a casa estiver segura.</li>
+        <li>Tocando, o app pede confirmação antes de o rei comer a peça própria (arrastando, não pede). Se essa for a única saída do xeque, não pede. Nas opções dá para não pedir sempre que o rei estiver em xeque.</li>
         <li>Se o rei capturar uma torre própria, o roque daquele lado deixa de existir (o rei se moveu, então nenhum roque é mais possível).</li>
         <li>Conta como captura para a regra dos 50/75 lances.</li>
         <li>Na lista de lances aparece em dourado com ⊗, por exemplo <strong>R⊗e2</strong>.</li>
@@ -1203,10 +1215,14 @@ function sfxRaw(kind){
 // ---------- Estado da partida ----------
 let G=null,selected=-1,targets=[],legalNow=[],modalOpen=false,view=null,ANIM=null;
 const ANIM_MS=1600;const cellHTML=[],cellBadge=[];
-const modo=()=>G.bot||G.online?'normal':G.mode;
-const passUp=()=>modo()==='pass'&&!G.result&&cur().turn!==G.orient;
+// revisão de partida sem bot e sem online (amigo no mesmo aparelho ou partida salva): tudo na posição normal, sem girar nada
+const revNormal=()=>REV&&!!G&&!G.bot&&!G.online;
+let REVORI=null; // orientação do tabuleiro nessa revisão: começa com as brancas embaixo; o botão Girar muda só ela
+const ori=()=>revNormal()&&REVORI?REVORI:G.orient; // orientação que aparece na tela
+const modo=()=>G.bot||G.online||revNormal()?'normal':G.mode;
+const passUp=()=>modo()==='pass'&&!G.result&&cur().turn!==ori();
 const frente=()=>modo()==='face'||modo()==='pass'; // os dois modos frente a frente
-const cmdUp=()=>frente()&&!G.result&&cur().turn!==G.orient; // painel de comandos virado para o jogador de cima, na vez dele (vale a vez real, não a posição vista no histórico)
+const cmdUp=()=>frente()&&!G.result&&cur().turn!==ori(); // painel de comandos virado para o jogador de cima, na vez dele (vale a vez real, não a posição vista no histórico)
 const ply=()=>view===null?G.states.length-1:view;
 const cur=()=>G.states[G.states.length-1];
 const refresh=()=>{legalNow=allLegal(cur());};
@@ -1418,11 +1434,11 @@ function renderDisc(){
   const el=$('disc');if(!el)return;
   const P=ply(),a=ANIM&&ANIM.ply===P&&ANIM.disc&&ANIM.disc.length&&Date.now()-ANIM.t0<2100?ANIM:null;
   const mate=!!(a&&G.result&&G.result.winner&&P===G.states.length-1&&(G.result.kind==='mate'||/^Xeque-mate/.test(G.result.text)));
-  const k=a?a.t0+(mate?'m':''):0;
+  const k=a?a.t0+(mate?'m':'')+ori():0;
   if(el._k===k)return;el._k=k;
   el.classList.toggle('mate',mate); // mate: setas e DOUBLE em vermelho
   if(!a){el.innerHTML='';return;}
-  const dp=x=>{const d=G.orient==='w'?x:63-x;return[(d&7)*100+50,(d>>3)*100+50];};
+  const dp=x=>{const d=ori()==='w'?x:63-x;return[(d&7)*100+50,(d>>3)*100+50];};
   let h=a.disc.map(([fr,to])=>{
     const[x1,y1]=dp(fr),[x2,y2]=dp(to),an=Math.atan2(y2-y1,x2-x1),c=Math.cos(an),s=Math.sin(an);
     const sx=x1+c*30,sy=y1+s*30,ex=x2-c*42,ey=y2-s*42,len=Math.hypot(ex-sx,ey-sy).toFixed(1);
@@ -1810,10 +1826,11 @@ function renderClsSummary(){
 }
 function renderEval(){
   const bar=$('evalBar');if(!bar)return;
-  bar.hidden=!barOn();if(!barOn())return;
+  const vis=barOn()||REV; // na revisão aparece sempre, além do gráfico
+  bar.hidden=!vis;if(!vis)return;
   const P=ply(),e=EVCACHE.get(keyAt(P));
   if(e)evShown=e.v;
-  bar.classList.toggle('flip',G.orient==='b');bar.classList.toggle('busy',!e);
+  bar.classList.toggle('flip',ori()==='b');bar.classList.toggle('busy',!e);
   let v=evShown;
   // partida encerrada, olhando a posição final: a barra mostra o resultado
   if(G.result&&P===G.states.length-1)v=G.result.winner?{mate:0,winner:G.result.winner,over:true}:{cp:0,over:true};
@@ -1825,7 +1842,7 @@ function renderEval(){
   $('evFill').style.width=(frac*100).toFixed(1)+'%';
   const wLead=frac>=.5,t=$('evTxt');t.textContent=txt;
   // o número fica na ponta de quem está melhor
-  const leftIsWhite=G.orient==='w',onLeft=wLead===leftIsWhite;
+  const leftIsWhite=ori()==='w',onLeft=wLead===leftIsWhite;
   t.className='ev-txt '+(onLeft?'l':'r')+' '+(wLead?'onw':'onb');
 }
 
@@ -1960,8 +1977,9 @@ function phaseOf(k){ // fase do jogo no lance k, pelo material de peças (sem pe
   if(mat<=26)return 'fin';if(k<=20)return 'abe';return 'meio';
 }
 const moveNum=k=>Math.ceil(k/2)+(k%2?'.':'...');
-function openReview(){REV=true;selected=-1;targets=[];render();setTimeout(()=>{const el=$('review');if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'start'});},50);}
-function closeReview(){REV=false;drawArrow(null);render();}
+// na revisão entre amigos o tabuleiro começa com as brancas embaixo; partida salva já vem do lado certo (contra o bot, o seu lado embaixo)
+function openReview(){REV=true;REVORI=G.fromArchive?G.orient:'w';selected=-1;targets=[];render();setTimeout(()=>{const el=$('review');if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'start'});},50);}
+function closeReview(){REV=false;REVORI=null;drawArrow(null);render();}
 function nextError(){
   const N=G.states.length-1,me=G.bot?other(G.bot.color):null;
   for(let k=ply()+1;k<=N;k++){const inf=moveInfo(k);
@@ -1972,7 +1990,7 @@ function nextError(){
 function drawArrow(m){
   const svg=$('arrows');if(!svg)return;
   if(!m){svg.innerHTML='';return;}
-  const dp=x=>{const d=G.orient==='w'?x:63-x;return[(d&7)*100+50,(d>>3)*100+50];};
+  const dp=x=>{const d=ori()==='w'?x:63-x;return[(d&7)*100+50,(d>>3)*100+50];};
   const[x1,y1]=dp(m.from),[x2,y2]=dp(m.to),ang=Math.atan2(y2-y1,x2-x1),L=Math.hypot(x2-x1,y2-y1)-8;
   const pts=[[14,-8],[L-34,-8],[L-34,-20],[L,0],[L-34,20],[L-34,8],[14,8]]
     .map(([u,v])=>`${(x1+u*Math.cos(ang)-v*Math.sin(ang)).toFixed(1)},${(y1+u*Math.sin(ang)+v*Math.cos(ang)).toFixed(1)}`).join(' ');
@@ -2061,7 +2079,8 @@ function onSquare(sq){
   if(selected>=0){
     const ms=targets.filter(m=>m.to===sq);
     if(ms.length){
-      if(ms[0].self&&!legalNow.every(x=>x.self))return confirmSelf(ms[0]); // se comer a própria peça é a única saída, não pede confirmação
+      // comer a própria peça pede confirmação; não pede se for a única saída, nem em xeque quando a opção estiver desligada
+      if(ms[0].self&&!legalNow.every(x=>x.self)&&(CONF_XEQUE||!inCheck(s,s.turn)))return confirmSelf(ms[0]);
       if(ms[0].promo)return askPromo(ms);
       return doMove(ms[0]);
     }
@@ -2091,7 +2110,7 @@ function askPromo(ms,opt={}){
 }
 function modal(title,body,buttons,who,stack){
   // frente a frente: a janela vira para quem tem de responder (who); sem who, fica para o jogador de baixo
-  document.querySelector('#modal .card').classList.toggle('up',frente()&&!!who&&who!==G.orient);
+  document.querySelector('#modal .card').classList.toggle('up',frente()&&!!who&&who!==ori());
   $('mTitle').textContent=title;$('mBody').innerHTML=body;
   const bx=$('mBtns');bx.innerHTML='';bx.classList.toggle('stack',!!stack);
   buttons.forEach(b=>{const el=document.createElement('button');el.className='btn'+(b.primary?' primary':'');el.textContent=b.label;
@@ -2119,7 +2138,7 @@ function renderFx(dk,anim,fimEmp){
   }
   const el=$('fx');if(el&&el._h!==fx){el.innerHTML=fx;el._h=fx;}
 }
-const upOf0=p=>modo()==='face'?col(p)!==G.orient:passUp();
+const upOf0=p=>modo()==='face'?col(p)!==ori():passUp();
 
 // ---------- Promoção: cada peça nova chega com uma animação que tem a ver com ela ----------
 // Paladino voa e solta penas · Ministro recebe a coroa de louros · Papa: fumaça branca (habemus papam)
@@ -2138,10 +2157,10 @@ function promoFxHTML(t,c,up){
 }
 function renderPromoFx(){ // raios de luz pelas diagonais do bispo recém-promovido
   const el=$('pfx');if(!el)return;
-  const P=ply(),a=ANIM&&ANIM.ply===P&&ANIM.promo==='b'&&Date.now()-ANIM.t0<1500?ANIM:null,k=a?a.t0:0;
+  const P=ply(),a=ANIM&&ANIM.ply===P&&ANIM.promo==='b'&&Date.now()-ANIM.t0<1500?ANIM:null,k=a?a.t0+ori():0;
   if(el._k===k)return;el._k=k;
   if(!a){el.innerHTML='';return;}
-  const d=G.orient==='w'?a.to:63-a.to,X=(d&7)*100+50,Y=(d>>3)*100+50;let defs='',lines='';
+  const d=ori()==='w'?a.to:63-a.to,X=(d&7)*100+50,Y=(d>>3)*100+50;let defs='',lines='';
   [[1,1],[-1,1],[1,-1],[-1,-1]].forEach(([ux,uy],i)=>{
     const t=Math.min(ux>0?(800-X):X,uy>0?(800-Y):Y);if(t<=60)return; // até a borda do tabuleiro (nenhum raio quando a casa já está na borda daquele lado)
     const sx=X+ux*30,sy=Y+uy*30,ex=X+ux*t,ey=Y+uy*t,len=Math.hypot(ex-sx,ey-sy).toFixed(1);
@@ -2217,8 +2236,9 @@ function render(){
   const chk=inCheck(s,s.turn)?kingSq(s.b,s.turn):-1;
   const tset=new Map(view===null?targets.map(m=>[m.to,m]):[]);
   const anim=ANIM&&ANIM.ply===P&&Date.now()-ANIM.t0<ANIM_MS?ANIM:null;
-  const dpos=x=>{const d=G.orient==='w'?x:63-x;return[d&7,d>>3];};
-  const upOf=p=>modo()==='face'?col(p)!==G.orient:passUp();
+  const O=ori(); // orientação na tela (na revisão entre amigos, a da revisão)
+  const dpos=x=>{const d=O==='w'?x:63-x;return[d&7,d>>3];};
+  const upOf=p=>modo()==='face'?col(p)!==O:passUp();
   const capSq=last&&last.captured?(last.capSq??last.to):-1;
   // fim de partida na posição final: rei tombado (mate) ou bandeira branca (resignação)
   const fimTipo=G.result&&G.result.winner&&P===G.states.length-1?(G.result.kind||(/^Xeque-mate/.test(G.result.text)?'mate':/resignaram/.test(G.result.text)?'resign':'')):'';
@@ -2237,7 +2257,7 @@ function render(){
   let myK=0;if(REV)myK=P;else if(clsOn())for(let k=P;k>=1;k--)if(G.moves[k-1].by!==G.bot.color){myK=k;break;}
   const myCls=myK?finalCls(myK):null,mySq=myK?G.moves[myK-1].to:-1;
   for(let d=0;d<64;d++){
-    const sq=G.orient==='w'?d:63-d,el=cells[d],[r,f]=rc(sq);
+    const sq=O==='w'?d:63-d,el=cells[d],[r,f]=rc(sq);
     let cls='sq '+(((r+f)&1)?'dk':'lt');
     if(last&&(sq===last.from||sq===last.to))cls+=' last';
     if(sq===selected)cls+=' sel';
@@ -2295,7 +2315,7 @@ function render(){
       if(cid)el.insertAdjacentHTML('beforeend',clsBadge(cid,'clb'));
       cellBadge[d]=cid;}
   }
-  renderBar($('barTop'),other(G.orient));renderBar($('barBottom'),G.orient);
+  renderBar($('barTop'),other(O));renderBar($('barBottom'),O);
   const st=$('statusText');
   if(view!==null){st.className='review';st.textContent=P===0?'Revendo: posição inicial':`Revendo o lance ${Math.ceil(P/2)}${P%2?'.':'...'} ${G.moves[P-1].san}`;}
   else if(G.result){st.className='over';st.textContent=G.result.text;}
@@ -2432,6 +2452,12 @@ $('revKeys').addEventListener('click',e=>{const li=e.target.closest('[data-k]');
 window.addEventListener('resize',()=>{if(REV)renderReview();});
 $('moveMode').value=MOVE_MODE;
 $('moveMode').onchange=e=>{MOVE_MODE=e.target.value;try{localStorage.setItem(STORE+'-mover',MOVE_MODE);}catch(_){}};
+// Rei em xeque comendo peça própria: pedir confirmação ou não (bom com quem ainda não conhece a regra; dispensável entre quem já conhece).
+// Guardado no aparelho; ligado por padrão, como sempre foi.
+let CONF_XEQUE=true;
+try{CONF_XEQUE=localStorage.getItem(STORE+'-confxeque')!=='0';}catch(e){}
+$('confXeque').checked=CONF_XEQUE;
+$('confXeque').onchange=e=>{CONF_XEQUE=e.target.checked;try{localStorage.setItem(STORE+'-confxeque',CONF_XEQUE?'1':'0');}catch(_){}};
 $('arquivo').addEventListener('click',e=>{const li=e.target.closest('[data-id]');if(li)acoesArquivo(li.dataset.id);});
 $('bArqPGN').onclick=()=>{const a=lerArquivo();if(!a.length)return;const t=a.map(pgnDe).join('\n');
   const bts=[{label:'Copiar tudo',primary:true,fn:()=>copiarTexto(t)}];
@@ -2443,9 +2469,51 @@ $('dbUrl').value=ONL.db||'';
 $('dbUrl').onchange=e=>{ONL.db=normDb(e.target.value);e.target.value=ONL.db;salvarOnl();};
 $('bJoin').onclick=abrirEntrar;
 $('bUndo').onclick=()=>{if(REV)closeReview();undo();};
-$('bFlip').onclick=()=>{G.orient=other(G.orient);save();render();};
+$('bFlip').onclick=()=>{if(revNormal()){REVORI=other(ori());render();return;}G.orient=other(G.orient);save();render();};
 $('mode').onchange=e=>{G.mode=e.target.value;if(G.mode==='auto'&&!G.result)G.orient=cur().turn;save();render();};
-$('bLock').onclick=()=>{G.lock=!G.lock;if(G.lock)$('barTop').scrollIntoView({block:'start'});save();render();};
+$('bLock').onclick=()=>{G.lock=!G.lock;if(G.lock)$('barTop').scrollIntoView({block:'start'});save();render();aplicarZoom(G.lock);}; // travar muda o limite do zoom
+
+// ---------- Zoom do tabuleiro: no tablet (ou onde sobrar tela), aumenta o tabuleiro e, junto, as barras e os controles ----------
+// Passos de 10% sobre o tamanho normal, até o tabuleiro ocupar a largura (ou a altura) da tela.
+// Com a rolagem travada, para quando barras, tabuleiro e controles enchem a tela, para nada ficar cortado.
+const ZOOM_KEY=STORE+'-zoom';
+let ZK=0;try{ZK=Math.max(0,parseInt(localStorage.getItem(ZOOM_KEY),10)||0);}catch(e){}
+function zoomMedidas(){
+  const vw=document.documentElement.clientWidth,vh=window.innerHeight;
+  if(!(vw>200&&vh>200))return {B0:1,Bmax:1};
+  const B0=Math.min(Math.min(580,vw)-28,Math.max(300,Math.min(560,vh-290))); // tamanho normal: a mesma conta do CSS
+  let Bmax=Math.min(vw-28,vh-16);                                            // no máximo, o tabuleiro ocupa a largura ou a altura da tela
+  if(G&&G.lock){
+    const zs=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--zs'))||1;
+    const h=el=>el&&!el.hidden?el.getBoundingClientRect().height:0;
+    const resto=(h($('barTop'))+h($('barBottom'))+h($('onlineBar'))+h(document.querySelector('#cmd>.status'))+h($('nav'))+h(document.querySelector('#cmd>.controls')))/zs;
+    Bmax=Math.min(Bmax,(vh-38)/(1+(resto+14)/B0));                          // barras e controles crescem na mesma proporção do tabuleiro
+  }
+  return {B0,Bmax:Math.max(B0,Bmax)};
+}
+function aplicarZoom(rolar){
+  const {B0,Bmax}=zoomMedidas(),kmax=Math.max(0,Math.ceil((Bmax/B0-1)/.1-1e-6));
+  ZK=Math.min(ZK,kmax);
+  const B=ZK?Math.min(B0*(1+.1*ZK),Bmax):B0,r=document.documentElement;
+  r.classList.toggle('zoomed',ZK>0);
+  // a coluna nunca fica mais estreita que a normal (580): no tablet deitado as barras continuam largas, como sem zoom
+  if(ZK>0){r.style.setProperty('--wrapw',Math.max(580,Math.floor(B+28))+'px');r.style.setProperty('--tab',Math.floor(B)+'px');r.style.setProperty('--zs',(B/B0).toFixed(4));}
+  else{['--wrapw','--tab','--zs'].forEach(v=>r.style.removeProperty(v));}
+  const zo=$('bZoomOut'),zi=$('bZoomIn');
+  zo.hidden=zi.hidden=kmax===0; // no celular em pé o tabuleiro já ocupa a largura: os botões nem aparecem
+  zo.disabled=ZK===0;zi.disabled=ZK>=kmax;
+  calibrarMarcas();
+  if(rolar&&$('barTop').scrollIntoView)$('barTop').scrollIntoView({block:'start'});
+  return {pct:Math.round(B/B0*100),max:ZK>=kmax&&ZK>0};
+}
+function mudarZoom(d){
+  ZK=Math.max(0,ZK+d);const z=aplicarZoom(true);
+  try{localStorage.setItem(ZOOM_KEY,String(ZK));}catch(e){}
+  aviso(z.pct===100?'Tabuleiro no tamanho normal':z.max?`Tabuleiro na tela toda (${z.pct}%)`:`Tabuleiro ${z.pct}%`);
+}
+$('bZoomIn').onclick=()=>mudarZoom(1);
+$('bZoomOut').onclick=()=>mudarZoom(-1);
+{let rz=0;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>aplicarZoom(false),160);});} // girou o tablet: recalcula (e respeita o novo limite)
 document.addEventListener('touchmove',e=>{if(!G||!G.lock)return;if(e.target.closest('#moves,.card'))return;e.preventDefault();},{passive:false});
 $('board').addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
 $('bDraw').onclick=()=>{
@@ -2515,7 +2583,7 @@ $('bNew').onclick=()=>{
       if($('opp').value==='bot'){let me=$('myc').value;if(me==='r')me=Math.random()<.5?'w':'b';bot={color:other(me),level:+$('lvl').value,myPick:$('myc').value,evalBar:$('evNew').checked,classify:$('clsNew').checked};
         const eu=$('nEu').value.trim();NOMES.eu=eu;names={[me]:eu||'Você',[other(me)]:`Bot nível ${bot.level} (${BOT_NIV[bot.level].nome})`};}
       else{const w=$('nW').value.trim(),bk=$('nB').value.trim();NOMES.w=w;NOMES.b=bk;if(w&&!NOMES.eu)NOMES.eu=w;names={w:w||'Brancas',b:bk||'Pretas'};}
-      salvarNomes();newGame(a,b,bot,names);}}],cmdUp()?other(G.orient):undefined); // tocou em Nova no painel virado: a janela vira junto
+      salvarNomes();newGame(a,b,bot,names);}}],cmdUp()?other(ori()):undefined); // tocou em Nova no painel virado: a janela vira junto
   $('nOn').value=NOMES.eu??'';
   $('nW').value=NOMES.w??NOMES.eu??'';$('nB').value=NOMES.b??'';$('nEu').value=NOMES.eu??NOMES.w??'';
   $('nSwap').onclick=()=>{const t=$('nW').value;$('nW').value=$('nB').value;$('nB').value=t;};
@@ -2536,6 +2604,7 @@ function load(){
   }catch(e){return false;}
 }
 if(load()){render();setTimeout(maybeBot,300);if(G.online&&!G.result)ouvirSala();}else newGame(0,0);
+aplicarZoom(false);
 conviteNoLink();
 })();
 </script>
