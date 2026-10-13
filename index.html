@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez do Rei Tirano · versão 12.1 -->
+<!-- index.html · Xadrez do Rei Tirano · versão 12.3 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -230,8 +230,11 @@ h1 .crown{color:var(--gold)}
 .controls .btn span{display:block;font-size:1.1rem;line-height:1.1}
 
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px}
-.phead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
-.phead h2{margin:0}
+.phead{display:flex;align-items:center;justify-content:space-between;gap:8px;row-gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.phead h2{margin:0;white-space:nowrap}
+.pbtns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-left:auto}
+.card textarea.pgnin{font:500 .78rem/1.35 ui-monospace,Menlo,Consolas,monospace;width:100%;min-height:150px;max-height:40vh;resize:vertical;padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.impbtns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .btn.mini{padding:5px 10px;font-size:.8rem}
 .placar{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.92rem}
 .placar th{color:var(--muted);font-weight:600;font-size:.78rem;text-align:center;padding:2px 4px}
@@ -656,7 +659,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
   </div>
 
   <div class="panel">
-    <div class="phead"><h2>Partidas salvas</h2><button class="btn mini" id="bArqPGN">Exportar todas</button></div>
+    <div class="phead"><h2>Partidas salvas</h2><div class="pbtns"><button class="btn mini" id="bImpPGN">Importar PGN</button><button class="btn mini" id="bArqPGN">Exportar todas</button></div></div>
     <ol id="arquivo" class="arq"></ol>
   </div>
   <div id="toast" class="toast" role="status"></div>
@@ -680,7 +683,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <option value="face">Frente a frente: peças de cima invertidas</option>
       <option value="pass">Frente a frente: todas as peças giram</option>
     </select></div>
-    <div class="ver">Versão 12.1</div>
+    <div class="ver">Versão 12.3</div>
     <div class="ver" id="verMarcas"></div>
   </div>
 
@@ -715,6 +718,8 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <p><strong>Jogo online:</strong> com o endereço do Firebase configurado nas opções, crie a partida em Nova partida → Um amigo online e mande o link. Cada um joga no seu aparelho; não dá para voltar lance, e propostas de empate, reivindicações e resignação vão para o outro lado. Funciona no app do GitHub (o link do artefato do claude.ai bloqueia a conexão).</p>
       <p><strong>Torres e cavalos:</strong> cada torre tem os dentes lá do alto, e cada cavalo as orelhas, da cor da casa onde começou a partida. A torre branca de a1 (casa escura) tem os dentes pretos e a torre preta de a8 (casa clara), os dentes brancos. O cavalo branco de g1 tem as orelhas pretas e o cavalo preto de g8, as orelhas brancas. A marca acompanha a peça a partida toda. É só visual: não muda nenhuma regra, nem a notação, nem a contagem de repetições para o empate.</p>
       <p>Notação em português: R rei, D dama, P paladino, M ministro, S papa (Santo Padre), T torre, B bispo, C cavalo.</p>
+      <p><strong>PGN:</strong> as partidas salvas são exportadas na notação internacional (K rei, Q dama, R torre, B bispo, N cavalo), que qualquer programa de xadrez lê. Partida sem lances da variante sai como xadrez comum e abre direto no Lichess ou em qualquer motor. Se tiver lance do Rei Tirano (rei comendo peça própria, Paladino L, Ministro M ou Papa A), o PGN leva a etiqueta Variant e só o próprio app entende esses lances.</p>
+      <p><strong>Importar PGN:</strong> em Partidas salvas, cole o PGN (ou abra um arquivo .pgn) de uma ou mais partidas, do próprio app, do Lichess, do Chess.com ou de outro programa. A partida entra na lista, marcada como importada, e abre na revisão com a análise. Vale também o PGN antigo do app, em português. Partida comum com promoção a dama é aceita na importação, mesmo sem dama na promoção do Rei Tirano. A análise segue as regras do Rei Tirano (o rei pode comer peça própria), por isso a avaliação de uma partida comum pode sair diferente da do Lichess.</p>
     </details>
   </div>
 </div>
@@ -1365,15 +1370,26 @@ function salvarEvNoArquivo(){ // guarda a análise junto da partida salva, para 
     const a=lerArquivo(),i=a.findIndex(x=>x.id===G.id);if(i<0)return;
     a[i].ev=evArray();gravarArquivo(a);},1500);
 }
+// PGN na notação internacional, a que qualquer programa de xadrez lê: R→K, D→Q, T→R, B→B, C→N (na tela o app continua em português).
+// Peças e lances que só existem no Rei Tirano: Paladino L, Ministro M, Papa A; ⊗ (rei come peça própria), ✝ (conversão), † (o Papa morreu junto).
+const PT2EN={R:'K',D:'Q',T:'R',B:'B',C:'N',P:'L',M:'M',S:'A'};
+const sanEN=s=>String(s).replace(/^[RDTBCPMS]/,c=>PT2EN[c]).replace(/=([RDTBCPMS])/,(_,c)=>'='+PT2EN[c]);
+const sanVariante=s=>/[⊗✝†↓✕]/.test(s)||/^[PMS]/.test(s)||/=[PMS]/.test(s); // lance que o xadrez comum não tem
 function pgnDe(e){
-  const d=new Date(e.t0),z=n=>String(n).padStart(2,'0');
-  const tags=[['Event',e.bot?`Contra o bot (nível ${e.bot.level} · ${BOT_NIV[e.bot.level].nome})`:e.online?'Partida online':'Partida entre amigos'],
-    ['Site','Xadrez do Rei Tirano'],['Date',`${d.getFullYear()}.${z(d.getMonth()+1)}.${z(d.getDate())}`],['Round','-'],
-    ['White',e.w],['Black',e.b],['Result',e.res],
-    ['UTCDate',`${d.getUTCFullYear()}.${z(d.getUTCMonth()+1)}.${z(d.getUTCDate())}`],['UTCTime',`${z(d.getUTCHours())}:${z(d.getUTCMinutes())}:${z(d.getUTCSeconds())}`],
-    ['Variant','Rei Tirano'],['TimeControl',e.tc],['Termination',e.term]];
+  const d=new Date(e.t0),z=n=>String(n).padStart(2,'0'),o=e.imp&&e.orig||null; // importada: guarda as etiquetas de onde ela veio
+  const variante=e.san.some(sanVariante); // sem nenhum lance da variante, o PGN é xadrez comum e abre em qualquer programa
+  const tags=[['Event',o&&o.Event||(e.bot?`Contra o bot (nível ${e.bot.level} · ${BOT_NIV[e.bot.level].nome})`:e.online?'Partida online':'Partida entre amigos')],
+    ['Site',o?o.Site||'?':'Xadrez do Rei Tirano'],['Date',o?o.Date||'????.??.??':`${d.getFullYear()}.${z(d.getMonth()+1)}.${z(d.getDate())}`],['Round',o&&o.Round||'-'],
+    ['White',e.w],['Black',e.b],['Result',e.res],...(e.fen?[['SetUp','1'],['FEN',e.fen]]:[]),
+    ...(o?(o.UTCDate?[['UTCDate',o.UTCDate],['UTCTime',o.UTCTime||'??:??:??']]:[])
+      :[['UTCDate',`${d.getUTCFullYear()}.${z(d.getUTCMonth()+1)}.${z(d.getUTCDate())}`],['UTCTime',`${z(d.getUTCHours())}:${z(d.getUTCMinutes())}:${z(d.getUTCSeconds())}`]]),
+    ...(variante?[['Variant','Rei Tirano']]:[]),['TimeControl',e.tc],['Termination',e.term]];
   let txt=tags.map(([k,v])=>`[${k} "${String(v).replace(/["\\]/g,"'")}"]`).join('\n')+'\n\n';
-  const tok=[];e.san.forEach((s,i)=>{if(i%2===0)tok.push(`${i/2+1}.`);tok.push(s);});tok.push(e.res);
+  if(variante)txt+='{Rei Tirano: K⊗ o rei come peça própria · L Paladino · M Ministro · A Papa (✝ converte, † morreu junto)}\n';
+  const s0=e.fen?lerFEN(e.fen):null,n0=s0?s0.full:1,dp=s0&&s0.turn==='b'?1:0; // começando com as pretas: "12... lance"
+  const tok=[];e.san.forEach((s,i)=>{const k=i+dp;if(k%2===0)tok.push(`${n0+k/2}.`);else if(i===0)tok.push(`${n0}...`);
+    // partida comum importada que terminou em mate de lá: o último lance volta com # (aqui o rei ainda podia comer peça própria)
+    tok.push(i===e.san.length-1&&!variante&&e.kind==='mate'?sanEN(s).replace(/\+$/,'#'):sanEN(s));});tok.push(e.res);
   let line='';for(const t of tok){if((line+' '+t).trim().length>80){txt+=line.trim()+'\n';line='';}line+=' '+t;}
   return txt+line.trim()+'\n';
 }
@@ -1393,15 +1409,15 @@ function renderArquivo(){
   ol.innerHTML=a.length?a.map(e=>{const cls=e.res==='1-0'?'w':e.res==='0-1'?'b':e.res==='*'?'o':'d';
       const r=e.res==='1/2-1/2'?'½–½':e.res==='*'?'*':e.res.replace('-','–');
       return `<li data-id="${e.id}"><span class="ares ${cls}">${r}</span><div><strong>${escH(e.w)}</strong> × <strong>${escH(e.b)}</strong><br>
-        <span class="muted">${dataHora(e.t0)} · ${nLances(e)} · ${escH(e.term)}</span></div></li>`;}).join('')
-    :'<li class="muted vazio">Nenhuma partida salva ainda. Elas entram aqui quando terminam.</li>';
+        <span class="muted">${dataHora(e.t0)} · ${nLances(e)} · ${escH(e.term)}${e.imp?' · importada':''}</span></div></li>`;}).join('')
+    :'<li class="muted vazio">Nenhuma partida salva ainda. Elas entram aqui quando terminam, ou pelo Importar PGN.</li>';
 }
 function abrirArquivada(id){
   const e=lerArquivo().find(x=>x.id===id);if(!e)return;
   const go=()=>{
     cancelBot();REV=false;EVCACHE.clear();CLSCACHE.clear();SECCACHE.clear();evShown=null;
-    let s=initState();const states=[s],keys=[posKey(s,allLegal(s))],moves=[];
-    for(const[from,to,promo]of e.mv){const L=allLegal(s),m=L.find(x=>x.from===from&&x.to===to&&(x.promo||'')===(promo||''));if(!m)break;
+    let s=(e.fen&&lerFEN(e.fen))||initState();const states=[s],keys=[posKey(s,allLegal(s))],moves=[];
+    for(const[from,to,promo]of e.mv){const L=allLegal(s),m=acharLance(s,L,from,to,promo);if(!m)break;
       const r=mkRecord(s,m,L);moves.push(r.rec);s=r.n;states.push(s);keys.push(posKey(s,allLegal(s)));}
     const winner=e.res==='1-0'?'w':e.res==='0-1'?'b':null;
     G={states,keys,moves,result:{winner,text:e.term,kind:e.kind||'arch',dk:e.dk||'',t0:0},
@@ -1424,9 +1440,210 @@ function acoesArquivo(id){
     {label:'Apagar esta partida',fn:()=>modal('Apagar partida',`<p>Apagar ${escH(e.w)} × ${escH(e.b)} de ${dataHora(e.t0)}?</p>`,
       [{label:'Cancelar'},{label:'Apagar',primary:true,fn:()=>{gravarArquivo(lerArquivo().filter(x=>x.id!==id));renderArquivo();}}])},
     {label:'Fechar'});
-  modal(`${e.w} × ${e.b}`,`<p>${dataHora(e.t0)} · ${e.bot?`contra o bot nível ${e.bot.level}`:e.online?'online':'entre amigos'}${e.tc!=='-'?` · relógio ${e.tc.replace('+',' + ')} s`:''}<br>
+  modal(`${e.w} × ${e.b}`,`<p>${dataHora(e.t0)} · ${escH(origemDe(e))}${e.tc!=='-'?` · relógio ${escH(e.tc.replace('+',' + '))} s`:''}<br>
     <strong>${e.res==='1/2-1/2'?'½–½':e.res}</strong> · ${escH(e.term)} · ${nLances(e)}</p>
     <pre class="pgnprev">${escH(pg)}</pre>`,bts,undefined,true);
+}
+
+// ---------- Importar PGN: do próprio app (notação nova ou a antiga, em português), do Lichess, do Chess.com... ----------
+// Cada partida entra na lista de partidas salvas e a primeira abre na revisão. Lê comentários, variações (ignoradas),
+// NAGs, números de lance, notação longa (e2e4), figurinhas (♘f3), FEN e várias partidas de uma vez.
+// A promoção a dama do xadrez comum só existe aqui, na importação (no Rei Tirano não há promoção a dama).
+const sqIdx=n=>(8-(+n[1]))*8+FILES.indexOf(n[0]);
+const PEC_EN={K:'k',Q:'q',R:'r',B:'b',N:'n',P:'p',L:'l',M:'m',A:'a'};   // internacional + L Paladino, M Ministro, A Papa (o PGN do app)
+const PEC_PT={R:'k',D:'q',T:'r',B:'b',C:'n',P:'l',M:'m',S:'a'};         // português (o PGN antigo do app)
+const IMP_MAX=100,ARQ_MAX=300,SITE_APP='Xadrez do Rei Tirano';
+let IMP_RASC=''; // o texto colado fica guardado se a janela fechar sem querer (toque fora dela)
+function lerFEN(f){
+  const p=String(f||'').trim().split(/\s+/),rows=(p[0]||'').split('/');if(rows.length!==8)return null;
+  const b=[];
+  for(const r of rows){let n=0;for(const ch of r){if(/[1-8]/.test(ch)){for(let i=0;i<+ch;i++)b.push('');n+=+ch;}else if(/^[kqrbnplmaKQRBNPLMA]$/.test(ch)){b.push(ch);n++;}else return null;}if(n!==8)return null;}
+  if(b.filter(x=>x==='K').length!==1||b.filter(x=>x==='k').length!==1)return null;
+  const c=p[2]||'-',ep=p[3]&&/^[a-h][36]$/.test(p[3])?sqIdx(p[3]):-1;
+  return {b,turn:p[1]==='b'?'b':'w',cr:{K:c.includes('K'),Q:c.includes('Q'),k:c.includes('k'),q:c.includes('q')},ep,half:parseInt(p[4],10)||0,full:parseInt(p[5],10)||1};
+}
+const FEN_INICIAL='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -';
+function acharLance(s,L,from,to,promo){ // lance pelo de/para; a promoção a dama (xadrez comum) só existe em partida importada
+  const m=L.find(x=>x.from===from&&x.to===to&&(x.promo||'')===(promo||''));if(m)return m;
+  if(promo==='q'){const b=L.find(x=>x.from===from&&x.to===to&&x.promo);if(b)return {...b,promo:'q'};}
+  return null;
+}
+function separarPGN(txt){ // texto → partidas {tags, mt (os lances)}
+  const jogos=[];let cur=null,temLance=false;
+  for(const l of String(txt).replace(/^﻿/,'').replace(/\r/g,'').split('\n')){
+    if(/^%/.test(l))continue; // linha de escape do PGN
+    if(/^\s*(\[\s*\w+\s+"(?:[^"\\]|\\.)*"\s*\]\s*)+$/.test(l)){
+      if(!cur||temLance){cur={tags:{},mt:''};jogos.push(cur);temLance=false;}
+      for(const m of l.matchAll(/\[\s*(\w+)\s+"((?:[^"\\]|\\.)*)"\s*\]/g))cur.tags[m[1]]=m[2].replace(/\\(.)/g,'$1');
+      continue;}
+    if(l.trim()){if(!cur){cur={tags:{},mt:''};jogos.push(cur);}cur.mt+=l+'\n';temLance=true;}
+  }
+  return jogos.filter(j=>j.mt.trim());
+}
+function tokensPGN(mt){ // só os lances da linha principal, na ordem, e o resultado escrito no fim
+  const s=String(mt).replace(/\{[^}]*\}/g,' ').replace(/;[^\n]*/g,' ').replace(/\$\d+/g,' ')
+    .replace(/[–—−]/g,'-').replace(/×/g,'x').replace(/[♔♚]/g,'K').replace(/[♕♛]/g,'Q').replace(/[♖♜]/g,'R')
+    .replace(/[♗♝]/g,'B').replace(/[♘♞]/g,'N').replace(/[♙♟]/g,'').replace(/︎|️/g,'');
+  let o='',d=0;for(const ch of s){if(ch==='(')d++;else if(ch===')'){if(d)d--;}else if(!d)o+=ch;} // variações (até aninhadas) ficam de fora
+  const mv=[];let res=null;
+  for(const t of o.replace(/\d+\s*\.(\s*\.\s*\.)?/g,' ').replace(/\.\.\./g,' ').split(/\s+/).filter(Boolean)){
+    if(/^(1-0|0-1|1\/2-1\/2|½-½|\*)$/.test(t)){res=t==='½-½'?'1/2-1/2':t;break;}
+    if(/^\d+$/.test(t)||/^e\.?p\.?$/i.test(t)||/^([!?]+|[±∓⩲⩱∞□=]|\+-|-\+|\+\/[-=]|[-=]\/\+|N)$/.test(t))continue; // número solto, e.p., avaliação
+    mv.push(t);
+  }
+  return {mv,res};
+}
+function idiomasPGN(toks){ // português (C, D, T, S) ou internacional (K, Q, N...); na dúvida tenta os dois
+  const pc=toks.map(t=>(t.match(/^([A-Z])[a-h1-8x:⊗✝-]/)||[])[1]).filter(Boolean);
+  return pc.some(c=>'DTCS'.includes(c))?['pt','en']:['en','pt'];
+}
+function lerLance(s,tok,idi,L){
+  let t=tok;for(let i=0;i<3;i++)t=t.replace(/[!?]+$/,'').replace(/[+#†]+$/,'').replace(/e\.?p\.?$/i,'');
+  if(/^[O0o]-[O0o](-[O0o])?$/.test(t)){const longo=t.length>3;return L.find(m=>m.castle&&longo===/q/i.test(m.castle))||null;}
+  let m=t.match(/^([a-h][1-8])[-x:]?([a-h][1-8])=?([QRBNLMAqrbnlma]?)$/); // notação longa: e2e4, e7e8q
+  if(m)return acharLance(s,L,sqIdx(m[1]),sqIdx(m[2]),m[3]?PEC_EN[m[3].toUpperCase()]:'');
+  m=t.match(/^([A-Z]?)([a-h]?)([1-8]?)[x:⊗✝-]?([a-h][1-8])(?:=?([A-Za-z]))?$/);if(!m)return null;
+  const P=idi==='pt'?PEC_PT:PEC_EN,[,pc,ff,fr,to,pr]=m,ty=pc?P[pc]:'p';if(!ty)return null;
+  const promo=pr?P[pr.toUpperCase()]:'';if(pr&&!promo)return null;
+  const T=sqIdx(to);
+  let c=L.filter(x=>x.to===T&&typ(s.b[x.from])===ty&&(!ff||FILES[x.from&7]===ff)&&(!fr||String(8-(x.from>>3))===fr));
+  if(promo){const c2=c.filter(x=>x.promo===promo);
+    if(!c2.length&&promo==='q'){const b=c.filter(x=>x.promo);return b.length&&new Set(b.map(x=>x.from)).size===1?{...b[0],promo:'q'}:null;}
+    c=c2;}
+  else c=c.filter(x=>!x.promo);
+  return c.length===1?c[0]:null;
+}
+function reproduzirPGN(j){
+  const v=(j.tags.Variant||'').trim();
+  if(!/^(standard|chess|normal|rei tirano|from position)?$/i.test(v))return {erro:`é da variante ${escH(v)}: só dá para importar xadrez comum ou partidas do Rei Tirano.`};
+  const s0=j.tags.FEN?lerFEN(j.tags.FEN):initState();if(!s0)return {erro:'a posição inicial (FEN) não é válida.'};
+  const {mv:toks,res}=tokensPGN(j.mt);let melhor=null;
+  for(const idi of idiomasPGN(toks)){
+    let s=s0,L=allLegal(s),falha=-1;const mv=[],san=[],keys=[posKey(s,L)];
+    for(let k=0;k<toks.length;k++){const m=lerLance(s,toks[k],idi,L);if(!m){falha=k;break;}
+      const r=mkRecord(s,m,L);mv.push([m.from,m.to,m.promo||'']);san.push(r.rec.san);s=r.n;L=allLegal(s);keys.push(posKey(s,L));}
+    const r={mv,san,falha,res,toks,s0,sF:s,LF:L,keys};
+    if(falha<0)return r;
+    if(!melhor||falha>melhor.falha)melhor=r;
+  }
+  return melhor;
+}
+function dataPGN(T){ // horário da partida: UTCDate + UTCTime (Lichess, Chess.com e o app) ou só Date
+  const d=/^(\d{4})\.(\d{2})\.(\d{2})$/;
+  if(d.test(T.UTCDate||'')&&/^\d{2}:\d{2}:\d{2}$/.test(T.UTCTime||'')){const[,y,mo,da]=T.UTCDate.match(d),[h,mi,se]=T.UTCTime.split(':');return Date.UTC(+y,+mo-1,+da,+h,+mi,+se);}
+  if(d.test(T.Date||'')){const[,y,mo,da]=T.Date.match(d);return new Date(+y,+mo-1,+da,12,0,0).getTime();}
+  return 0;
+}
+function fimImportado(T,res,r){ // a terminação do PGN no jeito do app: texto, tipo do fim (mate, resignação, tempo) e tipo do empate
+  const t=(T.Termination||'').trim(),l=t.toLowerCase(),nada=!t||l==='normal',W=res==='1-0'?'w':res==='0-1'?'b':null,V=W&&NAME[W],D=W&&NAME[other(W)];
+  if(res==='*')return {term:t&&!/^(normal|unterminated|\?)$/i.test(t)?t:'Sem resultado',kind:'',dk:'open'};
+  if(T.Site===SITE_APP&&t) // PGN do próprio app: o texto já é o daqui
+    return {term:t,kind:/^Xeque-mate/.test(t)?'mate':/resignaram/.test(t)?'resign':/no tempo/.test(t)?'time':'',dk:''};
+  // no xadrez comum o rei não come peça própria: mate ou afogamento de lá pode não ser mate nem afogamento aqui
+  const sF=r.sF,xq=inCheck(sF,sF.turn),preso=!r.LF.length,presoComum=!r.LF.some(m=>!m.self);
+  if(W){
+    const ult=r.toks[r.toks.length-1]||'';
+    if(xq&&preso)return {term:`Xeque-mate. ${V} vencem`,kind:'mate',dk:''};
+    if(xq&&presoComum||/#/.test(ult)||/checkmate/.test(l))return {term:`Xeque-mate (no xadrez comum). ${V} vencem`,kind:'mate',dk:''};
+    if(/resign/.test(l))return {term:`${D} resignaram. ${V} vencem`,kind:'resign',dk:''};
+    if(/time|forfeit/.test(l))return {term:`${V} vencem no tempo`,kind:'time',dk:''};
+    if(/abandon/.test(l))return {term:`Partida abandonada. ${V} vencem`,kind:'',dk:''};
+    if(/infraction/.test(l))return {term:`Infração das regras. ${V} vencem`,kind:'',dk:''};
+    return {term:nada||/\bwon\b|\bwins?\b/.test(l)?`${V} vencem`:t,kind:'',dk:''};
+  }
+  // empate: pelo texto do PGN ou, sem ele, pela posição final
+  const rep=r.keys.filter(k=>k===r.keys[r.keys.length-1]).length;
+  if(/repeti/.test(l)||nada&&rep>=3)return rep>=5?{term:'Empate: mesma posição repetida 5 vezes',kind:'',dk:'rep5'}:{term:'Empate por repetição',kind:'',dk:'rep'};
+  if(!xq&&preso)return {term:'Empate por afogamento',kind:'',dk:'stale'};
+  if(/stalemate/.test(l)||nada&&!xq&&presoComum)return {term:'Empate por afogamento (no xadrez comum)',kind:'',dk:'stale'};
+  if(/time|forfeit/.test(l))return {term:'Empate: o tempo acabou, mas não havia material para dar mate',kind:'',dk:'time'};
+  if(/insufficient/.test(l)||nada&&insufficient(sF.b))return {term:'Empate: material insuficiente para dar mate',kind:'',dk:'insuf'};
+  if(/75/.test(l))return {term:'Empate: 75 lances sem captura nem movimento de peão',kind:'',dk:'fifty75'};
+  if(/50|fifty/.test(l))return {term:'Empate: 50 lances sem captura nem movimento de peão',kind:'',dk:'fifty'};
+  if(/agree/.test(l))return {term:'Empate por acordo',kind:'',dk:'agree'};
+  return {term:nada?'Empate':t,kind:'',dk:'agree'};
+}
+function importarPGN(txt){
+  const todos=separarPGN(txt),jogos=todos.slice(0,IMP_MAX),arq=lerArquivo(),agora=Date.now(),ok=[],falhas=[];
+  let novos=0,repetidos=0,cheio=0;
+  if(!todos.length)return {ok,falhas:[{i:0,msg:'não achei nenhum lance no texto.'}],novos,repetidos,cheio,mais:0};
+  jogos.forEach((j,i)=>{
+    const T=j.tags,r=reproduzirPGN(j);
+    if(r.erro||r.falha>=0||!r.mv.length){falhas.push({i,r,msg:r.erro||(!r.toks.length?'não achei nenhum lance.':'')});return;}
+    const res=/^(1-0|0-1|1\/2-1\/2|\*)$/.test(T.Result||'')?T.Result:(r.res||'*');
+    const nome=(v,d)=>v&&v.trim()&&v.trim()!=='?'?v.trim():d,w=nome(T.White,'Brancas'),b=nome(T.Black,'Pretas');
+    const lv=x=>{const m=/^Bot nível (\d)\b/.exec(x);return m&&BOT_NIV[+m[1]]?+m[1]:0;}; // partida do app contra o bot
+    const bot=lv(w)?{color:'w',level:lv(w)}:lv(b)?{color:'b',level:lv(b)}:null;
+    const fim=fimImportado(T,res,r),orig={};
+    for(const k of ['Event','Site','Date','Round','UTCDate','UTCTime'])if(T[k])orig[k]=T[k];
+    const fen=T.FEN&&T.FEN.trim().split(/\s+/).slice(0,4).join(' ')!==FEN_INICIAL?T.FEN.trim():'';
+    const e={id:'i'+agora.toString(36)+i,t0:dataPGN(T)||agora,t1:agora,w,b,bot,online:T.Site===SITE_APP&&T.Event==='Partida online',
+      tc:/^[0-9+\/:.\-]{1,20}$/.test(T.TimeControl||'')&&T.TimeControl!=='-'?T.TimeControl:'-',res,term:fim.term,kind:fim.kind,dk:fim.dk,
+      mv:r.mv,san:r.san,ev:null,imp:true,orig,...(fen?{fen}:{})};
+    const dup=arq.find(x=>x.w===e.w&&x.b===e.b&&(x.fen||'')===(e.fen||'')&&JSON.stringify(x.mv)===JSON.stringify(e.mv));
+    if(dup){ok.push(dup.id);repetidos++;return;} // já estava na lista (exportada daqui ou importada antes): só abre
+    if(arq.length>=ARQ_MAX){cheio++;return;} // não apaga partida nenhuma para abrir espaço
+    arq.push(e);ok.push(e.id);novos++;
+  });
+  if(novos&&!gravarArquivo(arq)){ // sem espaço no aparelho: tenta guardar sem as análises antigas
+    for(const x of arq)x.ev=null;
+    if(!gravarArquivo(arq))return {ok:[],falhas:[{i:0,msg:'não há espaço neste aparelho para guardar as partidas.'}],novos:0,repetidos:0,cheio:0,mais:0};
+  }
+  renderArquivo();
+  return {ok,falhas,novos,repetidos,cheio,mais:todos.length-jogos.length};
+}
+function falhaPGN(f,varias){
+  let t=f.msg;
+  if(!t){const r=f.r,k=r.falha,k2=k+(r.s0.turn==='b'?1:0),n=r.s0.full+Math.floor(k2/2);
+    t=`não reconheci o lance ${n}${k2%2?'...':'.'} <strong>${escH(r.toks[k])}</strong>${k?` (${k} ${k===1?'lance lido':'lances lidos'} antes dele)`:''}.`;}
+  return varias?`Partida ${f.i+1}: ${t}`:t.charAt(0).toUpperCase()+t.slice(1);
+}
+function origemDe(e){ // contra o bot, online ou entre amigos; e, na importada, de onde ela veio (lichess.org, Chess.com...)
+  const o=e.orig||{},daqui=!e.imp||o.Site===SITE_APP;
+  const site=daqui?'':((/^https?:\/\/(?:www\.)?([^\/?#]+)/i.exec(o.Site||'')||[])[1]||(o.Site&&o.Site!=='?'?o.Site:''));
+  return [e.bot?`contra o bot nível ${e.bot.level}`:e.online?'online':daqui?'entre amigos':'',site,e.imp?'importada':''].filter(Boolean).join(' · ');
+}
+function abrirImportar(txt=IMP_RASC){
+  modal('Importar PGN',`<p>Cole o PGN de uma ou mais partidas: do próprio app, do Lichess, do Chess.com ou de outro programa. A partida entra nas partidas salvas e abre na revisão.</p>
+    <textarea id="impTxt" class="pgnin" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="PGN" placeholder="[Event &quot;…&quot;]&#10;1. e4 e5 2. Nf3 Nc6 …">${escH(txt)}</textarea>
+    <div class="impbtns"><button type="button" class="btn mini" id="impColar">Colar</button><button type="button" class="btn mini" id="impArq">Abrir arquivo .pgn</button><button type="button" class="btn mini" id="impLimpar">Limpar</button>
+    <input type="file" id="impFile" accept=".pgn,.txt,text/plain,application/x-chess-pgn,application/vnd.chess-pgn" hidden></div>`,
+    [{label:'Cancelar',fn:()=>{IMP_RASC='';}},{label:'Importar',primary:true,fn:()=>fazerImportacao($('impTxt').value)}]);
+  const ta=$('impTxt'),por=v=>{ta.value=v;IMP_RASC=v;};
+  ta.oninput=()=>{IMP_RASC=ta.value;};
+  $('impLimpar').onclick=()=>{por('');ta.focus();};
+  $('impColar').onclick=()=>{
+    const manual=()=>{aviso('Toque e segure na caixa para colar');ta.focus();};
+    if(navigator.clipboard&&navigator.clipboard.readText)navigator.clipboard.readText().then(t=>{if(t&&t.trim())por(t);else aviso('A área de transferência está vazia');},manual);else manual();};
+  $('impArq').onclick=()=>$('impFile').click();
+  $('impFile').onchange=ev=>{const f=ev.target.files&&ev.target.files[0];if(!f)return;
+    if(f.size>5e6){aviso('Arquivo grande demais (máximo 5 MB)');return;}
+    const rd=new FileReader();rd.onload=()=>por(String(rd.result||''));rd.onerror=()=>aviso('Não consegui ler o arquivo');rd.readAsText(f);};
+}
+function fazerImportacao(txt){
+  if(!String(txt).trim()){abrirImportar('');aviso('Cole um PGN ou abra um arquivo .pgn');return;}
+  const r=importarPGN(txt),varias=r.ok.length+r.falhas.length+r.cheio>1;
+  if(!r.ok.length){
+    if(r.cheio){modal('Partidas salvas cheias',`<p>A lista já tem ${ARQ_MAX} partidas. Apague algumas para poder importar.</p>`,[{label:'Fechar'}]);return;}
+    modal('Não consegui importar',`<p>${falhaPGN(r.falhas[0],varias)}</p>${r.falhas.length>1?`<p class="muted">${r.falhas.length} partidas com erro.</p>`:''}
+      <p class="muted">Confira se o texto é o PGN completo, com os lances numerados.</p>`,
+      [{label:'Fechar'},{label:'Corrigir o texto',primary:true,fn:()=>abrirImportar(txt)}]);
+    return;
+  }
+  IMP_RASC='';
+  const so=!r.repetidos&&!r.falhas.length&&!r.cheio&&!r.mais,partes=[];
+  if(r.novos)partes.push(r.novos===1?(so?'Partida importada':'1 partida importada'):`${r.novos} partidas importadas`);
+  if(r.repetidos)partes.push(r.repetidos===1?(r.novos?'1 já estava salva':'Essa partida já estava salva'):`${r.repetidos} já estavam salvas`);
+  if(r.falhas.length)partes.push(`${r.falhas.length} com erro`);
+  if(r.cheio+r.mais)partes.push(r.cheio+r.mais===1?'1 ficou de fora':`${r.cheio+r.mais} ficaram de fora`);
+  const resumo=partes.join(' · ');
+  if(r.falhas.length||r.cheio||r.mais){
+    modal('PGN importado',`<p>${resumo}.</p>${r.falhas.length?`<p class="muted">${falhaPGN(r.falhas[0],true)}</p>`:''}
+      ${r.mais?`<p class="muted">Cada importação traz no máximo ${IMP_MAX} partidas.</p>`:''}${r.cheio?`<p class="muted">A lista de partidas salvas chegou a ${ARQ_MAX}: apague algumas para importar o resto.</p>`:''}`,
+      [{label:'Fechar'},{label:'Rever a partida',primary:true,fn:()=>abrirArquivada(r.ok[0])}]);
+    return;
+  }
+  aviso(resumo);abrirArquivada(r.ok[0]);
 }
 
 // ---------- Xeque descoberto: uma linha de ataque sutil, da peça que dá o xeque até o rei ----------
@@ -2459,6 +2676,7 @@ try{CONF_XEQUE=localStorage.getItem(STORE+'-confxeque')!=='0';}catch(e){}
 $('confXeque').checked=CONF_XEQUE;
 $('confXeque').onchange=e=>{CONF_XEQUE=e.target.checked;try{localStorage.setItem(STORE+'-confxeque',CONF_XEQUE?'1':'0');}catch(_){}};
 $('arquivo').addEventListener('click',e=>{const li=e.target.closest('[data-id]');if(li)acoesArquivo(li.dataset.id);});
+$('bImpPGN').onclick=()=>abrirImportar();
 $('bArqPGN').onclick=()=>{const a=lerArquivo();if(!a.length)return;const t=a.map(pgnDe).join('\n');
   const bts=[{label:'Copiar tudo',primary:true,fn:()=>copiarTexto(t)}];
   if(navigator.share)bts.push({label:'Compartilhar',fn:()=>navigator.share({title:'Partidas do Rei Tirano',text:t}).catch(()=>{})});
