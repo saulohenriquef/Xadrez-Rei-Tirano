@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez do Rei Tirano · versão 12.3 -->
+<!-- index.html · Xadrez Rei Tirano · versão 13.0 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Xadrez do Rei Tirano</title>
+<title>Xadrez Rei Tirano</title>
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
@@ -12,7 +12,7 @@
 <meta name="theme-color" content="#10161e" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Rei Tirano">
+<meta name="apple-mobile-web-app-title" content="Xadrez Rei Tirano">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -49,14 +49,18 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
 .wrap{max-width:580px;margin:0 auto;padding:14px 14px 28px}
+/* medidas do tabuleiro: --cq é 1% da largura dele (1cqw). Navegador sem unidades de contêiner (Chrome antes da 105,
+   Safari antes da 16, comum em tablet mais antigo): o app mede o tabuleiro e põe a largura em --bw, e as peças acompanham o zoom */
+:root{--cq:calc(var(--bw,560px)/100)}
+@supports (width:1cqw){:root{--cq:1cqw}}
 /* zoom do tabuleiro (botões de lupa, quando sobra tela, como no tablet): o tabuleiro cresce e as barras e os controles crescem junto;
    título e painéis de baixo ficam do tamanho de sempre */
 html.zoomed .wrap{max-width:var(--wrapw,580px)}
 html.zoomed .wrap>header,html.zoomed .wrap>.panel{max-width:552px;margin-left:auto;margin-right:auto}
 html.zoomed .boardbox{max-width:var(--tab,560px)}
 html.zoomed #barTop,html.zoomed #barBottom,html.zoomed #onlineBar,html.zoomed .evalbar,html.zoomed #cmd>.status,html.zoomed #nav,html.zoomed #cmd>.controls{zoom:var(--zs,1)}
-header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:4px 2px 12px}
-h1{font-family:Spectral,Georgia,serif;font-weight:700;font-size:1.55rem;line-height:1.1;margin:0;letter-spacing:-.01em}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 12px;margin:4px 2px 12px}
+h1{font-family:Spectral,Georgia,serif;font-weight:700;font-size:1.55rem;line-height:1.1;margin:0;letter-spacing:-.01em;white-space:nowrap} /* o nome numa linha só; sem espaço, o subtítulo desce */
 h1 .crown{color:var(--gold)}
 .sub{color:var(--muted);font-size:.85rem;text-align:right}
 
@@ -88,9 +92,9 @@ h1 .crown{color:var(--gold)}
 .sq.check.mate{background-image:radial-gradient(circle,rgba(var(--check),.95) 0%,rgba(var(--check),.55) 38%,rgba(var(--check),0) 72%)}
 .sq.check{background-image:radial-gradient(circle,rgba(var(--checkc),1) 0%,rgba(var(--checkc),.7) 38%,rgba(var(--checkc),0) 72%)}
 .sq.dot::after{content:"";position:absolute;width:28%;height:28%;border-radius:50%;background:var(--dot);pointer-events:none}
-.sq.cap::after{content:"";position:absolute;inset:3%;border-radius:50%;border:max(3px,.85cqw) solid var(--dot);pointer-events:none}
-.sq.convt::after{content:"";position:absolute;inset:5%;border-radius:50%;border:max(3px,.8cqw) dotted var(--conv);background:var(--conv-soft);pointer-events:none;z-index:2}
-.sq.linked{box-shadow:inset 0 0 0 max(2px,.55cqw) var(--conv)}
+.sq.cap::after{content:"";position:absolute;inset:3%;border-radius:50%;border:max(3px,calc(.85*var(--cq))) solid var(--dot);pointer-events:none}
+.sq.convt::after{content:"";position:absolute;inset:5%;border-radius:50%;border:max(3px,calc(.8*var(--cq))) dotted var(--conv);background:var(--conv-soft);pointer-events:none;z-index:2}
+.sq.linked{box-shadow:inset 0 0 0 max(2px,calc(.55*var(--cq))) var(--conv)}
 .capt.knock.late{animation-delay:.18s}
 .burst.late{animation-delay:.3s}
 .pc.conv{z-index:5;animation:convert .8s ease-out both}
@@ -102,11 +106,11 @@ h1 .crown{color:var(--gold)}
 .burst.conv{border-color:var(--conv);animation-delay:0s;animation-duration:.6s}
 .burst.conv.b2{animation-delay:.18s}
 @media (prefers-reduced-motion:reduce){.pc.conv,.pc.preach{animation:none}}
-.sq.self::after{content:"";position:absolute;inset:5%;border-radius:50%;border:max(3px,.8cqw) dashed var(--gold);background:var(--gold-soft);pointer-events:none;z-index:2}
-.pc{position:relative;z-index:1;font-family:"Pecas Rei Tirano","Noto Sans Symbols 2","Segoe UI Symbol","DejaVu Sans",serif;font-size:min(10vw,56px);font-size:10.4cqw;line-height:1;--base:translateY(-3%);transform:var(--base);pointer-events:none}
+.sq.self::after{content:"";position:absolute;inset:5%;border-radius:50%;border:max(3px,calc(.8*var(--cq))) dashed var(--gold);background:var(--gold-soft);pointer-events:none;z-index:2}
+.pc{position:relative;z-index:1;font-family:"Pecas Rei Tirano","Noto Sans Symbols 2","Segoe UI Symbol","DejaVu Sans",serif;font-size:min(10vw,56px);font-size:calc(10.4*var(--cq));line-height:1;--base:translateY(-3%);transform:var(--base);pointer-events:none}
 .pc.w{color:#fbf7ee;text-shadow:1px 0 0 #1e1812,-1px 0 0 #1e1812,0 1px 0 #1e1812,0 -1px 0 #1e1812,1px 1px 0 #1e1812,-1px -1px 0 #1e1812,1px -1px 0 #1e1812,-1px 1px 0 #1e1812,0 3px 4px rgba(0,0,0,.3)}
 .pc.b{color:#1d1712;text-shadow:0 0 1px rgba(255,250,240,.45),0 3px 4px rgba(0,0,0,.3)}
-.co{position:absolute;font-size:max(9px,2.1cqw);font-weight:700;line-height:1;pointer-events:none;z-index:1}
+.co{position:absolute;font-size:max(9px,calc(2.1*var(--cq)));font-weight:700;line-height:1;pointer-events:none;z-index:1}
 .co.rk{top:3px;left:3px}.co.fl{bottom:3px;right:4px}
 .sq.lt .co{color:var(--coord-l)}.sq.dk .co{color:var(--coord-d)}
 
@@ -307,7 +311,7 @@ details ul{padding-left:1.1em;margin:6px 0}
 .pc.b .colm .bf{stroke:rgba(255,250,240,.6)}.pc.b .colm .bd{stroke:#c9d1da}.pc.b .colm .bl{fill:#c9d1da}
 .caps .b .colm .bf{stroke:#9aa8b6}.caps .b .colm .bd{stroke:#9aa8b6}.caps .b .colm .bl{fill:#9aa8b6}
 .caps .lost .colm .bf{stroke:none}.caps .lost .colm .bd{stroke:rgba(0,0,0,.35)}.caps .lost .colm .bl{fill:rgba(0,0,0,.35)}
-.sq.demt::after{content:"";position:absolute;inset:5%;border-radius:50%;border:max(3px,.8cqw) dotted var(--dem);background:var(--dem-soft);pointer-events:none;z-index:2}
+.sq.demt::after{content:"";position:absolute;inset:5%;border-radius:50%;border:max(3px,calc(.8*var(--cq))) dotted var(--dem);background:var(--dem-soft);pointer-events:none;z-index:2}
 .pc.demote{z-index:5;animation:demote .7s cubic-bezier(.3,1.5,.5,1) both}
 @keyframes demote{0%{transform:scale(1.6) rotate(-10deg) var(--base);filter:brightness(2)}55%{transform:scale(.85) rotate(4deg) var(--base);filter:none}100%{transform:scale(1) rotate(0deg) var(--base)}}
 .burst.dem{border-color:var(--dem);animation-delay:.05s}
@@ -336,7 +340,7 @@ details ul{padding-left:1.1em;margin:6px 0}
 #verMarcas{margin-top:2px}#verMarcas:empty{display:none}
 /* ---- animações de lance e captura ---- */
 .sq.dragsrc .pc{opacity:.28}
-.sq.dragover{box-shadow:inset 0 0 0 max(3px,.6cqw) rgba(255,255,255,.85)}
+.sq.dragover{box-shadow:inset 0 0 0 max(3px,calc(.6*var(--cq))) rgba(255,255,255,.85)}
 .ghost{position:fixed;left:0;top:0;z-index:300;pointer-events:none;display:flex;align-items:center;justify-content:center;will-change:transform}
 .ghost .pc{font-size:inherit;filter:drop-shadow(0 6px 7px rgba(0,0,0,.4))}
 .ghost.big .pc{font-size:1.3em}
@@ -346,18 +350,18 @@ body.grabbing,body.grabbing *{cursor:grabbing!important}
 @keyframes land{from{transform:scale(1.12) var(--base)}to{transform:scale(1) var(--base)}}
 .pc.arrive.epf{animation:epflip .62s cubic-bezier(.45,.05,.35,1) both}
 .pc.land.epf{animation:epflip0 .58s cubic-bezier(.45,.05,.35,1) both}
-@keyframes epflip{0%{transform:translate(calc(var(--dx)*12.5cqw),calc(var(--dy)*12.5cqw)) rotate(0deg) scale(1) var(--base)}
-  50%{transform:translate(calc(var(--dx)*6.25cqw),calc(var(--dy)*6.25cqw - 7cqw)) rotate(180deg) scale(1.15) var(--base)}
+@keyframes epflip{0%{transform:translate(calc(var(--dx)*calc(12.5*var(--cq))),calc(var(--dy)*calc(12.5*var(--cq)))) rotate(0deg) scale(1) var(--base)}
+  50%{transform:translate(calc(var(--dx)*calc(6.25*var(--cq))),calc(var(--dy)*calc(6.25*var(--cq)) - calc(7*var(--cq)))) rotate(180deg) scale(1.15) var(--base)}
   100%{transform:translate(0,0) rotate(360deg) scale(1) var(--base)}}
-@keyframes epflip0{0%{transform:translate(0,0) rotate(0deg) scale(1) var(--base)}50%{transform:translate(0,-6cqw) rotate(180deg) scale(1.15) var(--base)}
+@keyframes epflip0{0%{transform:translate(0,0) rotate(0deg) scale(1) var(--base)}50%{transform:translate(0,calc(-6*var(--cq))) rotate(180deg) scale(1.15) var(--base)}
   100%{transform:translate(0,0) rotate(360deg) scale(1) var(--base)}}
 .capt.eppir{animation:eppir 1s cubic-bezier(.4,.1,.3,1) both}
 @keyframes eppir{
   0%,10%{transform:translate(0,0) rotate(0deg) scale(1,1);opacity:1}
-  22%{transform:translate(0,-1.4cqw) rotate(0deg) scale(-1,1.04);opacity:1}
-  34%{transform:translate(0,-1.9cqw) rotate(0deg) scale(1,1.04)}
-  46%{transform:translate(0,-1.9cqw) rotate(0deg) scale(-1,1.04)}
-  58%{transform:translate(0,-1.4cqw) rotate(0deg) scale(1,1)}
+  22%{transform:translate(0,calc(-1.4*var(--cq))) rotate(0deg) scale(-1,1.04);opacity:1}
+  34%{transform:translate(0,calc(-1.9*var(--cq))) rotate(0deg) scale(1,1.04)}
+  46%{transform:translate(0,calc(-1.9*var(--cq))) rotate(0deg) scale(-1,1.04)}
+  58%{transform:translate(0,calc(-1.4*var(--cq))) rotate(0deg) scale(1,1)}
   100%{transform:translate(var(--tx),var(--ty)) rotate(var(--rot)) scale(.33,.33);opacity:.92}}
 @media (prefers-reduced-motion:reduce){.capt.eppir{animation:none}}
 .fr{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:0;transform-origin:left center;
@@ -368,7 +372,7 @@ body.grabbing,body.grabbing *{cursor:grabbing!important}
 /* ---- promoção: o peão chega, some num clarão e a peça nova entra do seu jeito ---- */
 .ppawn{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:5;pointer-events:none;opacity:0;
   animation:ppawn .38s cubic-bezier(.25,.7,.35,1) both}
-@keyframes ppawn{0%{opacity:1;transform:translate(calc(var(--dx)*12.5cqw),calc(var(--dy)*12.5cqw)) scale(1,1);filter:none}
+@keyframes ppawn{0%{opacity:1;transform:translate(calc(var(--dx)*calc(12.5*var(--cq))),calc(var(--dy)*calc(12.5*var(--cq)))) scale(1,1);filter:none}
   42%{opacity:1;transform:translate(0,0) scale(1,1);filter:none}
   68%{opacity:1;transform:translate(0,0) scale(1.16,1.16);filter:brightness(2.4) drop-shadow(0 0 6px #fff)}
   100%{opacity:0;transform:translate(0,0) scale(.55,.55);filter:brightness(3) drop-shadow(0 0 0 #fff)}}
@@ -460,8 +464,8 @@ body.grabbing,body.grabbing *{cursor:grabbing!important}
 
 .pc.arrive{z-index:5;animation:arrive .17s cubic-bezier(.25,.7,.35,1) both}
 .pc.arrive.hit{animation:arriveHit .3s cubic-bezier(.25,.7,.35,1) both}
-@keyframes arrive{from{transform:translate(calc(var(--dx)*12.5cqw),calc(var(--dy)*12.5cqw)) var(--base)}to{transform:translate(0,0) var(--base)}}
-@keyframes arriveHit{0%{transform:translate(calc(var(--dx)*12.5cqw),calc(var(--dy)*12.5cqw)) scale(1) var(--base)}
+@keyframes arrive{from{transform:translate(calc(var(--dx)*calc(12.5*var(--cq))),calc(var(--dy)*calc(12.5*var(--cq)))) var(--base)}to{transform:translate(0,0) var(--base)}}
+@keyframes arriveHit{0%{transform:translate(calc(var(--dx)*calc(12.5*var(--cq))),calc(var(--dy)*calc(12.5*var(--cq)))) scale(1) var(--base)}
   55%{transform:translate(0,0) scale(1.1) var(--base)}100%{transform:translate(0,0) scale(1) var(--base)}}
 /* peça capturada: fica pequena e tombada no canto da casa até o próximo lance */
 .capt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:3;pointer-events:none;
@@ -474,7 +478,7 @@ body.grabbing,body.grabbing *{cursor:grabbing!important}
   70%{transform:translate(var(--tx),var(--ty)) rotate(calc(var(--rot) + 10deg)) scale(.36)}
   85%{transform:translate(var(--tx),var(--ty)) rotate(calc(var(--rot) - 6deg)) scale(.32)}
   100%{transform:translate(var(--tx),var(--ty)) rotate(var(--rot)) scale(.33);opacity:.92}}
-.burst{position:absolute;inset:14%;border-radius:50%;border:max(2px,.5cqw) solid rgba(255,255,255,.9);z-index:2;pointer-events:none;opacity:0;
+.burst{position:absolute;inset:14%;border-radius:50%;border:max(2px,calc(.5*var(--cq))) solid rgba(255,255,255,.9);z-index:2;pointer-events:none;opacity:0;
   animation:burst .45s ease-out .15s both}
 .burst.gold{border-color:var(--gold)}
 @keyframes burst{0%{transform:scale(.35);opacity:.95}100%{transform:scale(1.3);opacity:0}}
@@ -482,8 +486,8 @@ body.grabbing,body.grabbing *{cursor:grabbing!important}
 /* empates */
 .half{position:absolute;left:3%;top:3%;width:36%;height:36%;z-index:6;pointer-events:none}
 .half.up{left:auto;top:auto;right:3%;bottom:3%;transform:rotate(180deg)}
-.half i{font-style:normal;width:100%;height:100%;border-radius:50%;background:#fbfaf6;color:#2a2018;border:max(1.5px,.35cqw) solid var(--gold);
-  display:flex;align-items:center;justify-content:center;font:700 3.4cqw/1 Figtree,system-ui,sans-serif;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.half i{font-style:normal;width:100%;height:100%;border-radius:50%;background:#fbfaf6;color:#2a2018;border:max(1.5px,calc(.35*var(--cq))) solid var(--gold);
+  display:flex;align-items:center;justify-content:center;font:700 calc(3.4*var(--cq))/1 Figtree,system-ui,sans-serif;box-shadow:0 1px 3px rgba(0,0,0,.35)}
 .half i.pop{animation:halfpop .6s cubic-bezier(.3,1.6,.5,1) .45s both}
 @keyframes halfpop{from{transform:scale(0) rotate(-90deg)}to{transform:none}}
 .pc.bow{animation:bow 1.7s ease-in-out .3s both}
@@ -492,7 +496,7 @@ body.grabbing,body.grabbing *{cursor:grabbing!important}
 .pc.shake{animation:shake 1s ease-in-out .35s both}
 @keyframes shake{0%,100%{transform:var(--base) translateX(0)}12%{transform:var(--base) translateX(-8%)}26%{transform:var(--base) translateX(8%)}
   40%{transform:var(--base) translateX(-7%)}54%{transform:var(--base) translateX(6%)}68%{transform:var(--base) translateX(-3%)}82%{transform:var(--base) translateX(2%)}}
-.nox{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 6.5cqw/1 Figtree,system-ui,sans-serif;
+.nox{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 calc(6.5*var(--cq))/1 Figtree,system-ui,sans-serif;
   color:rgb(var(--check));opacity:0;z-index:4;pointer-events:none;animation:nox 1.6s ease-out both;animation-delay:calc(.45s + var(--i) * .07s)}
 @keyframes nox{0%{opacity:0;transform:scale(.3)}22%{opacity:.85;transform:scale(1)}70%{opacity:.85;transform:scale(1)}100%{opacity:0;transform:scale(1.15)}}
 .echo{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:4;pointer-events:none;opacity:0;
@@ -555,8 +559,8 @@ body.grabbing,body.grabbing *{cursor:grabbing!important}
 @keyframes flagUp{from{opacity:0;transform:translateY(55%) scale(.5)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.pc.mated.topple,.flag svg.raise,.flag .cloth{animation:none}}
 /* peça capturada no último lance, marcada na lista de capturas */
-.clb{position:absolute;top:-1cqw;right:-1cqw;width:4.8cqw;height:4.8cqw;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  font:700 2.5cqw/1 Figtree,system-ui,sans-serif;letter-spacing:-.04em;color:#fff;z-index:6;pointer-events:none;
+.clb{position:absolute;top:calc(-1*var(--cq));right:calc(-1*var(--cq));width:calc(4.8*var(--cq));height:calc(4.8*var(--cq));border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font:700 calc(2.5*var(--cq))/1 Figtree,system-ui,sans-serif;letter-spacing:-.04em;color:#fff;z-index:6;pointer-events:none;
   box-shadow:0 1px 3px rgba(0,0,0,.45),0 0 0 1.5px rgba(255,255,255,.9);animation:clpop .28s cubic-bezier(.3,1.6,.5,1) both}
 @keyframes clpop{from{transform:scale(0)}to{transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.clb{animation:none}}
@@ -595,7 +599,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
 <body>
 <div class="wrap">
   <header>
-    <h1><span class="crown">♚&#xFE0E;</span> Rei Tirano</h1>
+    <h1><span class="crown">♚&#xFE0E;</span> Xadrez Rei Tirano</h1>
     <div class="sub">Xadrez para dois no mesmo aparelho</div>
   </header>
 
@@ -633,7 +637,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
     <div id="revPhases"></div>
     <h3>Momentos decisivos</h3>
     <ol id="revKeys"></ol>
-    <h3>Curiosidades do Rei Tirano</h3>
+    <h3>Curiosidades do Xadrez Rei Tirano</h3>
     <div id="revStats"></div>
   </div>
 
@@ -683,7 +687,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <option value="face">Frente a frente: peças de cima invertidas</option>
       <option value="pass">Frente a frente: todas as peças giram</option>
     </select></div>
-    <div class="ver">Versão 12.3</div>
+    <div class="ver">Versão 13.0</div>
     <div class="ver" id="verMarcas"></div>
   </div>
 
@@ -691,7 +695,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
     <details>
       <summary>Regras</summary>
       <div class="rule">
-        <p><strong>A regra do Rei Tirano:</strong> o rei pode capturar uma peça da própria cor numa casa vizinha, desde que essa peça não esteja ameaçada pelo adversário — é a mesma lógica que impede o rei de entrar em xeque. A peça capturada sai do jogo.</p>
+        <p><strong>A regra do Xadrez Rei Tirano:</strong> o rei pode capturar uma peça da própria cor numa casa vizinha, desde que essa peça não esteja ameaçada pelo adversário — é a mesma lógica que impede o rei de entrar em xeque. A peça capturada sai do jogo.</p>
       </div>
       <ul>
         <li>Vale inclusive para sair de um xeque, se a casa estiver segura.</li>
@@ -708,18 +712,18 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
         <li>Empate por 3 repetições ou por 50 lances de cada lado sem captura nem movimento de peão só por reivindicação, como no tabuleiro físico: o app não avisa. Na sua vez, toque em Empate → Reivindicar e diga se a posição já está no tabuleiro ou se vai acontecer com o seu próximo lance. O app confere: se estiver certo, é empate; se não, a partida segue, o lance declarado fica valendo e, com relógio, o adversário ganha 2 minutos.</li>
         <li>Com relógio: quem zera o tempo perde, a menos que o adversário não tenha material para dar mate.</li>
       </ul>
-      <p><strong>Contra o bot:</strong> escolha em Nova partida, com 5 níveis. O bot conhece a regra do Rei Tirano, nunca propõe empate, recusa as suas propostas e joga até o fim. Voltar desfaz o seu lance e o dele. Você pode reivindicar empate normalmente. A barra de avaliação, abaixo do tabuleiro, mostra quem está melhor segundo uma análise própria, sempre no nível máximo, independente do nível do bot: o número é a vantagem em peões e M3 significa mate em 3 lances.</p>
+      <p><strong>Contra o bot:</strong> escolha em Nova partida, com 5 níveis. O bot conhece a regra do Xadrez Rei Tirano, nunca propõe empate, recusa as suas propostas e joga até o fim. Voltar desfaz o seu lance e o dele. Você pode reivindicar empate normalmente. A barra de avaliação, abaixo do tabuleiro, mostra quem está melhor segundo uma análise própria, sempre no nível máximo, independente do nível do bot: o número é a vantagem em peões e M3 significa mate em 3 lances.</p>
       <p><strong>Avaliação dos lances</strong> (contra o bot): cada lance é comparado com a posição antes dele, pela chance de vitória de quem jogou, na mesma conta da barra. <span class="clb-s c-best">★</span> Melhor lance: o mesmo do motor, ou tão bom quanto. <span class="clb-s c-good"><svg class="thumb" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="10" width="4.5" height="11" rx="1"/><path d="M8.5 20.5V10.5L13 3.6C13.6 2.7 15.2 3 15.2 4.4V8.6H20C21.4 8.6 22.3 9.9 21.9 11.2L19.8 18.9C19.5 19.9 18.6 20.5 17.6 20.5Z"/></svg></span> Excelente: perde até 2%. <span class="clb-s c-ok">✓</span> Bom lance: até 5%. <span class="clb-s c-inacc">?!</span> Imprecisão: até 10%. <span class="clb-s c-mist">?</span> Erro: até 20%. <span class="clb-s c-blund">??</span> Capivarada: mais de 20%. Perder um peão numa partida já ganha pesa menos que perder o mesmo peão numa posição igual. No tabuleiro, o selo do seu último lance fica até você jogar de novo; os lances do bot aparecem avaliados na lista. Mais duas categorias: <span class="clb-s c-miss">✕</span> <strong>Chance perdida</strong>: o adversário acabou de errar, havia como punir e você deixou passar, sem ficar muito pior do que estava antes do erro dele (aparece no lugar de erro ou capivarada). <span class="clb-s c-great">!</span> <strong>Lance afiado</strong>: você achou o único lance bom, e o segundo melhor perderia 15% ou mais de chance de vitória; só é calculado na revisão da partida, e recapturas simples não contam.</p>
       <p><strong>Paladino</strong> (cavalo alado): peça extra, que só aparece por promoção. Em cada lance ele escolhe entre andar como torre ou saltar como cavalo. Como torre, não pula ninguém; só pula peças quando salta como cavalo. Vale 8, entre a dama e a torre.</p>
       <p><strong>Papa</strong> (bispo com tiara): outra peça extra, também só por promoção. Anda como bispo e, além disso, pode dar um passo na horizontal ou na vertical, mudando a cor da casa. <strong>Ele não captura: converte.</strong> Onde ele poderia capturar, pela diagonal ou pelo passo, ele fica no lugar e a peça inimiga passa para a cor dele, como os monges do Age of Empires. <strong>O risco:</strong> se a peça convertida estava protegida e o adversário a capturar logo no lance seguinte, o Papa morre junto (aparece † na lista de lances). Se o adversário não capturar na hora, a conversão fica valendo para sempre. Cabe ao jogador perceber se a peça está protegida: ao selecionar o Papa, todos os alvos aparecem igual, em violeta pontilhado. Depois da conversão, o Papa e a peça convertida ficam contornados em violeta enquanto o risco existir. O rei não pode ser convertido: o Papa só dá xeque normal. Conversão conta como captura para a regra dos 50/75 lances. Na lista de lances aparece em violeta com ✝, por exemplo <strong>S✝e5</strong>. Com a conversão ele fica mais forte que antes; vale cerca de 6.</p>
-      <p><strong>Revisão da partida:</strong> quando a partida termina, o botão Revisar partida analisa todas as posições (contra o bot ou contra um amigo) e mostra a precisão de cada lado (baseada no Lichess, com um ajuste: cada lance perde pela chance de vitória ou pelo material entregue, o que for maior, então lances descuidados contam mesmo com a partida já decidida; erros graves e momentos decisivos pesam mais), o gráfico da avaliação, a avaliação de cada lance com um comentário curto (o que o lance fez, o que o adversário pode responder, qual era o melhor lance e como fica a partida) e o melhor lance indicado por uma seta verde, a precisão por fase do jogo, os momentos decisivos e as curiosidades das regras novas.</p>
+      <p><strong>Revisão da partida:</strong> quando a partida termina, o botão Revisar partida analisa todas as posições (contra o bot ou contra um amigo) e mostra a precisão de cada lado (baseada no Lichess, com um ajuste: cada lance perde pela chance de vitória ou pelo material entregue, o que for maior, então lances descuidados contam mesmo com a partida já decidida; erros graves e momentos decisivos pesam mais), o gráfico da avaliação, a avaliação de cada lance com um comentário curto (o que o lance fez, o que o adversário pode responder, qual era o melhor lance e como fica a partida) e o melhor lance indicado por uma seta verde, a precisão por fase do jogo, os momentos decisivos e as curiosidades das regras novas. Na análise, uma posição repetida só vale empate na terceira vez (quando dá para reivindicar), e rei com só um bispo ou um cavalo contra rei vale empate. Ao andar pelos lances, na revisão ou no histórico, cada lance toca o seu som, como na hora em que foi jogado (para trás, um toque simples).</p>
       <p><strong>Ministro</strong> (coluna romana do Senado com a coroa de louros no alto, o primeiro-ministro do reino): mais uma peça que só aparece por promoção. Anda e captura como torre e também pode dar um passo na diagonal, como o rei.</p>
       <p><strong>Papa e Ministro são únicos:</strong> cada lado pode promover no máximo um Papa e um Ministro na partida inteira. Se ele morrer, for rebaixado ou convertido, não se promove outro. E um lado nunca tem dois ao mesmo tempo: o Papa não converte o Papa adversário, nem converte o Ministro adversário se o seu lado já tiver um.</p>
       <p><strong>Jogo online:</strong> com o endereço do Firebase configurado nas opções, crie a partida em Nova partida → Um amigo online e mande o link. Cada um joga no seu aparelho; não dá para voltar lance, e propostas de empate, reivindicações e resignação vão para o outro lado. Funciona no app do GitHub (o link do artefato do claude.ai bloqueia a conexão).</p>
       <p><strong>Torres e cavalos:</strong> cada torre tem os dentes lá do alto, e cada cavalo as orelhas, da cor da casa onde começou a partida. A torre branca de a1 (casa escura) tem os dentes pretos e a torre preta de a8 (casa clara), os dentes brancos. O cavalo branco de g1 tem as orelhas pretas e o cavalo preto de g8, as orelhas brancas. A marca acompanha a peça a partida toda. É só visual: não muda nenhuma regra, nem a notação, nem a contagem de repetições para o empate.</p>
       <p>Notação em português: R rei, D dama, P paladino, M ministro, S papa (Santo Padre), T torre, B bispo, C cavalo.</p>
-      <p><strong>PGN:</strong> as partidas salvas são exportadas na notação internacional (K rei, Q dama, R torre, B bispo, N cavalo), que qualquer programa de xadrez lê. Partida sem lances da variante sai como xadrez comum e abre direto no Lichess ou em qualquer motor. Se tiver lance do Rei Tirano (rei comendo peça própria, Paladino L, Ministro M ou Papa A), o PGN leva a etiqueta Variant e só o próprio app entende esses lances.</p>
-      <p><strong>Importar PGN:</strong> em Partidas salvas, cole o PGN (ou abra um arquivo .pgn) de uma ou mais partidas, do próprio app, do Lichess, do Chess.com ou de outro programa. A partida entra na lista, marcada como importada, e abre na revisão com a análise. Vale também o PGN antigo do app, em português. Partida comum com promoção a dama é aceita na importação, mesmo sem dama na promoção do Rei Tirano. A análise segue as regras do Rei Tirano (o rei pode comer peça própria), por isso a avaliação de uma partida comum pode sair diferente da do Lichess.</p>
+      <p><strong>PGN:</strong> as partidas salvas são exportadas na notação internacional (K rei, Q dama, R torre, B bispo, N cavalo), que qualquer programa de xadrez lê. Partida sem lances da variante sai como xadrez comum e abre direto no Lichess ou em qualquer motor. Se tiver lance do Xadrez Rei Tirano (rei comendo peça própria, Paladino L, Ministro M ou Papa A), o PGN leva a etiqueta Variant e só o próprio app entende esses lances.</p>
+      <p><strong>Importar PGN:</strong> em Partidas salvas, cole o PGN (ou abra um arquivo .pgn) de uma ou mais partidas, do próprio app, do Lichess, do Chess.com ou de outro programa. A partida entra na lista, marcada como importada, e abre na revisão com a análise. Vale também o PGN antigo do app, em português. Partida comum com promoção a dama é aceita na importação, mesmo sem dama na promoção do Xadrez Rei Tirano. A análise segue as regras do Xadrez Rei Tirano (o rei pode comer peça própria), por isso a avaliação de uma partida comum pode sair diferente da do Lichess.</p>
     </details>
   </div>
 </div>
@@ -871,7 +875,7 @@ function apply(s,m){
 function legalFrom(s,from){
   const c=s.turn,en=other(c);
   return pseudo(s,from).filter(m=>{
-    // Regra do Rei Tirano: a peça própria não pode estar ameaçada (mesma lógica de não entrar em xeque)
+    // Regra do Xadrez Rei Tirano: a peça própria não pode estar ameaçada (mesma lógica de não entrar em xeque)
     if(m.self&&attacked(s.b,m.to,en))return false;
     const n=apply(s,m); return !attacked(n.b,kingSq(n.b,c),en);
   });
@@ -902,11 +906,15 @@ function ENGINE(R){
   const cdist=i=>{const r=i>>3,f=i&7;return Math.max(3-r,r-4)+Math.max(3-f,f-4);};
 
   function evaluate(s){
-    const b=s.b;let mg=0,eg=0,npm=0,mat={w:0,b:0},bish={w:0,b:0},kw=-1,kb=-1;
+    const b=s.b;let mg=0,eg=0,npm=0,mat={w:0,b:0},bish={w:0,b:0},kw=-1,kb=-1,pecas=0,menores=0,corB=0;
     for(let i=0;i<64;i++){const p=b[i];if(!p)continue;const c=col(p),t=typ(p),j=c==='w'?i:i^56,sg=c==='w'?1:-1;
       if(t==='k'){if(c==='w')kw=i;else kb=i;mg+=sg*T.k[j];eg+=sg*T.e[j];continue;}
+      pecas++;if(t==='n'||t==='b')menores++;if(t==='b')corB|=((i>>3)+(i&7))&1?2:1;
       const v=V[t]+T[t][j];mg+=sg*v;eg+=sg*v;mat[c]+=V[t];
       if(t!=='p')npm+=V[t];if(t==='b')bish[c]++;}
+    // material insuficiente (a mesma regra que encerra a partida): só os reis, um bispo ou um cavalo sozinho,
+    // ou só bispos, todos em casas da mesma cor. Ninguém consegue dar mate: vale empate, não a vantagem de material.
+    if(!pecas||pecas===1&&menores===1||pecas===bish.w+bish.b&&corB!==3)return 0;
     const ph=Math.min(1,npm/6200);
     let sc=mg*ph+eg*(1-ph);
     if(bish.w>=2)sc+=30;if(bish.b>=2)sc-=30;
@@ -946,7 +954,9 @@ function ENGINE(R){
   }
   function search(s,depth,alpha,beta,ply){
     if(ply>0){ if(s.half>=150)return 0;
-      const k=key(s);if(path.includes(k)||hist.has(k))return 0; }
+      // repetição: é empate se a posição já apareceu nesta linha da busca, ou se já apareceu duas vezes na partida
+      // (seria a terceira, e aí dá para reivindicar). Uma vez só na partida não é empate: quem está ganhando sai da repetição.
+      const k=key(s);if(path.includes(k)||(hist.get(k)||0)>=2)return 0; }
     const chk=attacked(s.b,kingSq(s.b,s.turn),other(s.turn));
     if(chk&&ply<30)depth++;
     if(depth<=0)return qs(s,alpha,beta,ply);
@@ -963,7 +973,7 @@ function ENGINE(R){
   }
   // o: {maxDepth, timeMs, noise, randomPct, history:[chaves já vistas na partida]}
   function think(s,o){
-    nodes=0;stopped=false;canStop=false;killers=[];path=[];hist=new Set(o.history||[]);
+    nodes=0;stopped=false;canStop=false;killers=[];path=[];hist=new Map();for(const k of o.history||[])hist.set(k,(hist.get(k)||0)+1);
     deadline=Date.now()+o.timeMs;
     let root=gen(s).map(m=>({m,n:child(s,m)})).filter(x=>x.n);
     if(o.exclude)root=root.filter(x=>!(x.m.from===o.exclude.from&&x.m.to===o.exclude.to&&(x.m.promo||'')===(o.exclude.promo||'')));
@@ -1351,7 +1361,7 @@ function arquivar(over){ // grava (ou atualiza) a partida atual
     res:over?over.res:(G.result?resPGN(G.result.winner):'*'),
     term:over?over.term:(G.result?G.result.text:'Partida interrompida'),
     kind:G.result?G.result.kind||'':'',dk:over&&over.res==='*'?'open':(G.result?G.result.dk||'':''),
-    mv:G.moves.map(m=>[m.from,m.to,m.promo||'']),san:G.moves.map(m=>m.san),ev:evArray()};
+    mv:G.moves.map(m=>[m.from,m.to,m.promo||'']),san:G.moves.map(m=>m.san),ev:evArray(),anv:AN_VER};
   const a=lerArquivo(),i=a.findIndex(x=>x.id===e.id);
   if(i>=0)a[i]=e;else a.push(e);
   while(a.length>300)a.shift();
@@ -1368,10 +1378,10 @@ function salvarEvNoArquivo(){ // guarda a análise junto da partida salva, para 
   clearTimeout(evArqT);evArqT=setTimeout(()=>{
     if(!G||!G.id||!(G.result||G.fromArchive))return;
     const a=lerArquivo(),i=a.findIndex(x=>x.id===G.id);if(i<0)return;
-    a[i].ev=evArray();gravarArquivo(a);},1500);
+    a[i].ev=evArray();a[i].anv=AN_VER;gravarArquivo(a);},1500);
 }
 // PGN na notação internacional, a que qualquer programa de xadrez lê: R→K, D→Q, T→R, B→B, C→N (na tela o app continua em português).
-// Peças e lances que só existem no Rei Tirano: Paladino L, Ministro M, Papa A; ⊗ (rei come peça própria), ✝ (conversão), † (o Papa morreu junto).
+// Peças e lances que só existem no Xadrez Rei Tirano: Paladino L, Ministro M, Papa A; ⊗ (rei come peça própria), ✝ (conversão), † (o Papa morreu junto).
 const PT2EN={R:'K',D:'Q',T:'R',B:'B',C:'N',P:'L',M:'M',S:'A'};
 const sanEN=s=>String(s).replace(/^[RDTBCPMS]/,c=>PT2EN[c]).replace(/=([RDTBCPMS])/,(_,c)=>'='+PT2EN[c]);
 const sanVariante=s=>/[⊗✝†↓✕]/.test(s)||/^[PMS]/.test(s)||/=[PMS]/.test(s); // lance que o xadrez comum não tem
@@ -1379,13 +1389,13 @@ function pgnDe(e){
   const d=new Date(e.t0),z=n=>String(n).padStart(2,'0'),o=e.imp&&e.orig||null; // importada: guarda as etiquetas de onde ela veio
   const variante=e.san.some(sanVariante); // sem nenhum lance da variante, o PGN é xadrez comum e abre em qualquer programa
   const tags=[['Event',o&&o.Event||(e.bot?`Contra o bot (nível ${e.bot.level} · ${BOT_NIV[e.bot.level].nome})`:e.online?'Partida online':'Partida entre amigos')],
-    ['Site',o?o.Site||'?':'Xadrez do Rei Tirano'],['Date',o?o.Date||'????.??.??':`${d.getFullYear()}.${z(d.getMonth()+1)}.${z(d.getDate())}`],['Round',o&&o.Round||'-'],
+    ['Site',o?(ehSiteApp(o.Site)?SITE_APP:o.Site||'?'):SITE_APP],['Date',o?o.Date||'????.??.??':`${d.getFullYear()}.${z(d.getMonth()+1)}.${z(d.getDate())}`],['Round',o&&o.Round||'-'],
     ['White',e.w],['Black',e.b],['Result',e.res],...(e.fen?[['SetUp','1'],['FEN',e.fen]]:[]),
     ...(o?(o.UTCDate?[['UTCDate',o.UTCDate],['UTCTime',o.UTCTime||'??:??:??']]:[])
       :[['UTCDate',`${d.getUTCFullYear()}.${z(d.getUTCMonth()+1)}.${z(d.getUTCDate())}`],['UTCTime',`${z(d.getUTCHours())}:${z(d.getUTCMinutes())}:${z(d.getUTCSeconds())}`]]),
-    ...(variante?[['Variant','Rei Tirano']]:[]),['TimeControl',e.tc],['Termination',e.term]];
+    ...(variante?[['Variant','Xadrez Rei Tirano']]:[]),['TimeControl',e.tc],['Termination',e.term]];
   let txt=tags.map(([k,v])=>`[${k} "${String(v).replace(/["\\]/g,"'")}"]`).join('\n')+'\n\n';
-  if(variante)txt+='{Rei Tirano: K⊗ o rei come peça própria · L Paladino · M Ministro · A Papa (✝ converte, † morreu junto)}\n';
+  if(variante)txt+='{Xadrez Rei Tirano: K⊗ o rei come peça própria · L Paladino · M Ministro · A Papa (✝ converte, † morreu junto)}\n';
   const s0=e.fen?lerFEN(e.fen):null,n0=s0?s0.full:1,dp=s0&&s0.turn==='b'?1:0; // começando com as pretas: "12... lance"
   const tok=[];e.san.forEach((s,i)=>{const k=i+dp;if(k%2===0)tok.push(`${n0+k/2}.`);else if(i===0)tok.push(`${n0}...`);
     // partida comum importada que terminou em mate de lá: o último lance volta com # (aqui o rei ainda podia comer peça própria)
@@ -1423,7 +1433,7 @@ function abrirArquivada(id){
     G={states,keys,moves,result:{winner,text:e.term,kind:e.kind||'arch',dk:e.dk||'',t0:0},
       clock:{base:0,inc:0,w:0,b:0,running:false,last:0},orient:e.bot?other(e.bot.color):'w',
       mode:G.mode,lock:G.lock,bot:null,lastBot:G.lastBot,names:{w:e.w,b:e.b},t0:e.t0,id:e.id,fromArchive:true,scored:true};
-    if(e.ev)e.ev.forEach((x,k)=>{if(x&&k<states.length)EVCACHE.set(keyAt(k),{v:x[0],best:x[1]});});
+    if(e.ev&&e.anv===AN_VER)e.ev.forEach((x,k)=>{if(x&&k<states.length)EVCACHE.set(keyAt(k),{v:x[0],best:x[1]});}); // análise de motor anterior: refaz
     refresh();selected=-1;targets=[];view=null;save();openReview();
   };
   if(G.moves.length&&!G.result&&!G.fromArchive){
@@ -1433,7 +1443,7 @@ function abrirArquivada(id){
 }
 function acoesArquivo(id){
   const e=lerArquivo().find(x=>x.id===id);if(!e)return;
-  const pg=pgnDe(e),nomeArq=`rei-tirano-${new Date(e.t0).toISOString().slice(0,16).replace(/[:T]/g,'-')}.pgn`;
+  const pg=pgnDe(e),nomeArq=`xadrez-rei-tirano-${new Date(e.t0).toISOString().slice(0,16).replace(/[:T]/g,'-')}.pgn`;
   const bts=[{label:'Rever a partida',primary:true,fn:()=>abrirArquivada(id)},{label:'Copiar PGN',fn:()=>copiarTexto(pg)}];
   if(navigator.share)bts.push({label:'Compartilhar PGN',fn:()=>navigator.share({title:`${e.w} × ${e.b}`,text:pg}).catch(()=>{})});
   bts.push({label:'Baixar arquivo .pgn',fn:()=>baixarTexto(pg,nomeArq)},
@@ -1448,11 +1458,12 @@ function acoesArquivo(id){
 // ---------- Importar PGN: do próprio app (notação nova ou a antiga, em português), do Lichess, do Chess.com... ----------
 // Cada partida entra na lista de partidas salvas e a primeira abre na revisão. Lê comentários, variações (ignoradas),
 // NAGs, números de lance, notação longa (e2e4), figurinhas (♘f3), FEN e várias partidas de uma vez.
-// A promoção a dama do xadrez comum só existe aqui, na importação (no Rei Tirano não há promoção a dama).
+// A promoção a dama do xadrez comum só existe aqui, na importação (no Xadrez Rei Tirano não há promoção a dama).
 const sqIdx=n=>(8-(+n[1]))*8+FILES.indexOf(n[0]);
 const PEC_EN={K:'k',Q:'q',R:'r',B:'b',N:'n',P:'p',L:'l',M:'m',A:'a'};   // internacional + L Paladino, M Ministro, A Papa (o PGN do app)
 const PEC_PT={R:'k',D:'q',T:'r',B:'b',C:'n',P:'l',M:'m',S:'a'};         // português (o PGN antigo do app)
-const IMP_MAX=100,ARQ_MAX=300,SITE_APP='Xadrez do Rei Tirano';
+const IMP_MAX=100,ARQ_MAX=300,SITE_APP='Xadrez Rei Tirano';
+const ehSiteApp=x=>/^xadrez (do )?rei tirano$/i.test(String(x||'').trim()); // o nome novo e o antigo (até a 12.3: Xadrez do Rei Tirano)
 let IMP_RASC=''; // o texto colado fica guardado se a janela fechar sem querer (toque fora dela)
 function lerFEN(f){
   const p=String(f||'').trim().split(/\s+/),rows=(p[0]||'').split('/');if(rows.length!==8)return null;
@@ -1515,7 +1526,7 @@ function lerLance(s,tok,idi,L){
 }
 function reproduzirPGN(j){
   const v=(j.tags.Variant||'').trim();
-  if(!/^(standard|chess|normal|rei tirano|from position)?$/i.test(v))return {erro:`é da variante ${escH(v)}: só dá para importar xadrez comum ou partidas do Rei Tirano.`};
+  if(!/^(standard|chess|normal|rei tirano|xadrez (do )?rei tirano|from position)?$/i.test(v))return {erro:`é da variante ${escH(v)}: só dá para importar xadrez comum ou partidas do Xadrez Rei Tirano.`};
   const s0=j.tags.FEN?lerFEN(j.tags.FEN):initState();if(!s0)return {erro:'a posição inicial (FEN) não é válida.'};
   const {mv:toks,res}=tokensPGN(j.mt);let melhor=null;
   for(const idi of idiomasPGN(toks)){
@@ -1537,7 +1548,7 @@ function dataPGN(T){ // horário da partida: UTCDate + UTCTime (Lichess, Chess.c
 function fimImportado(T,res,r){ // a terminação do PGN no jeito do app: texto, tipo do fim (mate, resignação, tempo) e tipo do empate
   const t=(T.Termination||'').trim(),l=t.toLowerCase(),nada=!t||l==='normal',W=res==='1-0'?'w':res==='0-1'?'b':null,V=W&&NAME[W],D=W&&NAME[other(W)];
   if(res==='*')return {term:t&&!/^(normal|unterminated|\?)$/i.test(t)?t:'Sem resultado',kind:'',dk:'open'};
-  if(T.Site===SITE_APP&&t) // PGN do próprio app: o texto já é o daqui
+  if(ehSiteApp(T.Site)&&t) // PGN do próprio app: o texto já é o daqui
     return {term:t,kind:/^Xeque-mate/.test(t)?'mate':/resignaram/.test(t)?'resign':/no tempo/.test(t)?'time':'',dk:''};
   // no xadrez comum o rei não come peça própria: mate ou afogamento de lá pode não ser mate nem afogamento aqui
   const sF=r.sF,xq=inCheck(sF,sF.turn),preso=!r.LF.length,presoComum=!r.LF.some(m=>!m.self);
@@ -1577,7 +1588,7 @@ function importarPGN(txt){
     const fim=fimImportado(T,res,r),orig={};
     for(const k of ['Event','Site','Date','Round','UTCDate','UTCTime'])if(T[k])orig[k]=T[k];
     const fen=T.FEN&&T.FEN.trim().split(/\s+/).slice(0,4).join(' ')!==FEN_INICIAL?T.FEN.trim():'';
-    const e={id:'i'+agora.toString(36)+i,t0:dataPGN(T)||agora,t1:agora,w,b,bot,online:T.Site===SITE_APP&&T.Event==='Partida online',
+    const e={id:'i'+agora.toString(36)+i,t0:dataPGN(T)||agora,t1:agora,w,b,bot,online:ehSiteApp(T.Site)&&T.Event==='Partida online',
       tc:/^[0-9+\/:.\-]{1,20}$/.test(T.TimeControl||'')&&T.TimeControl!=='-'?T.TimeControl:'-',res,term:fim.term,kind:fim.kind,dk:fim.dk,
       mv:r.mv,san:r.san,ev:null,imp:true,orig,...(fen?{fen}:{})};
     const dup=arq.find(x=>x.w===e.w&&x.b===e.b&&(x.fen||'')===(e.fen||'')&&JSON.stringify(x.mv)===JSON.stringify(e.mv));
@@ -1599,7 +1610,7 @@ function falhaPGN(f,varias){
   return varias?`Partida ${f.i+1}: ${t}`:t.charAt(0).toUpperCase()+t.slice(1);
 }
 function origemDe(e){ // contra o bot, online ou entre amigos; e, na importada, de onde ela veio (lichess.org, Chess.com...)
-  const o=e.orig||{},daqui=!e.imp||o.Site===SITE_APP;
+  const o=e.orig||{},daqui=!e.imp||ehSiteApp(o.Site);
   const site=daqui?'':((/^https?:\/\/(?:www\.)?([^\/?#]+)/i.exec(o.Site||'')||[])[1]||(o.Site&&o.Site!=='?'?o.Site:''));
   return [e.bot?`contra o bot nível ${e.bot.level}`:e.online?'online':daqui?'entre amigos':'',site,e.imp?'importada':''].filter(Boolean).join(' · ');
 }
@@ -1766,7 +1777,7 @@ function linkConvite(code){
 function convidar(){
   if(!G||!G.online)return;const code=G.online.code,link=linkConvite(code);
   const bts=[];
-  if(navigator.share)bts.push({label:'Enviar convite',primary:true,fn:()=>navigator.share({title:'Xadrez do Rei Tirano',text:`Bora jogar? Sala ${code}`,url:link}).catch(()=>{})});
+  if(navigator.share)bts.push({label:'Enviar convite',primary:true,fn:()=>navigator.share({title:'Xadrez Rei Tirano',text:`Bora jogar? Sala ${code}`,url:link}).catch(()=>{})});
   bts.push({label:'Copiar link',primary:!navigator.share,fn:()=>{copiarTexto(link);}},{label:'Fechar'});
   modal('Convidar para a sala',`<p>Mande o link para o seu amigo. Ou ele pode tocar em <strong>Entrar numa sala</strong> nas opções e digitar o código:</p>
     <div class="codigo">${code}</div>`,bts,undefined,true);
@@ -1912,6 +1923,8 @@ function botResult(id,r){
 // Cada posição da partida é analisada uma vez, em fila. A avaliação de um lance é a perda de chance de vitória
 // de quem jogou: a mesma conta da barra, antes e depois do lance.
 const MATE_V=100000,EVAL_MS=800;
+// versão da análise: avaliações guardadas por um motor anterior (v13.0 corrigiu a repetição) são descartadas e refeitas
+const AN_VER=2;
 let evWorker=null,evOk=true,evBusy=null,evShown=null;
 const EVCACHE=new Map(),CLSCACHE=new Map(),SECCACHE=new Map();
 const barOn=()=>!!(G&&G.bot&&G.bot.evalBar);
@@ -1955,9 +1968,9 @@ function evDone(key,r){
     const sc=s.turn==='w'?r.score:-r.score;
     if(Math.abs(r.score)>MATE_V-1000){const plies=MATE_V-Math.abs(r.score);v={mate:Math.ceil(plies/2),winner:sc>0?'w':'b'};}
     else v={cp:sc};}
-  if(sec){SECCACHE.set(key,{v});if(G){(G.secs||(G.secs={}))[key]={v};save();}if(G)render();return;}
+  if(sec){SECCACHE.set(key,{v});if(G){(G.secs||(G.secs={}))[key]={v};G.anv=AN_VER;save();}if(G)render();return;}
   EVCACHE.set(key,{v,best});salvarEvNoArquivo();
-  if(G){(G.evals||(G.evals={}))[key]={v,best};save();}
+  if(G){(G.evals||(G.evals={}))[key]={v,best};G.anv=AN_VER;save();}
   if(G)render(); // render chama pump() de novo para a próxima posição da fila
 }
 // chance de vitória (0 a 1) de uma cor, na mesma escala da barra
@@ -2110,7 +2123,7 @@ function comentario(k,inf,best,only){
     if(attacked(S1.b,mv.to,o))F.push(`Conversão arriscada: se as ${NAME[o]} capturarem a peça agora, o Papa morre junto.`);}
   else if(mv.dem)F.push(`O Ministro rebaixa ${oa(typ(mv.dem))} em ${onde} a peão.`);
   else if(mv.cass)F.push(`O Ministro remove o peão desprotegido em ${onde}.`);
-  else if(mv.self)F.push(`O rei come ${proprio(typ(mv.captured))} em ${onde} (regra do Rei Tirano).`);
+  else if(mv.self)F.push(`O rei come ${proprio(typ(mv.captured))} em ${onde} (regra do Xadrez Rei Tirano).`);
   else if(mv.papa)F.push('Captura a peça recém-convertida e o Papa morre junto.');
   else if(mv.san.startsWith('O-O'))F.push('Roque: o rei vai para a segurança e a torre entra em jogo.');
   else if(mv.promo)F.push(`Promove o peão a ${NOMEPC[mv.promo]}.`);
@@ -2276,7 +2289,7 @@ function renderReview(){
     :`<li class="muted">${data.length?'Nenhuma imprecisão, erro ou capivarada. Partida limpa!':'Aguardando a análise…'}</li>`;
   // curiosidades das regras desta variante
   const ST=[['Capturas',m=>m.captured&&!m.self],['Xeques',m=>/[+#]$/.test(m.san)],['Roques',m=>m.san.startsWith('O-O')],
-    ['Promoções',m=>!!m.promo],['Autocapturas do Rei Tirano',m=>m.self],['Conversões do Papa',m=>!!m.conv]];
+    ['Promoções',m=>!!m.promo],['Autocapturas do rei',m=>m.self],['Conversões do Papa',m=>!!m.conv]];
   const cntS=(c,f)=>G.moves.filter(m=>m.by===c&&f(m)).length;
   const papasPerdidos=c=>G.moves.filter(m=>m.papa&&col(m.papa)===c).length;
   $('revStats').innerHTML=`<table class="rvt"><tr><th></th><th>${sideName('w')}</th><th>${sideName('b')}</th></tr>`+
@@ -2290,7 +2303,7 @@ function cancelBot(){botToken++;botBusy=false;pendingReq=null;}
 function select(sq){selected=sq;targets=legalNow.filter(m=>m.from===sq);}
 function onSquare(sq){
   if(modalOpen||REV)return;
-  if(view!==null){view=null;selected=-1;targets=[];return render();}
+  if(view!==null)return goTo(G.states.length-1); // tocar no tabuleiro durante o histórico volta para a posição atual
   if(G.result||botTurn()||remoteTurn())return;
   const s=cur(),p=s.b[sq];
   if(selected>=0){
@@ -2512,14 +2525,14 @@ function render(){
     if(sq===capSq){ // peça capturada pequena e tombada no canto, até o próximo lance
       // canto inferior esquerdo, do ponto de vista de quem está em pé na casa (peças invertidas usam o canto oposto)
       const cp=last.captured,att=s.b[sq]||(last.by==='w'?'P':'p'),up=upOf(att);
-      const pos=up?'--tx:3.75cqw;--ty:-3.75cqw;--rot:105deg':'--tx:-3.75cqw;--ty:3.75cqw;--rot:-75deg';
+      const pos=up?'--tx:calc(3.75*var(--cq));--ty:calc(-3.75*var(--cq));--rot:105deg':'--tx:calc(-3.75*var(--cq));--ty:calc(3.75*var(--cq));--rot:-75deg';
       const ep=last.capSq!=null&&last.capSq!==last.to; // só no en passant o peão capturado fica fora da casa de chegada
       h+=`<span class="capt${anim?(ep?' eppir':' knock'):''}" style="${pos}">${glyph(cp,false,'','',marcada(cp,OR[P-1][sq]))}</span>`;
       if(anim&&!ep)h+=`<span class="burst${last.self?' gold':''}"></span>`;}
     if(anim&&anim.conv&&sq===anim.to)h+=`<span class="burst conv"></span><span class="burst conv b2"></span>`;
     if(anim&&anim.dem==='p'&&sq===anim.to)h+=`<span class="burst dem"></span>`;
     if(last&&last.papaSq===sq&&last.papa){ // o Papa morreu junto: fica tombado no canto da casa dele até o próximo lance
-      const up=upOf(last.papa),pos=up?'--tx:3.75cqw;--ty:-3.75cqw;--rot:105deg':'--tx:-3.75cqw;--ty:3.75cqw;--rot:-75deg';
+      const up=upOf(last.papa),pos=up?'--tx:calc(3.75*var(--cq));--ty:calc(-3.75*var(--cq));--rot:105deg':'--tx:calc(-3.75*var(--cq));--ty:calc(3.75*var(--cq));--rot:-75deg';
       h+=`<span class="capt${anim?' knock late':''}" style="${pos}">${glyph(last.papa,false)}</span>`;
       if(anim)h+=`<span class="burst conv late"></span>`;}
     if((d&7)===0)h+=`<span class="co rk">${8-r}</span>`;
@@ -2648,7 +2661,22 @@ function tick(){
 setInterval(tick,100);
 
 // ---------- Botões ----------
-function goTo(k){const n=G.states.length-1;k=Math.max(0,Math.min(n,k));view=k===n?null:k;selected=-1;targets=[];render();}
+// Sons ao andar pelos lances (na revisão e no histórico): para a frente, o som do lance como na hora em que foi jogado
+// (captura, roque, xeque, promoção, autocaptura, conversão, Papa que morre) e, na posição final, o som do fim da partida.
+// Para trás, um toque simples de peça. Segurar a seta não vira uma rajada de sons.
+let somNavT=0;
+function somDoLance(k,frente){
+  if(muted)return;const t=Date.now();if(t-somNavT<70)return;somNavT=t;
+  const m=frente&&k>0?G.moves[k-1]:null;
+  if(!m){sfx('move');return;}
+  const mate=/#$/.test(m.san),chk=/[+#]$/.test(m.san);
+  sfx(m.conv?'convert':m.dem==='p'?'demote':m.self?'self':m.promo?'promote':/^O-O/.test(m.san)?'castle':m.captured?'capture':'move');
+  if(m.papa&&m.papaSq>=0)setTimeout(()=>sfx('martyr'),160);
+  const r=k===G.states.length-1?G.result:null;
+  if(r){const snd=mate||r.kind==='mate'?'mate':r.dk==='open'?'':r.kind==='resign'||/resignaram/.test(r.text||'')?'resign':'end';if(snd)setTimeout(()=>sfx(snd),180);}
+  else if(chk)setTimeout(()=>sfx('check'),110);
+}
+function goTo(k){const n=G.states.length-1;k=Math.max(0,Math.min(n,k));const p=ply();view=k===n?null:k;selected=-1;targets=[];render();if(k!==p)somDoLance(k,k>p);}
 $('nFirst').onclick=()=>goTo(0);
 $('nPrev').onclick=()=>goTo(ply()-1);
 $('nNext').onclick=()=>goTo(ply()+1);
@@ -2679,8 +2707,8 @@ $('arquivo').addEventListener('click',e=>{const li=e.target.closest('[data-id]')
 $('bImpPGN').onclick=()=>abrirImportar();
 $('bArqPGN').onclick=()=>{const a=lerArquivo();if(!a.length)return;const t=a.map(pgnDe).join('\n');
   const bts=[{label:'Copiar tudo',primary:true,fn:()=>copiarTexto(t)}];
-  if(navigator.share)bts.push({label:'Compartilhar',fn:()=>navigator.share({title:'Partidas do Rei Tirano',text:t}).catch(()=>{})});
-  bts.push({label:'Baixar arquivo .pgn',fn:()=>baixarTexto(t,'rei-tirano-todas-as-partidas.pgn')},{label:'Fechar'});
+  if(navigator.share)bts.push({label:'Compartilhar',fn:()=>navigator.share({title:'Partidas do Xadrez Rei Tirano',text:t}).catch(()=>{})});
+  bts.push({label:'Baixar arquivo .pgn',fn:()=>baixarTexto(t,'xadrez-rei-tirano-todas-as-partidas.pgn')},{label:'Fechar'});
   modal('Exportar partidas',`<p>${a.length} ${a.length===1?'partida':'partidas'} em PGN.</p>`,bts,undefined,true);};
 renderArquivo();
 $('dbUrl').value=ONL.db||'';
@@ -2694,6 +2722,11 @@ $('bLock').onclick=()=>{G.lock=!G.lock;if(G.lock)$('barTop').scrollIntoView({blo
 // ---------- Zoom do tabuleiro: no tablet (ou onde sobrar tela), aumenta o tabuleiro e, junto, as barras e os controles ----------
 // Passos de 10% sobre o tamanho normal, até o tabuleiro ocupar a largura (ou a altura) da tela.
 // Com a rolagem travada, para quando barras, tabuleiro e controles enchem a tela, para nada ficar cortado.
+// Sem unidades de contêiner (cqw), as peças ficavam no tamanho máximo antigo enquanto o tabuleiro crescia no zoom.
+// Aqui o app mede o tabuleiro sempre que ele muda de tamanho e passa a largura para o CSS.
+const SEM_CQ=!(window.CSS&&CSS.supports&&CSS.supports('width','1cqw'));
+function medirTabuleiro(){const b=$('board');if(!SEM_CQ||!b)return;const w=b.getBoundingClientRect().width;if(w>0)document.documentElement.style.setProperty('--bw',w.toFixed(1)+'px');}
+if(SEM_CQ){medirTabuleiro();if(window.ResizeObserver)new ResizeObserver(medirTabuleiro).observe($('board'));else window.addEventListener('resize',medirTabuleiro);}
 const ZOOM_KEY=STORE+'-zoom';
 let ZK=0;try{ZK=Math.max(0,parseInt(localStorage.getItem(ZOOM_KEY),10)||0);}catch(e){}
 function zoomMedidas(){
@@ -2720,7 +2753,7 @@ function aplicarZoom(rolar){
   const zo=$('bZoomOut'),zi=$('bZoomIn');
   zo.hidden=zi.hidden=kmax===0; // no celular em pé o tabuleiro já ocupa a largura: os botões nem aparecem
   zo.disabled=ZK===0;zi.disabled=ZK>=kmax;
-  calibrarMarcas();
+  medirTabuleiro();calibrarMarcas();
   if(rolar&&$('barTop').scrollIntoView)$('barTop').scrollIntoView({block:'start'});
   return {pct:Math.round(B/B0*100),max:ZK>=kmax&&ZK>0};
 }
@@ -2818,7 +2851,7 @@ function save(){try{localStorage.setItem(STORE,JSON.stringify(G));}catch(e){}}
 function load(){
   try{const raw=localStorage.getItem(STORE);if(!raw)return false;
     const g=JSON.parse(raw);if(!g||!Array.isArray(g.states)||!g.states.length||!g.clock)return false;
-    if(!g.mode)g.mode=g.autoflip?'auto':'normal';G=g;G.clock.last=Date.now();if(G.evals)for(const k in G.evals)EVCACHE.set(k,G.evals[k]);if(G.secs)for(const k in G.secs)SECCACHE.set(k,G.secs[k]);refresh();return true;
+    if(!g.mode)g.mode=g.autoflip?'auto':'normal';G=g;G.clock.last=Date.now();if(G.anv!==AN_VER){delete G.evals;delete G.secs;}if(G.evals)for(const k in G.evals)EVCACHE.set(k,G.evals[k]);if(G.secs)for(const k in G.secs)SECCACHE.set(k,G.secs[k]);refresh();return true;
   }catch(e){return false;}
 }
 if(load()){render();setTimeout(maybeBot,300);if(G.online&&!G.result)ouvirSala();}else newGame(0,0);
