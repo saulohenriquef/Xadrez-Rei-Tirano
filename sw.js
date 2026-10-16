@@ -1,9 +1,10 @@
-// sw.js · Xadrez do Rei Tirano · versão 2.0
-// Service worker do Xadrez do Rei Tirano
+// sw.js · Xadrez Rei Tirano · versão 2.1
+// Service worker do Xadrez Rei Tirano
+// 2.1: o app passou a se chamar Xadrez Rei Tirano (manifest novo); o cache novo garante que o manifest atualizado seja lido.
 // Ao publicar uma versão nova, basta trocar o index.html no GitHub:
 // a página é buscada na rede primeiro, e o cache só é usado offline.
-// Se mudar ícones ou este arquivo, aumente o número da VERSAO.
-const VERSAO = 'rei-tirano-2.0';
+// Se mudar ícones, o manifest ou este arquivo, aumente o número da VERSAO.
+const VERSAO = 'rei-tirano-2.1';
 const FONTES = 'rei-tirano-fontes';
 const SONS = 'rei-tirano-sons';
 const ARQUIVOS = [
