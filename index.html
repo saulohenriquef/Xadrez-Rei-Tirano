@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez Rei Tirano · versão 13.0 -->
+<!-- index.html · Xadrez Rei Tirano · versão 13.1 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -687,7 +687,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <option value="face">Frente a frente: peças de cima invertidas</option>
       <option value="pass">Frente a frente: todas as peças giram</option>
     </select></div>
-    <div class="ver">Versão 13.0</div>
+    <div class="ver">Versão 13.1</div>
     <div class="ver" id="verMarcas"></div>
   </div>
 
@@ -885,120 +885,492 @@ function allLegal(s){const out=[];for(let i=0;i<64;i++)if(s.b[i]&&col(s.b[i])===
 return {N_OFF,K_OFF,DIAG,ORTH,col,typ,other,rc,idx,inB,initState,attacked,attackers,kingSq,inCheck,pseudo,apply,legalFrom,allLegal};
 }
 const {N_OFF,K_OFF,DIAG,ORTH,col,typ,other,rc,idx,inB,initState,attacked,attackers,kingSq,inCheck,pseudo,apply,legalFrom,allLegal}=RULES();
-// Motor do bot: busca alfa-beta com aprofundamento iterativo e quiescência
+// Motor do bot e da análise: busca PVS com aprofundamento iterativo e janela de aspiração, tabela de transposição,
+// lance nulo, reduções de lances tardios (guiadas pelo histórico), podas de futilidade, lances matadores e contra-lances,
+// e quiescência com tabela, troca estática (SEE) e saída de xeque.
+// Avaliação em duas fases (meio-jogo e final) com estrutura de peões, mobilidade, segurança do rei e finais empatados;
+// os pesos começaram nos do PeSTO e foram ajustados contra o Stockfish em 24 mil posições de partidas.
+// Para ser rápido, o motor tem tabuleiro próprio (vetores de números, lance feito e desfeito no lugar, hash Zobrist)
+// e geração de lances própria, idêntica à de RULES (conferida por perft). Se mudar uma regra em RULES, mude aqui também;
+// na raiz da busca os lances são sempre conferidos com RULES, então o motor nunca devolve um lance que a página não aceite.
 function ENGINE(R){
-  const {pseudo,apply,attacked,kingSq,col,typ,other}=R;
-  const V={p:100,n:320,b:330,r:500,a:650,m:680,l:850,q:900,k:0};
-  const T={
-    p:[0,0,0,0,0,0,0,0,50,50,50,50,50,50,50,50,10,10,20,30,30,20,10,10,5,5,10,25,25,10,5,5,0,0,0,20,20,0,0,0,5,-5,-10,0,0,-10,-5,5,5,10,10,-20,-20,10,10,5,0,0,0,0,0,0,0,0],
-    n:[-50,-40,-30,-30,-30,-30,-40,-50,-40,-20,0,0,0,0,-20,-40,-30,0,10,15,15,10,0,-30,-30,5,15,20,20,15,5,-30,-30,0,15,20,20,15,0,-30,-30,5,10,15,15,10,5,-30,-40,-20,0,5,5,0,-20,-40,-50,-40,-30,-30,-30,-30,-40,-50],
-    b:[-20,-10,-10,-10,-10,-10,-10,-20,-10,0,0,0,0,0,0,-10,-10,0,5,10,10,5,0,-10,-10,5,5,10,10,5,5,-10,-10,0,10,10,10,10,0,-10,-10,10,10,10,10,10,10,-10,-10,5,0,0,0,0,5,-10,-20,-10,-10,-10,-10,-10,-10,-20],
-    r:[0,0,0,0,0,0,0,0,5,10,10,10,10,10,10,5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,0,0,0,5,5,0,0,0],
-    q:[-20,-10,-10,-5,-5,-10,-10,-20,-10,0,0,0,0,0,0,-10,-10,0,5,5,5,5,0,-10,-5,0,5,5,5,5,0,-5,0,0,5,5,5,5,0,-5,-10,5,5,5,5,5,0,-10,-10,0,5,0,0,0,0,-10,-20,-10,-10,-5,-5,-10,-10,-20],
-    k:[-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-20,-30,-30,-40,-40,-30,-30,-20,-10,-20,-20,-20,-20,-20,-20,-10,20,20,0,0,0,0,20,20,20,30,10,0,0,10,30,20],
-    e:[-50,-40,-30,-20,-20,-30,-40,-50,-30,-20,-10,0,0,-10,-20,-30,-30,-10,20,30,30,20,-10,-30,-30,-10,30,40,40,30,-10,-30,-30,-10,30,40,40,30,-10,-30,-30,-10,20,30,30,20,-10,-30,-30,-30,0,0,0,0,-30,-30,-50,-30,-30,-30,-30,-30,-30,-50]
-  };
-  T.l=T.r.map((v,i)=>v+Math.round(T.n[i]*.6)); // paladino: torre + centralização de cavalo
-  T.a=T.b.map((v,i)=>v+Math.round(T.n[i]*.3)); // papa: bispo + um pouco de centralização
-  T.m=T.r.map((v,i)=>v+Math.round(T.n[i]*.25)); // ministro: torre + um pouco de centralização
-  const MATE=100000;
-  let nodes=0,deadline=0,stopped=false,canStop=false,killers=[],path=[],hist=null;
-  const cdist=i=>{const r=i>>3,f=i&7;return Math.max(3-r,r-4)+Math.max(3-f,f-4);};
+  // peça: tipo 1 peão, 2 cavalo, 3 bispo, 4 torre, 5 dama, 6 rei, 7 paladino, 8 ministro, 9 papa; +16 = pretas; 0 = vazia
+  const PAW=1,KNI=2,BIS=3,ROO=4,QUE=5,KIN=6,PAL=7,MIN=8,PAP=9;
+  const LET=' pnbrqklma',TIPO={p:1,n:2,b:3,r:4,q:5,k:6,l:7,m:8,a:9};
+  // lance num inteiro: origem | destino<<6 | promoção<<12 | marcas
+  const F_CAP=1<<16,F_EP=1<<17,F_CAS=1<<18,F_DBL=1<<19,F_SELF=1<<20,F_CONV=1<<21,F_PRO=15<<12;
+  const MATE=100000,INF=1000000,MAXP=96,MB=512;
 
-  function evaluate(s){
-    const b=s.b;let mg=0,eg=0,npm=0,mat={w:0,b:0},bish={w:0,b:0},kw=-1,kb=-1,pecas=0,menores=0,corB=0;
-    for(let i=0;i<64;i++){const p=b[i];if(!p)continue;const c=col(p),t=typ(p),j=c==='w'?i:i^56,sg=c==='w'?1:-1;
-      if(t==='k'){if(c==='w')kw=i;else kb=i;mg+=sg*T.k[j];eg+=sg*T.e[j];continue;}
-      pecas++;if(t==='n'||t==='b')menores++;if(t==='b')corB|=((i>>3)+(i&7))&1?2:1;
-      const v=V[t]+T[t][j];mg+=sg*v;eg+=sg*v;mat[c]+=V[t];
-      if(t!=='p')npm+=V[t];if(t==='b')bish[c]++;}
-    // material insuficiente (a mesma regra que encerra a partida): só os reis, um bispo ou um cavalo sozinho,
-    // ou só bispos, todos em casas da mesma cor. Ninguém consegue dar mate: vale empate, não a vantagem de material.
-    if(!pecas||pecas===1&&menores===1||pecas===bish.w+bish.b&&corB!==3)return 0;
-    const ph=Math.min(1,npm/6200);
-    let sc=mg*ph+eg*(1-ph);
-    if(bish.w>=2)sc+=30;if(bish.b>=2)sc-=30;
-    // fim de jogo com vantagem: empurra o rei perdedor para a borda e aproxima o próprio rei (para conseguir dar mate)
-    const diff=mat.w-mat.b;
-    if(ph<.35&&Math.abs(diff)>=300){
-      const win=diff>0?'w':'b',lk=win==='w'?kb:kw,wk=win==='w'?kw:kb;
-      const kd=Math.max(Math.abs((lk>>3)-(wk>>3)),Math.abs((lk&7)-(wk&7)));
-      const bonus=cdist(lk)*12+(14-kd)*5;sc+=win==='w'?bonus:-bonus;
-    }
-    return s.turn==='w'?sc:-sc;
-  }
-  function gen(s){const out=[];for(let i=0;i<64;i++){const p=s.b[i];if(p&&col(p)===s.turn){const ms=pseudo(s,i);for(let k=0;k<ms.length;k++)out.push(ms[k]);}}return out;}
-  function child(s,m){const c=s.turn,en=other(c);if(m.self&&attacked(s.b,m.to,en))return null;const n=apply(s,m);return attacked(n.b,kingSq(n.b,c),en)?null:n;}
-  function mscore(s,m,ply){
-    if(m.promo)return 90000+V[m.promo];
-    if(m.self)return -5000;
-    if(m.conv)return 60000+V[typ(s.b[m.to])]*20; // converter vale o dobro: tira dele e dá para você
-    if(m.dem)return 58000+(m.dem==='p'?V[typ(s.b[m.to])]-100:100)*10;
-    if(m.cap)return 50000+(m.ep?100:V[typ(s.b[m.to])])*10-V[typ(s.b[m.from])]/10;
-    const k=killers[ply];if(k&&k[0]===m.from&&k[1]===m.to)return 40000;
-    return 0;
-  }
-  function order(s,ms,ply){for(const m of ms)m._o=mscore(s,m,ply);ms.sort((a,b)=>b._o-a._o);return ms;}
-  function tick(){nodes++;if(canStop&&(nodes&511)===0&&Date.now()>deadline)stopped=true;}
-  const key=s=>s.b.map(x=>x||'.').join('')+s.turn;
+  // ---------- geometria ----------
+  const KN=[],KG=[],DS=[],OS=[],RAY=[],PAF=[[],[]],DIST=new Uint8Array(4096),CD=new Uint8Array(64);
+  {const ok=(r,f)=>r>=0&&r<8&&f>=0&&f<8,OD=[[-1,0],[1,0],[0,-1],[0,1]],DD=[[-1,-1],[-1,1],[1,-1],[1,1]];
+   for(let s=0;s<64;s++){const r=s>>3,f=s&7,L=v=>Int8Array.from(v.filter(([a,b])=>ok(r+a,f+b)).map(([a,b])=>(r+a)*8+f+b));
+     KN[s]=L([[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]]);KG[s]=L(OD.concat(DD));DS[s]=L(DD);OS[s]=L(OD);
+     PAF[0][s]=L([[1,-1],[1,1]]);PAF[1][s]=L([[-1,-1],[-1,1]]); // de onde um peão branco (preto) ataca s
+     OD.concat(DD).forEach(([a,b],d)=>{const x=[];for(let rr=r+a,ff=f+b;ok(rr,ff);rr+=a,ff+=b)x.push(rr*8+ff);RAY[s*8+d]=Int8Array.from(x);});
+     CD[s]=Math.max(3-r,r-4)+Math.max(3-f,f-4);
+     for(let t=0;t<64;t++)DIST[s*64+t]=Math.max(Math.abs(r-(t>>3)),Math.abs(f-(t&7)));}}
+  const DSL=new Uint8Array(32),OSL=new Uint8Array(32); // deslizam na diagonal (bispo, dama, papa) e na ortogonal (torre, dama, paladino, ministro)
+  for(const c of[0,16]){DSL[BIS|c]=DSL[QUE|c]=DSL[PAP|c]=1;OSL[ROO|c]=OSL[QUE|c]=OSL[PAL|c]=OSL[MIN|c]=1;}
+  const CRM=new Uint8Array(64).fill(15),CRC=new Uint8Array(64).fill(15); // direitos de roque que ficam quando um lance toca a casa
+  CRM[63]=CRC[63]=14;CRM[56]=CRC[56]=13;CRM[7]=CRC[7]=11;CRM[0]=CRC[0]=7;CRM[60]=12;CRM[4]=3;
 
-  function qs(s,alpha,beta,ply){
-    tick();if(stopped)return 0;
-    const stand=evaluate(s);if(stand>=beta)return stand;if(stand>alpha)alpha=stand;
-    if(ply>40)return stand;
-    const ms=order(s,gen(s).filter(m=>(m.cap&&!m.self)||m.promo),ply);
-    for(const m of ms){const n=child(s,m);if(!n)continue;
-      const sc=-qs(n,-beta,-alpha,ply+1);if(stopped)return 0;
-      if(sc>=beta)return sc;if(sc>alpha)alpha=sc;}
-    return alpha;
+  // ---------- hash Zobrist (dois inteiros de 32 bits) ----------
+  let seed=0x2545F491;const rnd=()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return seed|0;};
+  const zt=n=>{const a=new Int32Array(n);for(let i=0;i<n;i++)a[i]=rnd();return a;};
+  const ZL=zt(2048),ZH=zt(2048),ZCL=zt(16),ZCH=zt(16),ZEL=zt(64),ZEH=zt(64),ZTL=zt(64),ZTH=zt(64),ZAL=zt(64),ZAH=zt(64),ZUL=zt(16),ZUH=zt(16);
+  const ZSL=rnd(),ZSH=rnd();
+
+  // ---------- avaliação: tabelas de casas (casa 0 = a8, vista das brancas), [meio-jogo, final] ----------
+  const PST={
+    p:[[0,0,0,0,0,0,0,0,96,132,61,95,66,125,35,-13,-7,14,29,34,67,57,28,-15,-16,15,8,23,47,25,20,-13,-20,-7,0,18,16,19,10,-20,-27,-11,-7,-5,-3,5,32,-10,-30,-8,-18,-29,-22,4,32,-25,0,0,0,0,0,0,0,0],
+       [0,0,0,0,0,0,0,0,176,174,161,136,144,126,166,176,101,95,86,67,56,50,85,78,28,26,12,3,-4,1,20,12,9,1,1,-10,-9,-25,3,-1,17,0,2,15,3,8,-7,-7,18,24,17,9,12,9,11,-13,0,0,0,0,0,0,0,0]],
+    n:[[-168,-89,-34,-48,59,-97,-15,-106,-71,-40,68,35,20,63,1,-17,-46,60,39,65,86,128,75,45,4,13,30,55,24,72,30,34,-15,7,13,22,30,28,19,-10,-28,-5,9,15,27,5,20,-14,-30,-55,-15,6,5,18,-16,-19,-104,-18,-58,-31,-19,-25,-14,-22],
+       [-58,-38,-13,-27,-33,-27,-62,-99,-24,-8,-26,-2,-10,-28,-28,-53,-22,-19,16,8,-2,-10,-21,-40,-12,2,24,19,22,13,7,-14,-18,-3,14,24,19,22,7,-20,-23,0,-1,23,13,-9,-23,-22,-42,-21,-12,-1,-2,-18,-22,-43,-29,-50,-22,-12,-20,-19,-52,-62]],
+    b:[[-28,6,-83,-38,-25,-41,7,-8,-27,15,-19,-15,29,59,16,-42,-15,35,41,38,34,47,35,5,-10,14,16,42,33,39,3,2,-4,5,3,20,36,1,8,1,-3,28,12,19,15,18,16,15,8,25,24,-9,9,22,32,11,-26,-1,-10,-13,-10,-8,-39,-20],
+       [-12,-15,-10,-10,-7,-5,-17,-23,-7,-4,6,-13,-3,-12,-9,-13,3,-7,0,-4,-6,7,-6,2,-6,14,7,9,13,7,-1,3,-2,-3,13,17,8,11,-2,-14,-15,-1,9,14,14,-2,-9,-10,-15,-11,-5,-3,7,-11,-9,-24,-20,-8,-16,3,-12,-8,-5,-15]],
+    r:[[31,41,29,51,62,9,31,43,26,36,57,63,80,67,27,42,-2,20,28,37,18,45,63,16,-27,-9,4,25,24,33,-7,-20,-38,-24,-15,-4,9,-6,7,-27,-44,-29,-21,-10,2,2,-4,-36,-45,-19,-21,-3,-5,14,-4,-69,-16,-9,4,8,14,5,-29,-23],
+       [17,7,14,16,9,14,6,5,17,19,11,13,-3,2,11,3,13,7,6,7,3,-1,-1,-3,6,5,9,-2,0,2,1,1,4,10,6,-1,-8,-4,-7,-13,-3,2,-2,1,-9,-13,-8,-16,-6,-7,3,7,-12,-7,-11,-4,1,2,0,-13,3,-3,9,-23]],
+    q:[[-28,-2,29,11,59,46,43,46,-24,-40,-2,2,-15,55,31,55,-16,-18,6,8,28,59,47,60,-19,-25,-19,-16,-1,15,2,2,-11,-28,-8,-12,-9,-8,10,-1,-13,4,-4,-5,-6,8,19,5,-34,-6,6,-2,8,8,-3,-3,-3,-26,-9,9,-21,-24,-32,-50],
+       [-10,21,22,27,27,20,9,21,-16,19,33,41,59,25,32,0,-22,6,8,49,48,37,20,10,4,24,25,47,59,40,60,37,-19,27,19,45,29,32,39,23,-16,-30,15,5,8,17,10,5,-21,-23,-33,-16,-18,-25,-39,-33,-34,-29,-21,-41,-8,-32,-20,-41]],
+    k:[[-65,23,16,-15,-56,-34,2,13,29,-1,-20,-7,-8,-4,-38,-29,-9,24,2,-16,-20,7,22,-22,-17,-20,-12,-27,-29,-25,-14,-36,-50,-1,-25,-39,-47,-44,-34,-46,-15,-16,-23,-48,-44,-32,-16,-28,6,3,-13,-69,-40,-7,11,12,-13,38,19,-56,7,-30,14,12],
+       [-74,-35,-18,-18,-11,15,3,-17,-13,17,16,17,18,38,24,11,11,18,23,18,20,48,45,14,-9,24,24,26,29,34,27,5,-19,-2,26,25,20,25,4,-9,-21,-5,11,19,22,6,0,-11,-22,-14,-1,6,19,2,2,-14,-50,-33,-17,-13,-34,-8,-24,-45]]};
+  // peças novas: paladino = torre + cavalo; ministro = torre que também dá um passo na diagonal; papa = bispo com passo reto
+  const mix=(a,x,b,y)=>[0,1].map(g=>a[g].map((v,i)=>Math.round(v*x+b[g][i]*y)));
+  PST.l=mix(PST.r,.5,PST.n,.5);PST.m=mix(PST.r,1,PST.n,.25);PST.a=mix(PST.b,1,PST.n,.25);
+  const VMG=[0,91,349,367,478,1024,0,929,651,623],VEG=[0,98,287,302,520,935,0,879,711,549],PHV=[0,0,1,1,2,4,0,4,3,3];
+  const MG=new Int32Array(2048),EG=new Int32Array(2048),PH=new Int8Array(32);
+  for(let t=1;t<=9;t++){const T=PST[LET[t]];PH[t]=PH[t|16]=PHV[t];
+    for(let s=0;s<64;s++){MG[t*64+s]=VMG[t]+T[0][s];EG[t*64+s]=VEG[t]+T[1][s];MG[(t|16)*64+s]=-(VMG[t]+T[0][s^56]);EG[(t|16)*64+s]=-(VEG[t]+T[1][s^56]);}}
+  const SV=[0,100,320,330,500,900,20000,880,680,600]; // valores para trocas e ordenação
+  const NPV=[0,0,300,300,500,900,0,880,700,600];      // material sem peões, para finais
+  // mobilidade por casa (meio-jogo, final) e o número de casas que vale zero; peso de cada peça no ataque ao rei
+  const MOBM=[0,0,5,4,4,1,0,2,2,3],MOBE=[0,0,4,2,4,7,0,3,4,4],MOBC=[0,0,4,6,6,12,0,9,8,8],KAW=[0,0,2,2,3,5,0,5,4,2];
+  const PPM=[0,0,-1,9,18,31,43],PPE=[0,4,9,19,34,55,82],PKE=[0,-7,-7,7,8,10,14],PKO=[0,3,0,-1,4,3,23]; // peão passado por fileira (2ª a 7ª); distância dos reis
+  const DBL=[-13,-14],ISO=[-11,-13],ROPEN=[26,8],RSEMI=[12,8],SH=[15,7,-9],BP=[27,53],KSW=3.99,TEMPO=17;
+
+  // ---------- estado do tabuleiro ----------
+  const bd=new Int8Array(64),cnt=new Int8Array(32),ksq=new Int8Array(2);
+  let side=0,cr=0,ep=-1,half=0,lkTo=-1,lkPa=-1,pu=0,rL=0,rH=0,mgS=0,egS=0,phS=0,tot=0;
+  // desfazer: valores salvos por nível e registro das casas alteradas
+  const US=256,U_cr=new Int8Array(US),U_ep=new Int8Array(US),U_hf=new Int16Array(US),U_lt=new Int8Array(US),U_lp=new Int8Array(US),U_pu=new Int8Array(US),
+    U_rL=new Int32Array(US),U_rH=new Int32Array(US),U_mg=new Int32Array(US),U_eg=new Int32Array(US),U_ph=new Int16Array(US),U_k0=new Int8Array(US),U_k1=new Int8Array(US),U_ch=new Int32Array(US);
+  const CHS=new Int8Array(4096),CHP=new Int8Array(4096);let chn=0,sp=0;
+  function put(p,s){bd[s]=p;cnt[p]++;const k=p*64+s;rL^=ZL[k];rH^=ZH[k];mgS+=MG[k];egS+=EG[k];phS+=PH[p];if((p&15)!==KIN)tot++;}
+  function take(s){const p=bd[s];bd[s]=0;cnt[p]--;const k=p*64+s;rL^=ZL[k];rH^=ZH[k];mgS-=MG[k];egS-=EG[k];phS-=PH[p];if((p&15)!==KIN)tot--;}
+  function set(s,p){CHS[chn]=s;CHP[chn]=bd[s];chn++;if(bd[s])take(s);if(p)put(p,s);}
+  function save(){U_cr[sp]=cr;U_ep[sp]=ep;U_hf[sp]=half;U_lt[sp]=lkTo;U_lp[sp]=lkPa;U_pu[sp]=pu;U_rL[sp]=rL;U_rH[sp]=rH;U_mg[sp]=mgS;U_eg[sp]=egS;U_ph[sp]=phS;U_k0[sp]=ksq[0];U_k1[sp]=ksq[1];U_ch[sp]=chn;sp++;rL^=ZSL;rH^=ZSH;}
+  // faz o lance (mesmo efeito de RULES.apply)
+  function make(m){
+    const from=m&63,to=(m>>6)&63,us=side;save();side=us^1;
+    if(m&F_CONV){set(to,(bd[to]&15)|(us<<4));cr&=CRC[to];ep=-1;half=0;lkTo=to;lkPa=from;return;} // o Papa converte e fica no lugar
+    const p=bd[from],pr=(m>>12)&15;let cap=bd[to]; // cap pode ser peça própria: o rei comendo a sua
+    if(m&F_EP){const cs=to+(us?-8:8);cap=bd[cs];set(cs,0);}
+    set(from,0);set(to,pr?pr|(us<<4):p);
+    if(m&F_CAS){const rf=to>from?from+3:from-4,rt=to>from?from+1:from-1;set(rt,bd[rf]);set(rf,0);}
+    if((p&15)===KIN)ksq[us]=to;
+    cr&=CRM[from]&CRM[to];
+    // capturou logo a peça recém-convertida: o Papa que converteu morre junto
+    if(lkTo>=0&&cap&&to===lkTo){const pp=bd[lkPa];if(pp&&(pp&15)===PAP&&(pp>>4)!==us)set(lkPa,0);}
+    if(pr===MIN)pu|=us?4:1;else if(pr===PAP)pu|=us?8:2;
+    half=((p&15)===PAW||cap)?0:half+1;ep=(m&F_DBL)?(from+to)>>1:-1;lkTo=lkPa=-1;
   }
-  function search(s,depth,alpha,beta,ply){
-    if(ply>0){ if(s.half>=150)return 0;
-      // repetição: é empate se a posição já apareceu nesta linha da busca, ou se já apareceu duas vezes na partida
-      // (seria a terceira, e aí dá para reivindicar). Uma vez só na partida não é empate: quem está ganhando sai da repetição.
-      const k=key(s);if(path.includes(k)||(hist.get(k)||0)>=2)return 0; }
-    const chk=attacked(s.b,kingSq(s.b,s.turn),other(s.turn));
-    if(chk&&ply<30)depth++;
-    if(depth<=0)return qs(s,alpha,beta,ply);
-    tick();if(stopped)return 0;
-    path.push(key(s));
-    let best=-Infinity,legal=0;
-    for(const m of order(s,gen(s),ply)){const n=child(s,m);if(!n)continue;legal++;
-      const sc=-search(n,depth-1,-beta,-alpha,ply+1);if(stopped){path.pop();return 0;}
-      if(sc>best)best=sc;if(sc>alpha)alpha=sc;
-      if(alpha>=beta){if(!m.cap&&!m.promo)killers[ply]=[m.from,m.to];break;}}
-    path.pop();
-    if(!legal)return chk?-MATE+ply:0;
+  function makeNull(){save();side^=1;ep=-1;lkTo=lkPa=-1;half++;}
+  function unmake(){
+    sp--;
+    for(let i=chn-1,e=U_ch[sp];i>=e;i--){const s=CHS[i],c=bd[s],o=CHP[i];if(c){cnt[c]--;if((c&15)!==KIN)tot--;}bd[s]=o;if(o){cnt[o]++;if((o&15)!==KIN)tot++;}}
+    chn=U_ch[sp];cr=U_cr[sp];ep=U_ep[sp];half=U_hf[sp];lkTo=U_lt[sp];lkPa=U_lp[sp];pu=U_pu[sp];rL=U_rL[sp];rH=U_rH[sp];
+    mgS=U_mg[sp];egS=U_eg[sp];phS=U_ph[sp];ksq[0]=U_k0[sp];ksq[1]=U_k1[sp];side^=1;
+  }
+  const hashL=()=>rL^ZCL[cr]^(ep>=0?ZEL[ep]:0)^(lkTo>=0?ZTL[lkTo]^ZAL[lkPa]:0)^ZUL[pu];
+  const hashH=()=>rH^ZCH[cr]^(ep>=0?ZEH[ep]:0)^(lkTo>=0?ZTH[lkTo]^ZAH[lkPa]:0)^ZUH[pu];
+  function load(s){
+    bd.fill(0);cnt.fill(0);rL=rH=mgS=egS=phS=tot=0;chn=sp=0;ksq[0]=ksq[1]=-1;
+    for(let i=0;i<64;i++){const ch=s.b[i];if(!ch)continue;const t=TIPO[ch.toLowerCase()];if(!t)continue;
+      const p=t|(ch===ch.toUpperCase()?0:16);put(p,i);if(t===KIN)ksq[p>>4]=i;}
+    side=s.turn==='w'?0:1;if(side){rL^=ZSL;rH^=ZSH;}
+    cr=(s.cr.K?1:0)|(s.cr.Q?2:0)|(s.cr.k?4:0)|(s.cr.q?8:0);ep=s.ep>=0?s.ep:-1;half=s.half||0;
+    lkTo=s.link?s.link.to:-1;lkPa=s.link?s.link.papa:-1;
+    const u=s.pu||'';pu=(u.includes('wm')?1:0)|(u.includes('wa')?2:0)|(u.includes('bm')?4:0)|(u.includes('ba')?8:0);
+  }
+
+  // ---------- ataques e geração de lances ----------
+  function attacked(s,c){ // a casa s é atacada pela cor c? (a mesma lógica de RULES.attacked)
+    const o=c<<4;let a=PAF[c][s];for(let i=0;i<a.length;i++)if(bd[a[i]]===(PAW|o))return true;
+    a=KN[s];for(let i=0;i<a.length;i++){const p=bd[a[i]];if(p===(KNI|o)||p===(PAL|o))return true;}
+    a=KG[s];for(let i=0;i<a.length;i++)if(bd[a[i]]===(KIN|o))return true;
+    a=DS[s];for(let i=0;i<a.length;i++)if(bd[a[i]]===(MIN|o))return true; // passo diagonal do Ministro
+    a=OS[s];for(let i=0;i<a.length;i++)if(bd[a[i]]===(PAP|o))return true; // passo do Papa
+    for(let d=0;d<8;d++){const ray=RAY[s*8+d],T=d<4?OSL:DSL;for(let i=0;i<ray.length;i++){const p=bd[ray[i]];if(p){if((p>>4)===c&&T[p])return true;break;}}}
+    return false;
+  }
+  const MV=new Int32Array(MAXP*MB),MS=new Int32Array(MAXP*MB);
+  function promos(s,t,fl,n,qs){ // promoção: paladino, ministro e papa (uma vez cada por lado), torre, bispo, cavalo; nunca dama
+    const m=s|t<<6|fl,o=side<<4;MV[n++]=m|PAL<<12;if(qs)return n;
+    if(!(pu&(side?4:1))&&!cnt[MIN|o])MV[n++]=m|MIN<<12;
+    if(!(pu&(side?8:2))&&!cnt[PAP|o])MV[n++]=m|PAP<<12;
+    MV[n++]=m|ROO<<12;MV[n++]=m|BIS<<12;MV[n++]=m|KNI<<12;return n;
+  }
+  function slide(s,d0,d1,n,qs,us){
+    for(let d=d0;d<d1;d++){const ray=RAY[s*8+d];for(let i=0;i<ray.length;i++){const t=ray[i],q=bd[t];
+      if(!q){if(!qs)MV[n++]=s|t<<6;}else{if((q>>4)!==us)MV[n++]=s|t<<6|F_CAP;break;}}}
+    return n;
+  }
+  function steps(a,s,n,qs,us){for(let i=0;i<a.length;i++){const t=a[i],q=bd[t];if(!q){if(!qs)MV[n++]=s|t<<6;}else if((q>>4)!==us)MV[n++]=s|t<<6|F_CAP;}return n;}
+  // o Papa não converte rei nem Papa, nem Ministro se o seu lado já tiver um
+  const conv=(q,o)=>{const t=q&15;return t!==KIN&&t!==PAP&&!(t===MIN&&cnt[MIN|o]);};
+  // gera os lances da vez em MV a partir de n; qs: só capturas, conversões e promoção a paladino (sem comer peça própria)
+  function gen(n,qs){
+    const us=side,o=us<<4;
+    for(let s=0;s<64;s++){const p=bd[s];if(!p||(p>>4)!==us)continue;
+      switch(p&15){
+        case PAW:{const dir=us?8:-8,t1=s+dir,last=(t1>>3)===(us?7:0),f=s&7;
+          if(!bd[t1]){if(last)n=promos(s,t1,0,n,qs);else if(!qs){MV[n++]=s|t1<<6;if((s>>3)===(us?1:6)&&!bd[t1+dir])MV[n++]=s|(t1+dir)<<6|F_DBL;}}
+          if(f>0){const t=t1-1,q=bd[t];if(q&&(q>>4)!==us){if(last)n=promos(s,t,F_CAP,n,qs);else MV[n++]=s|t<<6|F_CAP;}else if(t===ep&&!q)MV[n++]=s|t<<6|F_CAP|F_EP;}
+          if(f<7){const t=t1+1,q=bd[t];if(q&&(q>>4)!==us){if(last)n=promos(s,t,F_CAP,n,qs);else MV[n++]=s|t<<6|F_CAP;}else if(t===ep&&!q)MV[n++]=s|t<<6|F_CAP|F_EP;}
+          break;}
+        case KNI:n=steps(KN[s],s,n,qs,us);break;
+        case BIS:n=slide(s,4,8,n,qs,us);break;
+        case ROO:n=slide(s,0,4,n,qs,us);break;
+        case QUE:n=slide(s,0,8,n,qs,us);break;
+        case PAL:n=steps(KN[s],s,n,qs,us);n=slide(s,0,4,n,qs,us);break;
+        case MIN:n=slide(s,0,4,n,qs,us);n=steps(DS[s],s,n,qs,us);break;
+        case PAP:{
+          for(let d=4;d<8;d++){const ray=RAY[s*8+d];for(let i=0;i<ray.length;i++){const t=ray[i],q=bd[t];
+            if(!q){if(!qs)MV[n++]=s|t<<6;}else{if((q>>4)!==us&&conv(q,o))MV[n++]=s|t<<6|F_CAP|F_CONV;break;}}}
+          const a=OS[s];for(let i=0;i<a.length;i++){const t=a[i],q=bd[t];if(!q){if(!qs)MV[n++]=s|t<<6;}else if((q>>4)!==us&&conv(q,o))MV[n++]=s|t<<6|F_CAP|F_CONV;}
+          break;}
+        case KIN:{const a=KG[s];
+          for(let i=0;i<a.length;i++){const t=a[i],q=bd[t];if(!q){if(!qs)MV[n++]=s|t<<6;}else if((q>>4)!==us)MV[n++]=s|t<<6|F_CAP;else if(!qs)MV[n++]=s|t<<6|F_CAP|F_SELF;}
+          if(qs)break;
+          if(us===0&&s===60){
+            if((cr&1)&&!bd[61]&&!bd[62]&&bd[63]===ROO&&!attacked(60,1)&&!attacked(61,1)&&!attacked(62,1))MV[n++]=60|62<<6|F_CAS;
+            if((cr&2)&&!bd[59]&&!bd[58]&&!bd[57]&&bd[56]===ROO&&!attacked(60,1)&&!attacked(59,1)&&!attacked(58,1))MV[n++]=60|58<<6|F_CAS;}
+          if(us===1&&s===4){
+            if((cr&4)&&!bd[5]&&!bd[6]&&bd[7]===(ROO|16)&&!attacked(4,0)&&!attacked(5,0)&&!attacked(6,0))MV[n++]=4|6<<6|F_CAS;
+            if((cr&8)&&!bd[3]&&!bd[2]&&!bd[1]&&bd[0]===(ROO|16)&&!attacked(4,0)&&!attacked(3,0)&&!attacked(2,0))MV[n++]=4|2<<6|F_CAS;}
+          break;}
+      }}
+    return n;
+  }
+  // faz o lance se for legal (a peça própria que o rei come não pode estar ameaçada; o próprio rei não pode ficar em xeque)
+  function tryMake(m){
+    const us=side;if((m&F_SELF)&&attacked((m>>6)&63,us^1))return false;
+    make(m);if(attacked(ksq[us],us^1)){unmake();return false;}return true;
+  }
+
+  // ---------- troca estática (SEE): o Papa fica de fora, porque ele converte em vez de capturar ----------
+  const SW=new Int32Array(40),SES=new Int8Array(40),SEP=new Int8Array(40);
+  function lva(t,c){ // casa da peça de menor valor da cor c que captura em t (-1 se nenhuma)
+    const o=c<<4;let a=PAF[c][t];for(let i=0;i<a.length;i++)if(bd[a[i]]===(PAW|o))return a[i];
+    a=KN[t];for(let i=0;i<a.length;i++)if(bd[a[i]]===(KNI|o))return a[i];
+    let best=-1,bv=1e9;
+    for(let i=0;i<a.length;i++)if(bd[a[i]]===(PAL|o)&&SV[PAL]<bv){bv=SV[PAL];best=a[i];}
+    for(let d=0;d<8;d++){const ray=RAY[t*8+d];for(let i=0;i<ray.length;i++){const p=bd[ray[i]];if(!p)continue;
+      if((p>>4)===c){const tp=p&15;
+        if((d<4?(tp===ROO||tp===QUE||tp===PAL||tp===MIN):(tp===BIS||tp===QUE))||(i===0&&(tp===KIN||(d>=4&&tp===MIN)))){if(SV[tp]<bv){bv=SV[tp];best=ray[i];}}}
+      break;}}
     return best;
   }
-  // o: {maxDepth, timeMs, noise, randomPct, history:[chaves já vistas na partida]}
-  function think(s,o){
-    nodes=0;stopped=false;canStop=false;killers=[];path=[];hist=new Map();for(const k of o.history||[])hist.set(k,(hist.get(k)||0)+1);
-    deadline=Date.now()+o.timeMs;
-    let root=gen(s).map(m=>({m,n:child(s,m)})).filter(x=>x.n);
-    if(o.exclude)root=root.filter(x=>!(x.m.from===o.exclude.from&&x.m.to===o.exclude.to&&(x.m.promo||'')===(o.exclude.promo||'')));
-    if(!root.length)return null;
-    if(o.randomPct&&Math.random()<o.randomPct){const x=root[Math.random()*root.length|0];return{m:x.m,score:0,depth:0,nodes};}
-    const exact=o.noise>0; // com ruído, cada lance da raiz recebe nota exata para poder sortear entre eles
-    for(const x of root)x.o=mscore(s,x.m,0);root.sort((a,b)=>b.o-a.o);
-    let done=null,depthDone=0;
-    for(let d=1;d<=o.maxDepth;d++){
-      let alpha=-Infinity;
-      for(const x of root){
-        const sc=-search(x.n,d-1,-Infinity,exact?Infinity:-alpha,1);
-        if(stopped)break;x.s=sc;if(sc>alpha)alpha=sc;}
-      if(stopped)break;
-      root.sort((a,b)=>b.s-a.s);done=root.map(x=>({m:x.m,s:x.s}));depthDone=d;
-      canStop=true;
-      if(Math.abs(root[0].s)>MATE-1000)break; // mate encontrado
-      if(Date.now()>deadline)break;
-    }
-    let pick=done[0];
-    if(o.noise>0){let bestV=-Infinity;for(const x of done){if(Math.abs(x.s)>MATE-1000){ if(x.s>0){pick=x;break;} else continue;}
-        const v=x.s+(Math.random()*2-1)*o.noise;if(v>bestV){bestV=v;pick=x;}}}
-    return {m:pick.m,score:pick.s,depth:depthDone,nodes};
+  function see(m){
+    const from=m&63,to=(m>>6)&63,pr=(m>>12)&15;let n=0,d=0,c=side^1;
+    SW[0]=((m&F_EP)?SV[PAW]:SV[bd[to]&15])+(pr?SV[pr]-SV[PAW]:0);let av=pr?SV[pr]:SV[bd[from]&15];
+    SES[n]=from;SEP[n++]=bd[from];bd[from]=0;
+    if(m&F_EP){const cs=to+(side?-8:8);SES[n]=cs;SEP[n++]=bd[cs];bd[cs]=0;}
+    for(;;){d++;SW[d]=av-SW[d-1];if(Math.max(-SW[d-1],SW[d])<0)break;
+      const s=lva(to,c);if(s<0)break;av=SV[bd[s]&15];SES[n]=s;SEP[n++]=bd[s];bd[s]=0;c^=1;}
+    while(--d)SW[d-1]=-Math.max(-SW[d-1],SW[d]);
+    while(n--)bd[SES[n]]=SEP[n];
+    return SW[0];
   }
-  return {think,evaluate};
+  // conversão: ganha a peça (vale o dobro); se ela estiver defendida, o adversário a captura e leva o Papa junto
+  const convGain=m=>{const t=(m>>6)&63,v=SV[bd[t]&15];return attacked(t,side^1)?v-SV[PAP]:2*v;};
+
+  // ---------- avaliação ----------
+  function insuf(){ // material insuficiente (a mesma regra que encerra a partida)
+    if(!tot)return true;
+    const nb=cnt[BIS]+cnt[BIS|16];
+    if(tot===1)return nb+cnt[KNI]+cnt[KNI|16]===1;
+    if(nb!==tot)return false;
+    let cor=0;for(let s=0;s<64;s++)if((bd[s]&15)===BIS)cor|=((s>>3)+(s&7))&1?2:1;
+    return cor!==3;
+  }
+  const wMax=new Int8Array(10),bMin=new Int8Array(10),pfW=new Int8Array(10),pfB=new Int8Array(10),paW=new Uint8Array(64),paB=new Uint8Array(64);
+  // cache da avaliação (a quiescência passa muitas vezes pelas mesmas posições)
+  const EC=1<<16,ecL=new Int32Array(EC),ecH=new Int32Array(EC),ecV=new Int32Array(EC);
+  const npm=c=>{const o=c<<4;let v=0;for(let t=2;t<=9;t++)if(t!==KIN)v+=cnt[t|o]*NPV[t];return v;};
+  function shield(k,c){ // escudo de peões na frente do rei que ainda está na primeira ou segunda fileira
+    const r=k>>3,f=k&7;if(c?r>1:r<6)return 0;
+    const dr=c?8:-8,pp=PAW|(c<<4);let sc=0;
+    for(let ff=f-1;ff<=f+1;ff++){if(ff<0||ff>7)continue;const s1=k+dr+ff-f;sc+=bd[s1]===pp?SH[0]:bd[s1+dr]===pp?SH[1]:SH[2];}
+    return sc;
+  }
+  function evaluate(){
+    const hl=hashL(),hh=hashH(),ei=hl&(EC-1);
+    if(ecL[ei]===hl&&ecH[ei]===hh)return ecV[ei];
+    const v=evalFull();ecL[ei]=hl;ecH[ei]=hh;ecV[ei]=v;return v;
+  }
+  function evalFull(){
+    if(tot<=1||cnt[BIS]+cnt[BIS|16]===tot){if(insuf())return 0;}
+    let mg=mgS,eg=egS;
+    wMax.fill(-1);bMin.fill(8);pfW.fill(0);pfB.fill(0);paW.fill(0);paB.fill(0);
+    for(let s=8;s<56;s++){const p=bd[s];
+      if(p===PAW){const f=s&7;pfW[f+1]++;if((s>>3)>wMax[f+1])wMax[f+1]=s>>3;if(f>0)paW[s-9]=1;if(f<7)paW[s-7]=1;}
+      else if(p===(PAW|16)){const f=s&7;pfB[f+1]++;if((s>>3)<bMin[f+1])bMin[f+1]=s>>3;if(f>0)paB[s+7]=1;if(f<7)paB[s+9]=1;}}
+    const wk=ksq[0],bk=ksq[1];let aw=0,an=0,bw=0,bn=0,bc0=0,bc1=0;
+    for(let s=0;s<64;s++){const p=bd[s];if(!p)continue;const t=p&15;if(t===KIN)continue;
+      const c=p>>4,f=(s&7)+1,r=s>>3;
+      if(t===PAW){
+        if(c===0){
+          if(pfW[f]>1){mg+=DBL[0];eg+=DBL[1];}
+          if(!pfW[f-1]&&!pfW[f+1]){mg+=ISO[0];eg+=ISO[1];}
+          if(bMin[f-1]>=r&&bMin[f]>=r&&bMin[f+1]>=r){const k=7-r,fr=s-8;mg+=PPM[k];eg+=PPE[k]+DIST[fr*64+bk]*PKE[k]-DIST[fr*64+wk]*PKO[k];}
+        }else{
+          if(pfB[f]>1){mg-=DBL[0];eg-=DBL[1];}
+          if(!pfB[f-1]&&!pfB[f+1]){mg-=ISO[0];eg-=ISO[1];}
+          if(wMax[f-1]<=r&&wMax[f]<=r&&wMax[f+1]<=r){const k=r,fr=s+8;mg-=PPM[k];eg-=PPE[k]+DIST[fr*64+wk]*PKE[k]-DIST[fr*64+bk]*PKO[k];}
+        }
+        continue;}
+      // peças: mobilidade (casas livres ou com peça inimiga, fora do alcance de peões inimigos) e ataques perto do rei inimigo
+      const ek=c?wk:bk,pa=c?paW:paB,ed=ek*64;let mob=0,ka=0;
+      if(t===KNI||t===PAL){const a=KN[s];for(let i=0;i<a.length;i++){const x=a[i],q=bd[x];if(DIST[ed+x]<=1)ka++;if((!q||(q>>4)!==c)&&!pa[x])mob++;}}
+      if(t===BIS||t===QUE||t===PAP){for(let d=4;d<8;d++){const ray=RAY[s*8+d];for(let i=0;i<ray.length;i++){const x=ray[i],q=bd[x];if(DIST[ed+x]<=1)ka++;
+        if(q){if((q>>4)!==c)mob++;break;}if(!pa[x])mob++;}}}
+      if(t===ROO||t===QUE||t===PAL||t===MIN){for(let d=0;d<4;d++){const ray=RAY[s*8+d];for(let i=0;i<ray.length;i++){const x=ray[i],q=bd[x];if(DIST[ed+x]<=1)ka++;
+        if(q){if((q>>4)!==c)mob++;break;}if(!pa[x])mob++;}}
+        if(t!==QUE){const own=c?pfB:pfW,opp=c?pfW:pfB;if(!own[f]){const o2=opp[f]?RSEMI:ROPEN;if(c){mg-=o2[0];eg-=o2[1];}else{mg+=o2[0];eg+=o2[1];}}}}
+      if(t===MIN||t===PAP){const a=t===MIN?DS[s]:OS[s];for(let i=0;i<a.length;i++){const x=a[i],q=bd[x];if(DIST[ed+x]<=1)ka++;if((!q||(q>>4)!==c)&&!pa[x])mob++;}}
+      if(t===BIS){if(c)bc1|=(r+f-1)&1?2:1;else bc0|=(r+f-1)&1?2:1;}
+      const dm=MOBM[t]*(mob-MOBC[t]),de=MOBE[t]*(mob-MOBC[t]);
+      if(c===0){mg+=dm;eg+=de;if(ka){aw+=ka*KAW[t];an++;}}else{mg-=dm;eg-=de;if(ka){bw+=ka*KAW[t];bn++;}}
+    }
+    // segurança do rei: ataques de duas ou mais peças perto dele e escudo de peões
+    if(an>=2)mg+=Math.round(KSW*Math.min(500,(aw*aw)>>3));
+    if(bn>=2)mg-=Math.round(KSW*Math.min(500,(bw*bw)>>3));
+    mg+=shield(wk,0)-shield(bk,1);
+    if(cnt[BIS]>=2){mg+=BP[0];eg+=BP[1];}if(cnt[BIS|16]>=2){mg-=BP[0];eg-=BP[1];}
+    const ph=phS>24?24:phS;
+    let sc=((mg*ph+eg*(24-ph))/24)|0;
+    if(sc){ // finais difíceis de vencer
+      const st=sc>0?0:1,ns=npm(st),nw=npm(st^1);
+      if(!cnt[PAW|(st<<4)]){
+        if(ns-nw<=350)sc=(sc*(ns<500?1:4)/16)|0;                       // sem peões e pouca vantagem de material
+        else if(!nw&&cnt[KNI|(st<<4)]*300===ns&&!cnt[PAW|((st^1)<<4)])sc=(sc/16)|0; // só cavalos não dão mate forçado
+      }
+      if(ns===300&&nw===300&&cnt[BIS]===1&&cnt[BIS|16]===1&&bc0!==bc1)sc=(sc/2)|0; // bispos de cores opostas
+      // vantagem decisiva contra o rei sozinho: empurra o rei perdedor para a borda e aproxima o próprio rei
+      if(!nw&&!cnt[PAW|((st^1)<<4)]&&ns>=500){const lk=ksq[st^1],k2=ksq[st],b=CD[lk]*12+(7-DIST[lk*64+k2])*8;sc+=st?-b:b;}
+    }
+    return (side?-sc:sc)+TEMPO; // vantagem de ter a vez
+  }
+
+  // ---------- busca ----------
+  const TB=19,TN=1<<TB,TMK=TN-1,tK=new Int32Array(TN),tM=new Int32Array(TN),tS=new Int32Array(TN),tE=new Int16Array(TN),tD=new Int8Array(TN),tF=new Uint8Array(TN);
+  let age=0;
+  function ttStore(hl,hh,d,f,sc,m,ev,ply){
+    const i=hl&TMK;
+    if(tK[i]===hh&&tF[i]){if(!m)m=tM[i];if(d<tD[i]-2&&f!==3&&(tF[i]>>2)===age)return;}
+    else if(tF[i]&&(tF[i]>>2)===age&&tD[i]>d+3)return;
+    if(sc>MATE-1000)sc+=ply;else if(sc<-MATE+1000)sc-=ply;
+    tK[i]=hh;tM[i]=m;tS[i]=sc;tE[i]=ev>30000?30000:ev<-30000?-30000:ev;tD[i]=d;tF[i]=f|(age<<2);
+  }
+  const KIL=new Int32Array(MAXP*2),HIS=new Int32Array(8192),CMV=new Int32Array(4096),MSTK=new Int32Array(MAXP+1),QL=new Int32Array(MAXP*64),EVS=new Int32Array(MAXP);
+  const RLs=new Int32Array(MAXP),RHs=new Int32Array(MAXP),RB=new Int8Array(MAXP);
+  const LMR=new Int8Array(64*64);for(let d=1;d<64;d++)for(let i=1;i<64;i++)LMR[d*64+i]=Math.floor(.75+Math.log(d)*Math.log(i)/2.25);
+  const FUT=[0,130,240,350],LMP=[0,5,8,13,20];
+  // posições da partida (para repetição): tabela com contagem
+  const HSL=new Int32Array(1024),HSH=new Int32Array(1024),HSC=new Int16Array(1024);
+  function hsAdd(l,h){let i=l&1023;while(HSC[i]&&!(HSL[i]===l&&HSH[i]===h))i=(i+1)&1023;HSL[i]=l;HSH[i]=h;HSC[i]++;}
+  function hsGet(l,h){let i=l&1023;while(HSC[i]){if(HSL[i]===l&&HSH[i]===h)return HSC[i];i=(i+1)&1023;}return 0;}
+  // repetição: empate se a posição já apareceu nesta linha da busca, ou duas vezes na partida (seria a terceira)
+  function isRep(ply){
+    for(let j=ply-2;j>=RB[ply];j-=2)if(RLs[j]===rL&&RHs[j]===rH)return true;
+    return RB[ply]===1&&hsGet(rL,rH)>=2;
+  }
+  let nodes=0,deadline=0,stopped=false,canStop=false;
+  const tick=()=>{if((++nodes&1023)===0&&canStop&&Date.now()>=deadline)stopped=true;return stopped;};
+  const hasPieces=c=>{const o=c<<4;return cnt[KNI|o]+cnt[BIS|o]+cnt[ROO|o]+cnt[QUE|o]+cnt[PAL|o]+cnt[MIN|o]+cnt[PAP|o]>0;};
+  function hisUpd(m,b){const k=side*4096+(m&4095);HIS[k]+=b-((HIS[k]*Math.abs(b))>>14);}
+  // nota de cada lance para a ordem de busca
+  function order(b,e,ttm,ply){
+    const k1=KIL[2*ply],k2=KIL[2*ply+1],hb=side*4096,cm=ply?CMV[MSTK[ply]&4095]:0;
+    for(let i=b;i<e;i++){const m=MV[i];let s;
+      if(m===ttm)s=1e8;
+      else if(m&F_CONV){const g=convGain(m);s=g>=0?6e6+g*8:-1e6+g;}
+      else if(m&F_SELF)s=-4e6+HIS[hb+(m&4095)];                       // comer peça própria: por último
+      else if(m&F_CAP){const v=(m&F_EP)?100:SV[bd[(m>>6)&63]&15],a=SV[bd[m&63]&15];
+        s=6e6+v*8-(a>>4);if(a>v&&!(m&F_PRO)&&see(m)<0)s=-1e6+v*8-(a>>4);}    // capturas que perdem material vão depois dos lances tranquilos
+      else if(m&F_PRO)s=((m>>12)&15)===PAL?5.5e6:-3e6+SV[(m>>12)&15];      // promoção a paladino cedo; as outras no fim
+      else if(m===k1)s=5e6;else if(m===k2)s=4.9e6;else if(m===cm)s=4.8e6;
+      else s=HIS[hb+(m&4095)];
+      MS[i]=s;}
+  }
+  function pick(i,e){let bi=i,bs=MS[i];for(let j=i+1;j<e;j++)if(MS[j]>bs){bs=MS[j];bi=j;}
+    if(bi!==i){const t=MV[i];MV[i]=MV[bi];MV[bi]=t;MS[bi]=MS[i];MS[i]=bs;}return MV[i];}
+
+  function qs(al,be,ply,chk){
+    if(tick())return 0;
+    if(ply>=MAXP-1)return chk?0:evaluate();
+    const hl=hashL(),hh=hashH(),ti=hl&TMK,oal=al;let ttm=0;
+    if(tK[ti]===hh&&tF[ti]){ttm=tM[ti];let ts=tS[ti];if(ts>MATE-1000)ts-=ply;else if(ts<-MATE+1000)ts+=ply;const f=tF[ti]&3;
+      if(f===3||(f===2&&ts>=be)||(f===1&&ts<=al))return ts;}
+    let best,ev=0,bm=0;
+    if(chk)best=-MATE+ply;
+    else{ev=evaluate();if(ev>=be)return ev;if(ev>al)al=ev;best=ev;}
+    const b=ply*MB,e=gen(b,!chk),us=side;order(b,e,ttm,ply);
+    let legal=0;
+    for(let i=b;i<e;i++){const m=pick(i,e);
+      if(!chk){
+        if(MS[i]<0)break; // daqui em diante só trocas que perdem material
+        if(!(m&F_PRO)){const v=(m&F_EP)?100:SV[bd[(m>>6)&63]&15];if(ev+((m&F_CONV)?2*v:v)+200<=al)continue;} // nem ganhando a peça chega a alfa
+      }
+      if(!tryMake(m))continue;legal++;
+      MSTK[ply+1]=m;const sc=-qs(-be,-al,ply+1,attacked(ksq[side],us));
+      unmake();if(stopped)return 0;
+      if(sc>best){best=sc;bm=m;if(sc>al){al=sc;if(sc>=be)break;}}
+    }
+    if(chk&&!legal)return -MATE+ply;
+    ttStore(hl,hh,0,best>=be?2:best>oal?3:1,best,bm,chk?0:ev,ply);
+    return best;
+  }
+
+  function search(d,al,be,ply,pv,chk){
+    RLs[ply]=rL;RHs[ply]=rH;
+    if(ply){
+      if(half>=150||isRep(ply)||(tot<=2&&insuf()))return 0;
+      const ma=-MATE+ply,mb=MATE-ply-1;if(al<ma)al=ma;if(be>mb)be=mb;if(al>=be)return al;
+    }
+    if(chk&&ply<MAXP/2)d++; // xeque: busca um lance a mais
+    if(d<=0)return qs(al,be,ply,chk);
+    if(ply>=MAXP-2)return evaluate();
+    if(tick())return 0;
+    const hl=hashL(),hh=hashH(),ti=hl&TMK,hit=tK[ti]===hh&&tF[ti]!==0;let ttm=0;
+    if(hit){ttm=tM[ti];
+      if(!pv&&tD[ti]>=d){let ts=tS[ti];if(ts>MATE-1000)ts-=ply;else if(ts<-MATE+1000)ts+=ply;const f=tF[ti]&3;
+        if(f===3||(f===2&&ts>=be)||(f===1&&ts<=al))return ts;}}
+    const ev=chk?-INF:hit?tE[ti]:evaluate();EVS[ply]=ev;
+    const imp=!chk&&ply>=2&&ev>EVS[ply-2],us=side;
+    if(!pv&&!chk&&be<MATE-1000&&be>-MATE+1000){
+      if(d<=7&&ev-(imp?60:85)*d>=be)return ev;           // poda reversa de futilidade
+      if(d>=3&&ev>=be&&hasPieces(us)){                    // lance nulo: passar a vez e ainda assim ficar acima de beta
+        const r=3+(d>>2)+Math.min(3,((ev-be)/200)|0);
+        makeNull();RB[ply+1]=ply+1;MSTK[ply+1]=0;
+        const sc=-search(d-1-r,-be,-be+1,ply+1,false,false);
+        unmake();if(stopped)return 0;
+        if(sc>=be)return sc>=MATE-1000?be:sc;
+      }
+    }
+    if(!ttm&&d>=4)d--;
+    const b=ply*MB,e=gen(b,false);order(b,e,ttm,ply);
+    let best=-INF,bm=0,legal=0,nq=0,f=1;
+    for(let i=b;i<e;i++){
+      const m=pick(i,e);
+      if(!tryMake(m))continue;legal++;
+      const gc=attacked(ksq[side],us),quiet=!(m&(F_CONV|F_PRO))&&(!(m&F_CAP)||(m&F_SELF));
+      if(!pv&&!chk&&!gc&&quiet&&legal>1&&best>-MATE+1000){
+        if(d<=3&&ev+FUT[d]<=al){unmake();continue;}      // futilidade: nem com folga chega a alfa
+        if(d<=4&&nq>=LMP[d]+(imp?3:0)){unmake();continue;}  // lances tranquilos demais em profundidade baixa
+      }
+      if(quiet&&nq<64)QL[ply*64+nq++]=m;
+      RB[ply+1]=RB[ply];MSTK[ply+1]=m;
+      let sc;
+      if(legal===1)sc=-search(d-1,-be,-al,ply+1,pv,gc);
+      else{
+        let r=0;
+        if(d>=3&&quiet&&!chk&&!gc){r=LMR[(d<63?d:63)*64+(legal<63?legal:63)];if(pv)r--;if(m===KIL[2*ply]||m===KIL[2*ply+1])r--;if(!imp)r++;
+          r-=Math.max(-2,Math.min(2,(HIS[us*4096+(m&4095)]/6000)|0));
+          if(r<0)r=0;else if(r>d-2)r=d-2;}
+        sc=-search(d-1-r,-al-1,-al,ply+1,false,gc);
+        if(r>0&&sc>al)sc=-search(d-1,-al-1,-al,ply+1,false,gc);
+        if(pv&&sc>al&&sc<be)sc=-search(d-1,-be,-al,ply+1,true,gc);
+      }
+      unmake();if(stopped)return 0;
+      if(sc>best){best=sc;bm=m;
+        if(sc>al){al=sc;f=3;
+          if(sc>=be){f=2;
+            if(quiet){if(KIL[2*ply]!==m){KIL[2*ply+1]=KIL[2*ply];KIL[2*ply]=m;}if(ply)CMV[MSTK[ply]&4095]=m;
+              const bo=Math.min(d*d,1200);hisUpd(m,bo);for(let j=0;j<nq-1;j++)hisUpd(QL[ply*64+j],-bo);}
+            break;}}}
+    }
+    if(!legal)return chk?-MATE+ply:0;
+    ttStore(hl,hh,d,f,best,bm,chk?0:ev,ply);
+    return best;
+  }
+
+  // ---------- raiz ----------
+  const RM=new Int32Array(MB),RS=new Int32Array(MB),RN=new Float64Array(MB);let RC=0;
+  const toPage=m=>{const pr=(m>>12)&15,o={from:m&63,to:(m>>6)&63};if(pr)o.promo=LET[pr];return o;};
+  const same=(m,x)=>x&&(m&63)===x.from&&((m>>6)&63)===x.to&&(((m>>12)&15)?LET[(m>>12)&15]:'')===(x.promo||'');
+  function keyHash(k){ // chave de posição da página (64 casas + vez) no hash de repetição
+    let l=0,h=0;for(let i=0;i<64;i++){const ch=k[i];if(ch==='.'||!ch)continue;const t=TIPO[ch.toLowerCase()];if(!t)continue;const x=(t|(ch===ch.toUpperCase()?0:16))*64+i;l^=ZL[x];h^=ZH[x];}
+    if(k[64]==='b'){l^=ZSL;h^=ZSH;}return [l,h];
+  }
+  function rootSearch(d,al,be,exact,it){
+    let best=-INF;
+    for(let k=0;k<RC;k++){
+      const m=RM[k],n0=nodes;make(m);const gc=attacked(ksq[side],side^1);RB[1]=1;MSTK[1]=m;
+      let sc;
+      if(exact)sc=-search(d-1,-INF,INF,1,true,gc);
+      else if(k===0)sc=-search(d-1,-be,-al,1,true,gc);
+      else{sc=-search(d-1,-al-1,-al,1,false,gc);if(sc>al&&sc<be)sc=-search(d-1,-be,-al,1,true,gc);}
+      unmake();if(stopped)break;
+      RN[k]+=nodes-n0;RS[k]=sc;
+      if(sc>best)best=sc;
+      if(!exact&&sc>al){
+        al=sc;it.m=m;it.s=sc;
+        if(k>0){for(let j=k;j>0;j--){RM[j]=RM[j-1];RS[j]=RS[j-1];RN[j]=RN[j-1];}RM[0]=m;RS[0]=sc;RN[0]=0;} // o novo melhor vai para a frente
+        if(sc>=be)break;
+      }
+    }
+    return best;
+  }
+  // o: {maxDepth, timeMs, noise, randomPct, history:[chaves já vistas na partida], exclude:{from,to,promo}}
+  function think(s,o){
+    load(s);nodes=0;stopped=false;canStop=false;deadline=Date.now()+o.timeMs;age=(age+1)&63;
+    // lances da raiz: os do motor, conferidos com os da página
+    const pg=R.allLegal(s);RC=0;
+    {const e=gen(0,false);for(let i=0;i<e;i++){const m=MV[i];if(o.exclude&&same(m,o.exclude))continue;
+      if(!pg.some(x=>same(m,x)))continue;if(!tryMake(m))continue;unmake();RM[RC]=m;RS[RC]=0;RN[RC]=0;RC++;}}
+    if(!RC){const x=pg.filter(x=>!(o.exclude&&x.from===o.exclude.from&&x.to===o.exclude.to&&(x.promo||'')===(o.exclude.promo||'')));
+      return x.length?{m:{from:x[0].from,to:x[0].to,promo:x[0].promo},score:0,depth:0,nodes:0}:null;}
+    if(o.randomPct&&Math.random()<o.randomPct)return{m:toPage(RM[Math.random()*RC|0]),score:0,depth:0,nodes};
+    HSC.fill(0);const H=o.history||[];for(let i=Math.max(0,H.length-400);i<H.length;i++){const[l,h]=keyHash(H[i]);hsAdd(l,h);}
+    KIL.fill(0);for(let i=0;i<HIS.length;i++)HIS[i]>>=2;
+    // ordem inicial: lance da tabela, capturas, depois o resto
+    {const hl=hashL(),hh=hashH(),ti=hl&TMK,ttm=tK[ti]===hh&&tF[ti]?tM[ti]:0;for(let i=0;i<RC;i++)MV[i]=RM[i];order(0,RC,ttm,0);
+      for(let i=0;i<RC;i++){pick(i,RC);RM[i]=MV[i];}}
+    const exact=o.noise>0; // com ruído, cada lance da raiz recebe nota exata para poder sortear entre eles
+    let bestM=RM[0],bestS=0,depthDone=0,prev=0,done=null;const it={m:0,s:0};
+    RLs[0]=rL;RHs[0]=rH;RB[0]=1;EVS[0]=evaluate();
+    for(let d=1;d<=o.maxDepth;d++){
+      it.m=0;for(let k=0;k<RC;k++)RN[k]=0;
+      let a=-INF,b=INF,delta=30,sc;
+      if(!exact&&d>=4&&Math.abs(prev)<MATE-1000){a=prev-delta;b=prev+delta;}
+      for(;;){
+        sc=rootSearch(d,a,b,exact,it);if(stopped)break;
+        if(sc<=a){b=(a+b)>>1;a=Math.max(-INF,sc-delta);}
+        else if(sc>=b)b=Math.min(INF,sc+delta);
+        else break;
+        delta+=delta;if(delta>600){a=-INF;b=INF;}
+      }
+      if(stopped){if(it.m&&!exact){bestM=it.m;bestS=it.s;}break;}
+      if(exact){const ix=[...Array(RC).keys()].sort((x,y)=>RS[y]-RS[x]);const m2=ix.map(i=>RM[i]),s2=ix.map(i=>RS[i]);for(let i=0;i<RC;i++){RM[i]=m2[i];RS[i]=s2[i];}}
+      else if(RC>2){const ix=[...Array(RC-1).keys()].map(i=>i+1).sort((x,y)=>RN[y]-RN[x]);const m2=ix.map(i=>RM[i]);for(let i=0;i<RC-1;i++)RM[i+1]=m2[i];}
+      bestM=RM[0];bestS=exact?RS[0]:sc;prev=bestS;depthDone=d;canStop=true;
+      done=[];for(let i=0;i<RC;i++)done.push({m:RM[i],s:RS[i]});
+      if(Math.abs(bestS)>MATE-1000&&MATE-Math.abs(bestS)<=d)break; // mate encontrado dentro do horizonte
+      if(Date.now()>deadline-o.timeMs*.45)break;  // a próxima iteração não terminaria a tempo
+    }
+    let pm=bestM,ps=bestS;
+    if(o.noise>0&&done){let bv=-Infinity;for(const x of done){if(Math.abs(x.s)>MATE-1000){if(x.s>0){pm=x.m;ps=x.s;break;}else continue;}
+      const v=x.s+(Math.random()*2-1)*o.noise;if(v>bv){bv=v;pm=x.m;ps=x.s;}}}
+    // a nota sai 10% maior: é a escala que mais se aproxima da do Stockfish em posições de partidas reais (barra e avaliação dos lances)
+    return {m:toPage(pm),score:Math.abs(ps)>MATE-1000?ps:Math.round(ps*1.1),depth:depthDone,nodes};
+  }
+  function perft(d,ply){if(!d)return 1;const b=ply*MB,e=gen(b,false);let n=0;for(let i=b;i<e;i++){const m=MV[i];if(!tryMake(m))continue;n+=perft(d-1,ply+1);unmake();}return n;}
+  return {think,evaluate:s=>{load(s);return evaluate();},
+    perft:(s,d)=>{load(s);return perft(d,0);},
+    legal:s=>{load(s);const e=gen(0,false),out=[];for(let i=0;i<e;i++){const m=MV[i];if(tryMake(m)){unmake();out.push(toPage(m));}}return out;}};
 }
 const sqName=i=>FILES[i&7]+(8-(i>>3));
 const WING=`<svg class="wing" viewBox="0 0 100 100" aria-hidden="true"><path class="wf" d="M14,88 C8,60 18,28 46,12 C62,4 82,2 98,8 C88,14 80,18 72,20 C84,22 92,26 96,32 C86,36 76,38 66,38 C78,42 86,48 88,54 C76,56 64,56 56,54 C64,60 70,66 70,72 C58,74 44,72 36,70 C38,76 34,84 14,88 Z"/><path class="wl" d="M28,66 C40,46 56,28 84,14 M34,68 C48,54 62,44 82,34 M40,70 C50,62 60,58 74,52"/></svg>`;
@@ -1869,7 +2241,7 @@ const BOT_NIV=[null,
   {nome:'Fácil',maxDepth:2,noise:100,randomPct:.05,timeMs:700},
   {nome:'Médio',maxDepth:3,noise:40,timeMs:1200},
   {nome:'Difícil',maxDepth:5,noise:0,timeMs:1800},
-  {nome:'Máximo',maxDepth:12,noise:0,timeMs:3500}];
+  {nome:'Máximo',maxDepth:64,noise:0,timeMs:3500}];
 let worker=null,workerOk=true,botToken=0,botBusy=false,localE=null,pendingReq=null;
 const botTurn=()=>!!G.bot&&!G.result&&cur().turn===G.bot.color;
 let WURL=null;
@@ -1923,8 +2295,8 @@ function botResult(id,r){
 // Cada posição da partida é analisada uma vez, em fila. A avaliação de um lance é a perda de chance de vitória
 // de quem jogou: a mesma conta da barra, antes e depois do lance.
 const MATE_V=100000,EVAL_MS=800;
-// versão da análise: avaliações guardadas por um motor anterior (v13.0 corrigiu a repetição) são descartadas e refeitas
-const AN_VER=2;
+// versão da análise: avaliações guardadas por um motor anterior (v13.0 corrigiu a repetição, v13.1 trocou o motor) são descartadas e refeitas
+const AN_VER=3;
 let evWorker=null,evOk=true,evBusy=null,evShown=null;
 const EVCACHE=new Map(),CLSCACHE=new Map(),SECCACHE=new Map();
 const barOn=()=>!!(G&&G.bot&&G.bot.evalBar);
@@ -1953,7 +2325,7 @@ function pump(){
   if(k<0)return;
   const pos=sec?k-1:k,s=G.states[pos],key=sec?secKey(k):keyAt(k);
   evBusy={key,s,sec};
-  const o={maxDepth:14,noise:0,timeMs:REV&&!clsOn()||sec?REV_MS:EVAL_MS,history:G.states.slice(0,pos+1).map(st=>st.b.map(x=>x||'.').join('')+st.turn)};
+  const o={maxDepth:64,noise:0,timeMs:REV&&!clsOn()||sec?REV_MS:EVAL_MS,history:G.states.slice(0,pos+1).map(st=>st.b.map(x=>x||'.').join('')+st.turn)};
   if(sec)o.exclude=EVCACHE.get(keyAt(k-1)).best;
   ensureEvWorker();
   if(evWorker)evWorker.postMessage({id:key,s,o});
