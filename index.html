@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez Rei Tirano · versão 13.2 -->
+<!-- index.html · Xadrez Rei Tirano · versão 13.3 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -700,7 +700,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <option value="face">Frente a frente: peças de cima invertidas</option>
       <option value="pass">Frente a frente: todas as peças giram</option>
     </select></div>
-    <div class="ver">Versão 13.2</div>
+    <div class="ver">Versão 13.3</div>
     <div class="ver" id="verMarcas"></div>
   </div>
 
@@ -2188,7 +2188,7 @@ async function criarSala(nome,cor,tc){
   ONL.db=normDb(ONL.db);salvarOnl();
   if(!ONL.db){aviso('Configure o endereço do Firebase nas opções');return;}
   const code=novoCodigo(),me=cor==='r'?(Math.random()<.5?'w':'b'):cor,eu={nome:nome||'Eu',id:ONL.pid};
-  const sala={criada:{'.sv':'timestamp'},versao:'13.2',rodada:1,tc:{base:tc[0],inc:tc[1]},brancas:me==='w'?eu:null,pretas:me==='b'?eu:null};
+  const sala={criada:{'.sv':'timestamp'},versao:'13.3',rodada:1,tc:{base:tc[0],inc:tc[1]},brancas:me==='w'?eu:null,pretas:me==='b'?eu:null};
   try{await fb('PUT',`salas/${code}`,sala);}
   catch(e){modal('Não deu para criar a sala',`<p>O Firebase não respondeu (${escH(e.message)}). Confira o endereço do banco e as regras. No link do artefato do claude.ai o jogo online não funciona: use o app do GitHub.</p>`,[{label:'OK',primary:true}]);return;}
   arquivarAbandono();
