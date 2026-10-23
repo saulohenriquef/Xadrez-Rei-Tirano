@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez Rei Tirano · versão 13.3 -->
+<!-- index.html · Xadrez Rei Tirano · versão 14.1 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -28,21 +28,21 @@
   --light:#d8dfe7; --dark:#62778f; --coord-l:#62778f; --coord-d:#d8dfe7;
   --gold:#c3921f; --gold-soft:rgba(195,146,31,.22); --conv:#8a55d4; --conv-soft:rgba(138,85,212,.2); --dem:#1f8a8a; --dem-soft:rgba(31,138,138,.18);
   --sel:rgba(214,170,60,.55); --last:rgba(214,190,90,.36); --dot:rgba(20,30,45,.30);
-  --check:210,55,40; --checkc:255,196,0; --btn:#e9eef3; --btn-ink:#18212c; --primary:#18212c; --primary-ink:#f6f8fa;
+  --check:210,55,40; --checkc:255,196,0; --win:#2a7a40; --loss:#c4372a; --ilg:#d85f00; --btn:#e9eef3; --btn-ink:#18212c; --primary:#18212c; --primary-ink:#f6f8fa;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#10161e; --surface:#18212c; --ink:#e4eaf1; --muted:#95a3b3; --line:#2a3644;
     --light:#b7c3cf; --dark:#4b5f76; --coord-l:#4b5f76; --coord-d:#b7c3cf;
     --gold:#e0b04a; --gold-soft:rgba(224,176,74,.18); --conv:#b48cf0; --conv-soft:rgba(180,140,240,.2); --dem:#4cc4c4; --dem-soft:rgba(76,196,196,.18);
-    --btn:#223040; --btn-ink:#e4eaf1; --primary:#e4eaf1; --primary-ink:#10161e;
+    --btn:#223040; --btn-ink:#e4eaf1; --primary:#e4eaf1; --primary-ink:#10161e; --win:#6cc785; --loss:#f07b67; --ilg:#ff9a3d;
   }
 }
 :root[data-theme="dark"]{
   --bg:#10161e; --surface:#18212c; --ink:#e4eaf1; --muted:#95a3b3; --line:#2a3644;
   --light:#b7c3cf; --dark:#4b5f76; --coord-l:#4b5f76; --coord-d:#b7c3cf;
   --gold:#e0b04a; --gold-soft:rgba(224,176,74,.18); --conv:#b48cf0; --conv-soft:rgba(180,140,240,.2); --dem:#4cc4c4; --dem-soft:rgba(76,196,196,.18);
-  --btn:#223040; --btn-ink:#e4eaf1; --primary:#e4eaf1; --primary-ink:#10161e;
+  --btn:#223040; --btn-ink:#e4eaf1; --primary:#e4eaf1; --primary-ink:#10161e; --win:#6cc785; --loss:#f07b67; --ilg:#ff9a3d;
 }
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -601,6 +601,142 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
 .optlbl{font-weight:600;font-size:.93rem;display:block;margin-bottom:6px}
 .opt+.opt{margin-top:10px}
 @media (prefers-reduced-motion:no-preference){.card{animation:pop .16s ease-out}@keyframes pop{from{transform:scale(.96);opacity:0}}}
+/* fim de partida (qualquer tipo): o tabuleiro perde a cor; a coroa do vencedor fica por cima, fora do filtro, e continua dourada */
+#board.semcor{filter:grayscale(1);transition:filter 2s ease .6s}
+#board.semcor.dk-fifty{filter:grayscale(1) sepia(.35)}
+#board.semcor.dk-75{filter:grayscale(1) sepia(.2)}
+.boardbox{position:relative}
+#over{position:absolute;left:0;top:0;width:100%;aspect-ratio:1/1;pointer-events:none;z-index:12;container-type:inline-size}
+.crc{position:absolute;width:12.5%;height:12.5%}
+.crw{position:absolute;left:-8%;top:-15%;width:66%;height:66%;transform:rotate(-14deg)}
+.crw.up{left:auto;top:auto;right:-8%;bottom:-15%;transform:rotate(166deg)}
+.crw svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.5))}
+.crw .cb{fill:url(#coroaG);stroke:#2a2018;stroke-width:1.5;stroke-linejoin:round}
+.crw .cj{fill:#fff4cf;stroke:#2a2018;stroke-width:1.1}
+.crw .cg{stroke:#2a2018;stroke-width:.7}.crw .cg.r{fill:#d2382a}.crw .cg.a{fill:#2f6fd0}
+.crw .csh{fill:#fff;opacity:.6}
+.crw .crn{transform-box:fill-box;transform-origin:50% 100%;animation:crBreath 3.2s ease-in-out 1.7s infinite}
+@keyframes crBreath{0%,100%{transform:none}50%{transform:scale(1.05)}}
+.crw svg.drop{animation:crDrop .85s cubic-bezier(.3,1.45,.5,1) .55s both}
+@keyframes crDrop{0%{opacity:0;transform:translateY(-85%) rotate(-38deg) scale(.35)}50%{opacity:1}100%{opacity:1;transform:none}}
+.crw .spk{fill:#fff6c8;stroke:#c3921f;stroke-width:.6;transform-box:fill-box;transform-origin:center;opacity:0}
+.crw svg.drop .spk{animation:spk .9s ease-in-out 1.25s 2 both}
+.crw svg.drop .spk.s2{animation-delay:1.5s}.crw svg.drop .spk.s3{animation-delay:1.75s}
+@keyframes spk{0%,100%{opacity:0;transform:scale(.2) rotate(0deg)}50%{opacity:1;transform:scale(1) rotate(45deg)}}
+@media (prefers-reduced-motion:reduce){.crw svg.drop,.crw svg.drop .spk,.crw .crn{animation:none}#board.semcor{transition:none}}
+/* online: o adversário entrou. As peças dele chegam ao tabuleiro e aparece quem joga contra quem (cada nome do seu lado) */
+#vs{position:absolute;inset:0;z-index:10;pointer-events:none;border-radius:6px;overflow:hidden;opacity:0}
+#vs.on{animation:vsFade 3.4s ease both}
+@keyframes vsFade{0%{opacity:0}7%{opacity:1}80%{opacity:1}100%{opacity:0}}
+#vs .vsbg{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(8,12,18,.62) 0%,rgba(8,12,18,.4) 55%,rgba(8,12,18,.18) 100%)}
+.vsb{position:absolute;left:8%;right:8%;height:calc(12.5*var(--cq));display:flex;align-items:center;justify-content:center;padding:0 calc(4*var(--cq));border-radius:calc(6.25*var(--cq));
+  font:700 calc(5.8*var(--cq))/1.1 Spectral,Georgia,serif;box-shadow:0 calc(.8*var(--cq)) calc(3*var(--cq)) rgba(0,0,0,.5)}
+.vsb span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.vsb.top{top:25%;animation:vsDir .6s cubic-bezier(.2,1.25,.4,1) .12s both}
+.vsb.bot{bottom:25%;animation:vsEsq .6s cubic-bezier(.2,1.25,.4,1) .12s both}
+.vsb.w{background:#f7f3ea;color:#1d1712;border:calc(.5*var(--cq)) solid #1d1712}
+.vsb.b{background:#1d1712;color:#f7f3ea;border:calc(.5*var(--cq)) solid #f7f3ea}
+.vsx{position:absolute;left:50%;top:50%;width:calc(14*var(--cq));height:calc(14*var(--cq));margin:calc(-7*var(--cq)) 0 0 calc(-7*var(--cq));border-radius:50%;background:var(--gold);color:#1a1307;
+  display:flex;align-items:center;justify-content:center;font:italic 700 calc(6.4*var(--cq))/1 Spectral,Georgia,serif;padding-bottom:calc(.6*var(--cq));
+  box-shadow:0 0 0 calc(.9*var(--cq)) rgba(255,255,255,.3),0 calc(1*var(--cq)) calc(4*var(--cq)) rgba(0,0,0,.55);animation:vsPop .55s cubic-bezier(.3,1.7,.5,1) .5s both}
+@keyframes vsDir{from{opacity:0;transform:translateX(70%)}to{opacity:1;transform:none}}
+@keyframes vsEsq{from{opacity:0;transform:translateX(-70%)}to{opacity:1;transform:none}}
+@keyframes vsPop{from{transform:scale(0) rotate(-40deg)}to{transform:none}}
+.pc.placein{z-index:6;animation:placein .46s cubic-bezier(.3,1.3,.5,1) both;animation-delay:calc(.55s + var(--pi) * .055s)}
+@keyframes placein{0%{opacity:0;transform:var(--base) translateY(-90%) scale(1.3)}55%{opacity:1}100%{opacity:1;transform:var(--base)}}
+@media (prefers-reduced-motion:reduce){#vs{display:none}.pc.placein{animation:none}}
+/* lance ilegal: a peça vai e volta, tachinha na peça cravada, rei furioso com a casa em laranja e +0:30 no relógio do adversário */
+.ilw{position:relative;z-index:7;display:flex;align-items:center;justify-content:center}
+.ilw.go{animation:ilGo .95s cubic-bezier(.3,.7,.35,1) both}
+.ilw.back{animation:ilBack .7s cubic-bezier(.3,.7,.35,1) both}
+@keyframes ilGo{0%{transform:none}28%,62%{transform:translate(calc(var(--dx) * 12.5 * var(--cq)),calc(var(--dy) * 12.5 * var(--cq)))}
+  92%{transform:none}96%{transform:translateY(calc(-1*var(--cq)))}100%{transform:none}}
+@keyframes ilBack{0%,36%{transform:translate(calc(var(--dx) * 12.5 * var(--cq)),calc(var(--dy) * 12.5 * var(--cq)))}
+  88%{transform:none}94%{transform:translateY(calc(-1*var(--cq)))}100%{transform:none}}
+.pc.wob{animation:wob .38s ease-in-out .27s both}
+.ilw.back .pc.wob{animation-delay:0s}
+@keyframes wob{0%,100%{transform:var(--base) rotate(0deg)}25%{transform:var(--base) rotate(-12deg)}50%{transform:var(--base) rotate(10deg)}75%{transform:var(--base) rotate(-5deg)}}
+.pc.fury{z-index:7;animation:fury 1.5s linear .1s both}
+.pc.fury.late{animation-delay:.62s}
+@keyframes fury{0%,100%{transform:var(--base);filter:none}
+  6%{transform:var(--base) translate(-5%,1%) rotate(-9deg) scale(1.08);filter:drop-shadow(0 0 calc(1.1*var(--cq)) rgba(255,106,0,.95))}
+  12%{transform:var(--base) translate(5%,-2%) rotate(8deg) scale(1.12);filter:drop-shadow(0 0 calc(1.3*var(--cq)) rgba(255,106,0,.95))}
+  18%{transform:var(--base) translate(-5%,0) rotate(-9deg) scale(1.1);filter:drop-shadow(0 0 calc(1.1*var(--cq)) rgba(255,106,0,.95))}
+  24%{transform:var(--base) translate(5%,-1%) rotate(8deg) scale(1.13);filter:drop-shadow(0 0 calc(1.3*var(--cq)) rgba(255,106,0,.95))}
+  30%{transform:var(--base) translate(-4%,0) rotate(-8deg) scale(1.1);filter:drop-shadow(0 0 calc(1.1*var(--cq)) rgba(255,106,0,.95))}
+  36%{transform:var(--base) translate(4%,-1%) rotate(7deg) scale(1.12);filter:drop-shadow(0 0 calc(1.3*var(--cq)) rgba(255,106,0,.95))}
+  42%{transform:var(--base) translate(-4%,0) rotate(-7deg) scale(1.1);filter:drop-shadow(0 0 calc(1.1*var(--cq)) rgba(255,106,0,.95))}
+  48%{transform:var(--base) translate(4%,-1%) rotate(6deg) scale(1.11);filter:drop-shadow(0 0 calc(1.3*var(--cq)) rgba(255,106,0,.95))}
+  54%{transform:var(--base) translate(-3%,0) rotate(-6deg) scale(1.08);filter:drop-shadow(0 0 calc(1.1*var(--cq)) rgba(255,106,0,.95))}
+  60%{transform:var(--base) translate(3%,0) rotate(5deg) scale(1.08);filter:drop-shadow(0 0 calc(1.2*var(--cq)) rgba(255,106,0,.95))}
+  68%{transform:var(--base) translate(-2%,0) rotate(-4deg) scale(1.06);filter:drop-shadow(0 0 calc(1*var(--cq)) rgba(255,106,0,.9))}
+  76%{transform:var(--base) translate(2%,0) rotate(3deg) scale(1.05);filter:drop-shadow(0 0 calc(1*var(--cq)) rgba(255,106,0,.85))}
+  86%{transform:var(--base) rotate(-1deg) scale(1.02);filter:drop-shadow(0 0 calc(.8*var(--cq)) rgba(255,106,0,.7))}}
+.ilgg{position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle,rgba(255,122,0,1) 0%,rgba(255,122,0,.72) 38%,rgba(255,122,0,0) 72%);
+  animation:ilgg 2.9s ease both}
+.ilgg.late{animation-delay:.5s;animation-duration:2.4s}
+@keyframes ilgg{0%{opacity:0}8%{opacity:1}18%{opacity:.7}28%{opacity:1}38%{opacity:.75}48%{opacity:1}86%{opacity:1}100%{opacity:0}}
+.anger{position:absolute;right:-6%;top:-8%;width:42%;height:42%;z-index:8;pointer-events:none}
+.anger.up{right:auto;top:auto;left:-6%;bottom:-8%;transform:rotate(180deg)}
+.anger svg{width:100%;height:100%;overflow:visible;opacity:0;animation:anger 1.7s ease-out .22s both}
+.anger.late svg{animation-delay:.72s}
+.anger path{fill:none;stroke:#ff3d1f;stroke-width:3.2;stroke-linecap:round;filter:drop-shadow(0 0 1px rgba(0,0,0,.7))}
+@keyframes anger{0%{opacity:0;transform:scale(.2)}12%{opacity:1;transform:scale(1.25)}22%{transform:scale(.9)}32%{transform:scale(1.15)}42%{transform:scale(.94)}
+  52%{transform:scale(1.1)}62%{transform:scale(1)}85%{opacity:1}100%{opacity:0;transform:scale(1.05)}}
+.tack{position:absolute;right:-12%;top:-20%;width:76%;height:76%;z-index:9;pointer-events:none}
+.tack.up{right:auto;top:auto;left:-12%;bottom:-20%;transform:rotate(180deg)}
+.tack svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 1.5px 1.5px rgba(0,0,0,.5));opacity:0;animation:tack 2.2s cubic-bezier(.3,1.4,.5,1) .8s both}
+.ilw.back~.tack svg{animation-delay:.6s;animation-duration:2.35s}
+@keyframes tack{0%{opacity:0;transform:translate(45%,-75%) scale(1.5) rotate(25deg)}16%{opacity:1;transform:translate(0,0) scale(.84) rotate(0deg)}
+  24%{transform:scale(1.07)}32%{transform:none}84%{opacity:1;transform:none}100%{opacity:0;transform:none}}
+.tack .tn{stroke:#59606a;stroke-width:2;stroke-linecap:round}
+.tack .tb{fill:url(#tachaG);stroke:#5b0d0d;stroke-width:1}
+.tack .tl{fill:#fff;opacity:.75}
+#ilgl{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:8}
+#ilgl .il{fill:none;stroke:#ff7a00;stroke-width:8;stroke-linecap:round;stroke-dasharray:var(--len);stroke-dashoffset:var(--len);
+  filter:drop-shadow(0 0 5px rgba(255,122,0,.85));animation:ilLine 2.6s ease-out .35s both}
+@keyframes ilLine{0%{stroke-dashoffset:var(--len);opacity:0}5%{opacity:.95}17%{stroke-dashoffset:0}80%{opacity:.85;stroke-dashoffset:0}100%{stroke-dashoffset:0;opacity:0}}
+#ilgl .ih{fill:#ff7a00;filter:drop-shadow(0 0 4px rgba(255,122,0,.85));animation:ilHead 2.6s ease-out .35s both}
+@keyframes ilHead{0%,15%{opacity:0}19%{opacity:.95}80%{opacity:.85}100%{opacity:0}}
+.clkw{position:relative;display:inline-flex;flex:none}
+.bonus{position:absolute;right:calc(100% + 6px);top:50%;height:1.6em;margin-top:-.8em;padding:0 .55em;border-radius:.8em;background:#2e8b4a;color:#fff;
+  font-weight:800;font-size:.95rem;line-height:1.6em;white-space:nowrap;pointer-events:none;font-variant-numeric:tabular-nums;box-shadow:0 2px 6px rgba(0,0,0,.3);
+  opacity:0;animation:bonus 2.5s ease-out .45s both}
+@keyframes bonus{0%{opacity:0;transform:translateX(14px) scale(.6)}12%{opacity:1;transform:scale(1.2)}22%{transform:none}80%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-6px)}}
+.clock.plus{animation:clkPlus 1s ease-out .45s 2}
+@keyframes clkPlus{0%{box-shadow:0 0 0 0 rgba(46,139,74,.9)}100%{box-shadow:0 0 0 11px rgba(46,139,74,0)}}
+#statusText.ilegal{color:var(--ilg)}#statusText.ilegal b{color:var(--ilg)}
+@media (prefers-reduced-motion:reduce){.ilw.go,.ilw.back,.pc.wob,.pc.fury{animation:none}.anger,#ilgl{display:none}.tack svg{animation:none;opacity:1}.ilgg{animation:none;opacity:.85}.bonus{animation:none;opacity:1}}
+/* partidas salvas: os nomes no centro, brancas primeiro, com o ponto da cor das peças e o resultado no meio; quem venceu em verde, quem perdeu em vermelho */
+.arq li{display:block}
+.anomes{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto minmax(0,1fr);align-items:center;gap:6px;font-weight:700}
+.anm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.anm.l{text-align:right}.anm.r{text-align:left}
+.anm.win{color:var(--win)}.anm.loss{color:var(--loss)}
+.adot{display:block;width:.75em;height:.75em;border-radius:50%;border:1.5px solid var(--ink);flex:none}
+.adot.w{background:#f7f3ea}.adot.b{background:#1d1712}
+.ainfo{color:var(--muted);font-size:.8rem;line-height:1.35;margin-top:4px}
+/* buscar no Firebase: as duplas que têm partidas guardadas lá */
+.fbpares{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px;max-height:42vh;overflow:auto}
+.fbpares label{display:flex;gap:10px;align-items:flex-start;padding:7px 9px;border:1px solid var(--line);border-radius:9px;cursor:pointer}
+.fbpares input{margin-top:3px;flex:none}
+.fbpares .muted{display:block;font-size:.8rem;color:var(--muted);margin-top:1px}
+/* nacionalidade: a bandeirinha junto do nome e o seletor nas janelas de começar partida */
+.bdr{display:inline-block;flex:none;width:1.4em;height:.93em;vertical-align:-.12em;margin-right:.32em;border-radius:2px;box-shadow:0 0 0 1px rgba(120,120,120,.45);overflow:hidden}
+.paises{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:7px}
+.paises button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:7px 2px 6px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);
+  font:600 .72rem/1.1 Figtree,system-ui,sans-serif;cursor:pointer;min-width:0}
+.paises button .bdr{width:30px;height:20px;margin:0}
+.paises button.on{border-color:var(--gold);background:var(--gold-soft);box-shadow:inset 0 0 0 1px var(--gold)}
+.paises.erro{outline:2px solid rgb(var(--check));outline-offset:3px;border-radius:9px}
+.card input.erro,.nomes input.erro{border-color:rgb(var(--check));box-shadow:0 0 0 1px rgb(var(--check))}
+.nomes .paises{grid-column:2;margin:0 0 4px}
+.card{max-height:calc(100vh - 36px);overflow-y:auto}
+@supports (height:100dvh){.card{max-height:calc(100dvh - 36px)}}
+.anm{display:flex;align-items:center;gap:.35em}.anm.l{justify-content:flex-end}.anm.r{justify-content:flex-start}
+.anm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.anm .bdr{margin:0}
+.vsb .bdr{width:1.3em;height:.87em;margin-right:.4em}
+.onlinebar .sc .bdr,.placar .bdr,.card strong .bdr{margin-left:.12em}
 </style>
 </head>
 <body>
@@ -611,7 +747,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
   </header>
 
   <div id="barTop" class="bar"></div>
-  <div class="boardbox"><div id="board" role="grid" aria-label="Tabuleiro"></div>
+  <div class="boardbox"><div id="board" role="grid" aria-label="Tabuleiro"></div><div id="over" aria-hidden="true"></div>
     <div id="evalBar" class="evalbar" hidden aria-label="Barra de avaliação"><div class="ev-fill" id="evFill"></div><span class="ev-txt" id="evTxt"></span></div>
   </div>
   <div id="barBottom" class="bar"></div>
@@ -700,7 +836,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <option value="face">Frente a frente: peças de cima invertidas</option>
       <option value="pass">Frente a frente: todas as peças giram</option>
     </select></div>
-    <div class="ver">Versão 13.3</div>
+    <div class="ver">Versão 14.1</div>
     <div class="ver" id="verMarcas"></div>
   </div>
 
@@ -724,6 +860,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
         <li>Empate automático por material insuficiente, 5 repetições da mesma posição ou 75 lances de cada lado sem captura nem movimento de peão.</li>
         <li>Empate por 3 repetições ou por 50 lances de cada lado sem captura nem movimento de peão só por reivindicação, como no tabuleiro físico: o app não avisa. Na sua vez, toque em Empate → Reivindicar e diga se a posição já está no tabuleiro ou se vai acontecer com o seu próximo lance. O app confere: se estiver certo, é empate; se não, a partida segue, o lance declarado fica valendo e, com relógio, o adversário ganha 2 minutos.</li>
         <li>Com relógio: quem zera o tempo perde, a menos que o adversário não tenha material para dar mate.</li>
+        <li><strong>Lance ilegal</strong>, como no tabuleiro físico: dá para mexer uma peça cravada no rei e para levar o rei a uma casa atacada (inclusive comendo uma peça própria defendida pelo adversário). Os pontos de lance mostram esses lances igual aos outros: perceber a cravada e as casas atacadas é com você. O lance não vale: a peça vai até a casa e volta, a peça cravada ganha uma tachinha, o rei fica furioso com a casa em laranja, toca o som de tilt e, com relógio, o adversário ganha 30 segundos (aparece +0:30 no relógio dele). A vez continua sendo sua. Mexer outra peça deixando o rei em xeque continua não sendo possível.</li>
       </ul>
       <p><strong>Contra o bot:</strong> escolha em Nova partida, com 5 níveis. O bot conhece a regra do Xadrez Rei Tirano, nunca propõe empate, recusa as suas propostas e joga até o fim. Voltar desfaz o seu lance e o dele. Você pode reivindicar empate normalmente. A barra de avaliação, abaixo do tabuleiro, mostra quem está melhor segundo uma análise própria, sempre no nível máximo, independente do nível do bot: o número é a vantagem em peões e M3 significa mate em 3 lances.</p>
       <p><strong>Avaliação dos lances</strong> (contra o bot): cada lance é comparado com a posição antes dele, pela chance de vitória de quem jogou, na mesma conta da barra. <span class="clb-s c-best">★</span> Melhor lance: o mesmo do motor, ou tão bom quanto. <span class="clb-s c-good"><svg class="thumb" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="10" width="4.5" height="11" rx="1"/><path d="M8.5 20.5V10.5L13 3.6C13.6 2.7 15.2 3 15.2 4.4V8.6H20C21.4 8.6 22.3 9.9 21.9 11.2L19.8 18.9C19.5 19.9 18.6 20.5 17.6 20.5Z"/></svg></span> Excelente: perde até 2%. <span class="clb-s c-ok">✓</span> Bom lance: até 5%. <span class="clb-s c-inacc">?!</span> Imprecisão: até 10%. <span class="clb-s c-mist">?</span> Erro: até 20%. <span class="clb-s c-blund">??</span> Capivarada: mais de 20%. Perder um peão numa partida já ganha pesa menos que perder o mesmo peão numa posição igual. No tabuleiro, o selo do seu último lance fica até você jogar de novo; os lances do bot aparecem avaliados na lista. Mais duas categorias: <span class="clb-s c-miss">✕</span> <strong>Chance perdida</strong>: o adversário acabou de errar, havia como punir e você deixou passar, sem ficar muito pior do que estava antes do erro dele (aparece no lugar de erro ou capivarada). <span class="clb-s c-great">!</span> <strong>Lance afiado</strong>: você achou o único lance bom, e o segundo melhor perderia 15% ou mais de chance de vitória; só é calculado na revisão da partida, e recapturas simples não contam.</p>
@@ -732,12 +869,13 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <p><strong>Revisão da partida:</strong> quando a partida termina, o botão Revisar partida analisa todas as posições (contra o bot ou contra um amigo) e mostra a precisão de cada lado (baseada no Lichess, com um ajuste: cada lance perde pela chance de vitória ou pelo material entregue, o que for maior, então lances descuidados contam mesmo com a partida já decidida; erros graves e momentos decisivos pesam mais), o gráfico da avaliação, a avaliação de cada lance com um comentário curto (o que o lance fez, o que o adversário pode responder, qual era o melhor lance e como fica a partida) e o melhor lance indicado por uma seta verde, a precisão por fase do jogo, os momentos decisivos e as curiosidades das regras novas. Na análise, uma posição repetida só vale empate na terceira vez (quando dá para reivindicar), e rei com só um bispo ou um cavalo contra rei vale empate. Ao andar pelos lances, na revisão ou no histórico, cada lance toca o seu som, como na hora em que foi jogado (para trás, um toque simples).</p>
       <p><strong>Ministro</strong> (coluna romana do Senado com a coroa de louros no alto, o primeiro-ministro do reino): mais uma peça que só aparece por promoção. Anda e captura como torre e também pode dar um passo na diagonal, como o rei.</p>
       <p><strong>Papa e Ministro são únicos:</strong> cada lado pode promover no máximo um Papa e um Ministro na partida inteira. Se ele morrer, for rebaixado ou convertido, não se promove outro. E um lado nunca tem dois ao mesmo tempo: o Papa não converte o Papa adversário, nem converte o Ministro adversário se o seu lado já tiver um.</p>
-      <p><strong>Jogo online:</strong> com o endereço do Firebase configurado nas opções, crie a partida em Nova partida → Um amigo online e mande o link. Cada um joga no seu aparelho; não dá para voltar lance, e propostas de empate, reivindicações e resignação vão para o outro lado. <strong>Revanche:</strong> terminada a partida, toque em Revanche; o amigo recebe o pedido e, se aceitar, a partida nova começa na mesma sala, com as cores trocadas e o mesmo relógio. Se os dois pedirem juntos, começa direto. Quem fechou o app recebe o pedido quando abrir de novo. Funciona no app do GitHub (o link do artefato do claude.ai bloqueia a conexão).</p>
+      <p><strong>Jogo online:</strong> com o endereço do Firebase configurado nas opções, crie a partida em Nova partida → Um amigo online e mande o link. Cada um joga no seu aparelho; não dá para voltar lance, e propostas de empate, reivindicações e resignação vão para o outro lado. <strong>Revanche:</strong> terminada a partida, toque em Revanche; o amigo recebe o pedido e, se aceitar, a partida nova começa na mesma sala, com as cores trocadas e o mesmo relógio. Se os dois pedirem juntos, começa direto. Quem fechou o app recebe o pedido quando abrir de novo. Enquanto o amigo não entra na sala, as peças dele não aparecem; quando ele entra, elas chegam ao tabuleiro e aparece quem joga contra quem. Funciona no app do GitHub (o link do artefato do claude.ai bloqueia a conexão).</p>
+      <p><strong>Nome e nacionalidade:</strong> para começar uma partida (contra o bot, no mesmo aparelho, criando ou entrando numa sala online), o nome e a nacionalidade de cada jogador são obrigatórios. Por enquanto: EUA, Portugal, Argentina e Brasil. O app lembra o que foi escolhido da última vez, e digitar o nome de alguém conhecido já marca a nacionalidade dele. A bandeirinha aparece junto do nome no tabuleiro, na entrada da partida online, nos placares e nas partidas salvas. Com o Firebase, a nacionalidade vai junto com o placar entre amigos e os dois aparelhos mostram a mesma bandeira.</p>
       <p><strong>Placar entre amigos:</strong> cada partida terminada entre duas pessoas entra no placar da dupla, pelo nome de cada um (maiúsculas e acentos não fazem diferença, mas o nome tem de ser o mesmo). No mesmo aparelho, conta quando os dois nomes estão preenchidos em Nova partida; online, quando cada um põe o seu nome ao criar ou entrar na sala. O placar da dupla aparece embaixo do tabuleiro durante a partida, com o botão de revanche no fim. Com o Firebase configurado, o placar fica também no banco e os dois veem o mesmo, de qualquer aparelho; sem ele, fica neste aparelho e sobe para o banco quando o endereço for configurado. A mesma partida online nunca conta duas vezes. O PGN de cada uma dessas partidas também fica guardado (no Firebase, em partidas): toque numa dupla para ver as últimas partidas (tocando numa delas, o PGN abre e dá para rever a partida, de qualquer aparelho), exportar todas em PGN ou zerar o placar (zera para os dois; os PGNs continuam guardados). Partida interrompida não conta. Se as regras do banco liberam só as salas, libere também o placar e as partidas: <code>"placar": {".read": true, ".write": true}, "partidas": {".read": true, ".write": true}</code>.</p>
       <p><strong>Torres e cavalos:</strong> cada torre tem os dentes lá do alto, e cada cavalo as orelhas, da cor da casa onde começou a partida. A torre branca de a1 (casa escura) tem os dentes pretos e a torre preta de a8 (casa clara), os dentes brancos. O cavalo branco de g1 tem as orelhas pretas e o cavalo preto de g8, as orelhas brancas. A marca acompanha a peça a partida toda. É só visual: não muda nenhuma regra, nem a notação, nem a contagem de repetições para o empate.</p>
       <p>Notação em português: R rei, D dama, P paladino, M ministro, S papa (Santo Padre), T torre, B bispo, C cavalo.</p>
       <p><strong>PGN:</strong> as partidas salvas são exportadas na notação internacional (K rei, Q dama, R torre, B bispo, N cavalo), que qualquer programa de xadrez lê. Partida sem lances da variante sai como xadrez comum e abre direto no Lichess ou em qualquer motor. Se tiver lance do Xadrez Rei Tirano (rei comendo peça própria, Paladino L, Ministro M ou Papa A), o PGN leva a etiqueta Variant e só o próprio app entende esses lances.</p>
-      <p><strong>Importar PGN:</strong> em Partidas salvas, cole o PGN (ou abra um arquivo .pgn) de uma ou mais partidas, do próprio app, do Lichess, do Chess.com ou de outro programa. A partida entra na lista, marcada como importada, e abre na revisão com a análise. Vale também o PGN antigo do app, em português. Partida comum com promoção a dama é aceita na importação, mesmo sem dama na promoção do Xadrez Rei Tirano. A análise segue as regras do Xadrez Rei Tirano (o rei pode comer peça própria), por isso a avaliação de uma partida comum pode sair diferente da do Lichess.</p>
+      <p><strong>Importar PGN:</strong> em Partidas salvas, cole o PGN (ou abra um arquivo .pgn) de uma ou mais partidas, do próprio app, do Lichess, do Chess.com ou de outro programa. A partida entra na lista, marcada como importada, e abre na revisão com a análise. Vale também o PGN antigo do app, em português. Partida comum com promoção a dama é aceita na importação, mesmo sem dama na promoção do Xadrez Rei Tirano. A análise segue as regras do Xadrez Rei Tirano (o rei pode comer peça própria), por isso a avaliação de uma partida comum pode sair diferente da do Lichess. Na mesma janela, <strong>Buscar no Firebase</strong> traz de volta as partidas entre amigos guardadas no banco (por exemplo, depois de limpar os dados do app); as partidas contra o bot ficam só no aparelho onde foram jogadas.</p>
     </details>
   </div>
 </div>
@@ -1490,7 +1628,7 @@ try{muted=localStorage.getItem(STORE+'-mute')==='1';}catch(e){}
 function ac(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();decodificar();}if(AC.state==='suspended')AC.resume();return AC;}
 // ---------- Sons de arquivo (pasta sons/ ao lado do index.html) ----------
 // Se existir sons/<nome>.mp3 ou .wav, ele toca no lugar do som sintetizado.
-const SOM_ARQ={demote:'rebaixar',martyr:'papa-morre',convert:'conversao',move:'lance',capture:'captura',castle:'roque',promote:'promocao',check:'xeque',mate:'mate',resign:'resignar',end:'fim',self:'autocaptura'};
+const SOM_ARQ={demote:'rebaixar',martyr:'papa-morre',convert:'conversao',move:'lance',capture:'captura',castle:'roque',promote:'promocao',check:'xeque',mate:'mate',resign:'resignar',end:'fim',self:'autocaptura',ilegal:'lance-ilegal',vs:'entrada'};
 const RAW={},BUFS={},FALHAS={};
 async function carregarSons(){
   if(location.protocol==='file:')return renderSndInfo(); // arquivo avulso: não há pasta para ler
@@ -1569,6 +1707,17 @@ function bell(t,f,dur,gain){ // sino: parciais inarmônicos, os agudos morrem an
     g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(gain*a,t+.003);g.gain.exponentialRampToValueAtTime(.0001,t+d);
     o.connect(g).connect(bus());o.start(t);o.stop(t+d+.02);});
 }
+function buzz(t,dur,f){ // zumbido elétrico com tremolo, caindo de afinação (o tilt do fliperama)
+  const out=AC.createGain();out.gain.setValueAtTime(.0001,t);out.gain.exponentialRampToValueAtTime(.22,t+.012);
+  out.gain.setValueAtTime(.22,t+dur*.65);out.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  const lp=AC.createBiquadFilter();lp.type='lowpass';lp.Q.value=3;lp.frequency.setValueAtTime(2600,t);lp.frequency.exponentialRampToValueAtTime(900,t+dur);
+  const trem=AC.createGain();trem.gain.value=.55;
+  const lfo=AC.createOscillator(),lg=AC.createGain();lfo.type='square';lfo.frequency.value=23;lg.gain.value=.45;lfo.connect(lg).connect(trem.gain);
+  [[f,'sawtooth',.5],[f*1.07,'sawtooth',.42],[f*2.02,'square',.12]].forEach(([fr,ty,a])=>{
+    const o=AC.createOscillator(),g=AC.createGain();o.type=ty;o.frequency.setValueAtTime(fr,t);o.frequency.exponentialRampToValueAtTime(fr*.82,t+dur);
+    g.gain.value=a;o.connect(g).connect(lp);o.start(t);o.stop(t+dur+.03);});
+  lp.connect(trem).connect(out).connect(bus());lfo.start(t);lfo.stop(t+dur+.03);
+}
 function sfx(kind){
   if(muted||!ac())return;
   try{if(tocarArquivo(kind))return;}catch(e){}
@@ -1610,11 +1759,16 @@ function sfxRaw(kind){
       [.11,.2,.27,.32,.355].forEach((dt,i)=>knock(t+dt,.5*Math.pow(.72,i),1900+i*120,bus()));
       tone(t+.5,330,.55,.06,'triangle',bus());tone(t+.8,262,.9,.06,'triangle',bus());break;
     case'end':[392,494,587,784].forEach((f,i)=>tone(t+i*.09,f,.9-i*.1,.08,'triangle'));break;
+    case'ilegal': // tilt de fliperama: a pancada na máquina, o estalo da trava e o zumbido de quando ela trava
+      thump(t,140,45,.32,.75);knock(t,1,650,bus());knock(t+.025,.55,2400,bus());buzz(t+.05,.6,104);break;
+    case'vs': // o adversário chegou: um sopro que sobe, o golpe do "vs" e as peças dele caindo no tabuleiro
+      noise(t,.42,'bandpass',300,3200,1.6,.16,.25);thump(t+.5,130,55,.35,.55);bell(t+.5,523,1.3,.07);bell(t+.5,784,1.1,.05);
+      for(let i=0;i<16;i++)knock(t+.8+i*.055,.2+.1*Math.random(),1500+Math.random()*700,bus());break;
   }
 }
 
 // ---------- Estado da partida ----------
-let G=null,selected=-1,targets=[],legalNow=[],modalOpen=false,view=null,ANIM=null;
+let G=null,selected=-1,targets=[],legalNow=[],modalOpen=false,view=null,ANIM=null,ILG=null,INTRO=null;
 const ANIM_MS=1600;const cellHTML=[],cellBadge=[];
 // revisão de partida sem bot e sem online (amigo no mesmo aparelho ou partida salva): tudo na posição normal, sem girar nada
 const revNormal=()=>REV&&!!G&&!G.bot&&!G.online;
@@ -1630,7 +1784,7 @@ const refresh=()=>{legalNow=allLegal(cur());};
 const countKey=k=>G.keys.filter(x=>x===k).length;
 
 function newGame(baseMin=0,incSec=0,bot=null,names=null,manterSala=false){
-  REV=false;if(!manterSala){if(ES){ES.close();ES=null;}SALA=null;pendentes=[];}
+  REV=false;ILG=null;INTRO=null;if(!manterSala){if(ES){ES.close();ES=null;}SALA=null;pendentes=[];}
   if(G)cancelBot();
   EVCACHE.clear();CLSCACHE.clear();SECCACHE.clear();evShown=null;
   const prev=G,s0=initState(),lg=allLegal(s0);
@@ -1694,7 +1848,7 @@ function mkRecord(s,m,legal){
     papa:papaSq>=0?s.b[papaSq]:'',papaSq,dem,cass,disc,dbl,ck,by:s.turn}};
 }
 function doMove(m,opt={}){
-  const s=cur(),{n,rec}=mkRecord(s,m,legalNow),captured=rec.captured,papaSq=rec.papaSq;
+  ILG=null;const s=cur(),{n,rec}=mkRecord(s,m,legalNow),captured=rec.captured,papaSq=rec.papaSq;
   const c=G.clock;
   if(c.base){const now=Date.now();if(c.running)c[s.turn]-=now-c.last;c[s.turn]+=c.inc;c.running=true;c.last=now;}
   G.states.push(n);
@@ -1720,7 +1874,7 @@ function undo(){
   pop();
   // contra o bot, volta também o lance dele, devolvendo a vez para você
   if(G.bot)while(G.moves.length&&cur().turn===G.bot.color)pop();
-  G.result=null;G.claim=null;refresh();
+  G.result=null;G.claim=null;ILG=null;refresh();
   const c=G.clock;if(c.base){c.running=G.moves.length>0;c.last=Date.now();}
   selected=-1;targets=[];view=null;if(modo()==='auto')G.orient=cur().turn;save();render();maybeBot();
 }
@@ -1731,6 +1885,43 @@ let NOMES=(()=>{try{const n=JSON.parse(localStorage.getItem(NOMES_KEY));if(n&&ty
 function salvarNomes(){try{localStorage.setItem(NOMES_KEY,JSON.stringify(NOMES));}catch(e){}}
 const nomeDe=c=>G&&G.names&&G.names[c]?G.names[c]:(G&&G.bot?(c===G.bot.color?'Bot':'Você'):NAME[c]);
 const escH=t=>String(t).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+
+// ---------- Nacionalidade (por enquanto EUA, Portugal, Argentina e Brasil): a bandeirinha aparece junto do nome ----------
+// Fica por jogador, pelo nome (como no placar entre amigos): neste aparelho e, com o Firebase, em placar/DUPLA/paises,
+// onde vale a escolha mais recente. Nome e nacionalidade são obrigatórios para começar uma partida.
+const PAIS_LISTA=[['us','EUA'],['pt','Portugal'],['ar','Argentina'],['br','Brasil']],PAIS_NOME=Object.fromEntries(PAIS_LISTA);
+const BANDEIRA={ // desenho simples, em 3:2, para todas ficarem do mesmo tamanho
+  us:'<rect width="30" height="20" fill="#fff"/><path fill="#b22234" d="M0 0h30v1.54H0zM0 3.08h30v1.54H0zM0 6.15h30v1.54H0zM0 9.23h30v1.54H0zM0 12.31h30v1.54H0zM0 15.38h30v1.54H0zM0 18.46h30v1.54H0z"/><rect width="12.5" height="10.77" fill="#3c3b6e"/><g fill="#fff">'
+    +[0,1,2,3,4].map(r=>[...Array(r%2?5:6)].map((_,c)=>`<circle cx="${((r%2?2.1:1.1)+c*2.05).toFixed(2)}" cy="${(1.15+r*2.1).toFixed(2)}" r=".42"/>`).join('')).join('')+'</g>',
+  pt:'<rect width="30" height="20" fill="#da291c"/><rect width="12" height="20" fill="#046a38"/><circle cx="12" cy="10" r="4.3" fill="none" stroke="#ffe000" stroke-width="1.5"/><path d="M9.8 7.4h4.4v3.6a2.2 2.2 0 0 1-4.4 0z" fill="#fff" stroke="#da291c" stroke-width=".8"/>',
+  ar:'<rect width="30" height="20" fill="#74acdf"/><rect y="6.67" width="30" height="6.67" fill="#fff"/><circle cx="15" cy="10" r="2.9" fill="none" stroke="#f6b40e" stroke-width="1.1" stroke-dasharray=".9 .62"/><circle cx="15" cy="10" r="1.85" fill="#f6b40e" stroke="#85340a" stroke-width=".3"/>',
+  br:'<rect width="30" height="20" fill="#009b3a"/><path d="M15 2.2 27.6 10 15 17.8 2.4 10z" fill="#fedf00"/><circle cx="15" cy="10" r="4.7" fill="#002776"/><path d="M10.4 9.1c3-.9 6.3-.5 9.1 1.2" fill="none" stroke="#fff" stroke-width=".9"/>'};
+const bandeira=p=>BANDEIRA[p]?`<svg class="bdr" viewBox="0 0 30 20" role="img" aria-label="${PAIS_NOME[p]}">${BANDEIRA[p]}</svg>`:'';
+const PAISES_KEY=STORE+'-paises';
+let PAISES=(()=>{try{const p=JSON.parse(localStorage.getItem(PAISES_KEY));if(p&&typeof p==='object')return p;}catch(e){}return {};})(); // jogador (chave do nome): {p: país, t: quando foi escolhido}
+function salvarPaises(){try{localStorage.setItem(PAISES_KEY,JSON.stringify(PAISES));}catch(e){}}
+function setPais(nome,p){const k=chaveNome(nome);if(!k||!PAIS_NOME[p]||(PAISES[k]&&PAISES[k].p===p))return;PAISES[k]={p,t:Date.now()};salvarPaises();}
+const paisDe=nome=>{const x=PAISES[chaveNome(nome)];return x&&PAIS_NOME[x.p]?x.p:'';};
+const comBandeira=nome=>bandeira(paisDe(nome))+escH(nome); // o nome com a bandeirinha antes
+function seletorPais(id){ // escolha da nacionalidade, embaixo do nome
+  return `<div class="paises" id="${id}" role="radiogroup" aria-label="Nacionalidade" data-v="">${PAIS_LISTA.map(([p,n])=>`<button type="button" role="radio" aria-checked="false" data-p="${p}">${bandeira(p)}<span>${n}</span></button>`).join('')}</div>`;
+}
+function marcarPais(g,p){if(!g)return;g.dataset.v=PAIS_NOME[p]?p:'';g.classList.remove('erro');
+  g.querySelectorAll('button[data-p]').forEach(b=>{const on=b.dataset.p===g.dataset.v;b.classList.toggle('on',on);b.setAttribute('aria-checked',on);});}
+function ligarPaises(){ // na janela aberta: tocar na bandeira escolhe; digitar um nome conhecido já marca a nacionalidade dele
+  const mb=$('mBody');
+  mb.querySelectorAll('.paises').forEach(g=>g.querySelectorAll('button[data-p]').forEach(b=>{b.onclick=()=>marcarPais(g,b.dataset.p);}));
+  mb.querySelectorAll('input').forEach(i=>{i.addEventListener('input',()=>i.classList.remove('erro'));
+    if(i.dataset.pais)i.addEventListener('change',()=>{const p=paisDe(i.value);if(p)marcarPais($(i.dataset.pais),p);});});
+}
+function completo(pares){ // [campo do nome, seletor da nacionalidade]: marca o que falta e avisa
+  let falta=null;
+  for(const[i,g]of pares){
+    const semN=!chaveNome(i.value);i.classList.toggle('erro',semN);if(semN&&!falta)falta=i;
+    const semP=!g.dataset.v;g.classList.toggle('erro',semP);if(semP&&!falta)falta=g.querySelector('button');}
+  if(!falta)return true;
+  falta.focus();aviso(falta.tagName==='INPUT'?'Coloque o nome para começar':'Escolha a nacionalidade para começar');return false;
+}
 
 // ---------- Partidas salvas (como no Lichess: nomes, data, horário e PGN) ----------
 const ARQ_KEY=STORE+'-arquivo';
@@ -1798,15 +1989,24 @@ function copiarTexto(t,msg='PGN copiado'){
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,alt);else alt();
 }
 function baixarTexto(t,nome){try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'application/x-chess-pgn'}));a.download=nome;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);}catch(e){aviso('Não consegui baixar');}}
+// "Pretas vencem" ganha o nome de quem venceu: "Xeque-mate. Pretas vencem, Saulo vence"
+function termoNome(e){
+  const t=String(e.term||''),W=e.res==='1-0'?'w':e.res==='0-1'?'b':null;if(!W)return t;
+  const nome=String((W==='w'?e.w:e.b)||'').trim();if(!nome||chaveNome(nome)===chaveNome(NAME[W]))return t;
+  const re=new RegExp(`${NAME[W]} vencem( no tempo)?`);
+  return re.test(t)?t.replace(re,x=>`${x}, ${nome} vence`):`${t.replace(/[.\s]+$/,'')}. ${NAME[W]} vencem, ${nome} vence`;
+}
 function renderArquivo(){
   const ol=$('arquivo');if(!ol)return;
   const a=lerArquivo().slice().reverse();
   $('bArqPGN').disabled=!a.length;
+  // brancas sempre primeiro: "Saulo ● 1–0 ● Wellington", com o ponto da cor das peças de cada um e o resultado no meio
   ol.innerHTML=a.length?a.map(e=>{const cls=e.res==='1-0'?'w':e.res==='0-1'?'b':e.res==='*'?'o':'d';
       const r=e.res==='1/2-1/2'?'½–½':e.res==='*'?'*':e.res.replace('-','–');
-      return `<li data-id="${e.id}"><span class="ares ${cls}">${r}</span><div><strong>${escH(e.w)}</strong> × <strong>${escH(e.b)}</strong><br>
-        <span class="muted">${dataHora(e.t0)} · ${nLances(e)} · ${escH(e.term)}${e.imp?' · importada':''}</span></div></li>`;}).join('')
-    :'<li class="muted vazio">Nenhuma partida salva ainda. Elas entram aqui quando terminam, ou pelo Importar PGN.</li>';
+      const cw=e.res==='1-0'?' win':e.res==='0-1'?' loss':'',cb=e.res==='0-1'?' win':e.res==='1-0'?' loss':'';
+      return `<li data-id="${e.id}"><div class="anomes"><span class="anm l${cw}">${bandeira(paisDe(e.w))}<span>${escH(e.w)}</span></span><i class="adot w"></i><span class="ares ${cls}">${r}</span><i class="adot b"></i><span class="anm r${cb}"><span>${escH(e.b)}</span>${bandeira(paisDe(e.b))}</span></div>
+        <div class="ainfo">${dataHora(e.t0)} · ${nLances(e)} · ${escH(termoNome(e))}${e.fb?' · do Firebase':e.imp?' · importada':''}</div></li>`;}).join('')
+    :'<li class="muted vazio">Nenhuma partida salva ainda. Elas entram aqui quando terminam, ou pelo Importar PGN (que também busca no Firebase as partidas entre amigos guardadas lá).</li>';
 }
 function abrirArquivada(id){
   const e=lerArquivo().find(x=>x.id===id);if(!e)return;
@@ -1837,7 +2037,7 @@ function acoesArquivo(id){
       [{label:'Cancelar'},{label:'Apagar',primary:true,fn:()=>{gravarArquivo(lerArquivo().filter(x=>x.id!==id));renderArquivo();}}])},
     {label:'Fechar'});
   modal(`${e.w} × ${e.b}`,`<p>${dataHora(e.t0)} · ${escH(origemDe(e))}${e.tc!=='-'?` · relógio ${escH(e.tc.replace('+',' + '))} s`:''}<br>
-    <strong>${e.res==='1/2-1/2'?'½–½':e.res}</strong> · ${escH(e.term)} · ${nLances(e)}</p>
+    <strong>${e.res==='1/2-1/2'?'½–½':e.res}</strong> · ${escH(termoNome(e))} · ${nLances(e)}</p>
     <pre class="pgnprev">${escH(pg)}</pre>`,bts,undefined,true);
 }
 
@@ -1960,10 +2160,10 @@ function fimImportado(T,res,r){ // a terminação do PGN no jeito do app: texto,
   if(/agree/.test(l))return {term:'Empate por acordo',kind:'',dk:'agree'};
   return {term:nada?'Empate':t,kind:'',dk:'agree'};
 }
-function importarPGN(txt){
-  const todos=separarPGN(txt),jogos=todos.slice(0,IMP_MAX),arq=lerArquivo(),agora=Date.now(),ok=[],falhas=[];
+function importarPGN(txt,max=IMP_MAX,todos=separarPGN(txt)){ // ids[i]: a partida i na lista de partidas salvas (nova ou a que já estava lá)
+  const jogos=todos.slice(0,max),arq=lerArquivo(),agora=Date.now(),ok=[],falhas=[],ids=[];
   let novos=0,repetidos=0,cheio=0;
-  if(!todos.length)return {ok,falhas:[{i:0,msg:'não achei nenhum lance no texto.'}],novos,repetidos,cheio,mais:0};
+  if(!todos.length)return {ok,ids,falhas:[{i:0,msg:'não achei nenhum lance no texto.'}],novos,repetidos,cheio,mais:0};
   jogos.forEach((j,i)=>{
     const T=j.tags,r=reproduzirPGN(j);
     if(r.erro||r.falha>=0||!r.mv.length){falhas.push({i,r,msg:r.erro||(!r.toks.length?'não achei nenhum lance.':'')});return;}
@@ -1978,16 +2178,16 @@ function importarPGN(txt){
       tc:/^[0-9+\/:.\-]{1,20}$/.test(T.TimeControl||'')&&T.TimeControl!=='-'?T.TimeControl:'-',res,term:fim.term,kind:fim.kind,dk:fim.dk,
       mv:r.mv,san:r.san,ev:null,imp:true,orig,...(fen?{fen}:{})};
     const dup=arq.find(x=>x.w===e.w&&x.b===e.b&&(x.fen||'')===(e.fen||'')&&JSON.stringify(x.mv)===JSON.stringify(e.mv));
-    if(dup){ok.push(dup.id);repetidos++;return;} // já estava na lista (exportada daqui ou importada antes): só abre
+    if(dup){ok.push(dup.id);ids[i]=dup.id;repetidos++;return;} // já estava na lista (exportada daqui ou importada antes): só abre
     if(arq.length>=ARQ_MAX){cheio++;return;} // não apaga partida nenhuma para abrir espaço
-    arq.push(e);ok.push(e.id);novos++;
+    arq.push(e);ok.push(e.id);ids[i]=e.id;novos++;
   });
   if(novos&&!gravarArquivo(arq)){ // sem espaço no aparelho: tenta guardar sem as análises antigas
     for(const x of arq)x.ev=null;
-    if(!gravarArquivo(arq))return {ok:[],falhas:[{i:0,msg:'não há espaço neste aparelho para guardar as partidas.'}],novos:0,repetidos:0,cheio:0,mais:0};
+    if(!gravarArquivo(arq))return {ok:[],ids:[],falhas:[{i:0,msg:'não há espaço neste aparelho para guardar as partidas.'}],novos:0,repetidos:0,cheio:0,mais:0};
   }
   renderArquivo();
-  return {ok,falhas,novos,repetidos,cheio,mais:todos.length-jogos.length};
+  return {ok,ids,falhas,novos,repetidos,cheio,mais:todos.length-jogos.length};
 }
 function falhaPGN(f,varias){
   let t=f.msg;
@@ -1998,12 +2198,12 @@ function falhaPGN(f,varias){
 function origemDe(e){ // contra o bot, online ou entre amigos; e, na importada, de onde ela veio (lichess.org, Chess.com...)
   const o=e.orig||{},daqui=!e.imp||ehSiteApp(o.Site);
   const site=daqui?'':((/^https?:\/\/(?:www\.)?([^\/?#]+)/i.exec(o.Site||'')||[])[1]||(o.Site&&o.Site!=='?'?o.Site:''));
-  return [e.bot?`contra o bot nível ${e.bot.level}`:e.online?'online':daqui?'entre amigos':'',site,e.imp?'importada':''].filter(Boolean).join(' · ');
+  return [e.bot?`contra o bot nível ${e.bot.level}`:e.online?'online':daqui?'entre amigos':'',site,e.fb?'do Firebase':e.imp?'importada':''].filter(Boolean).join(' · ');
 }
 function abrirImportar(txt=IMP_RASC){
-  modal('Importar PGN',`<p>Cole o PGN de uma ou mais partidas: do próprio app, do Lichess, do Chess.com ou de outro programa. A partida entra nas partidas salvas e abre na revisão.</p>
+  modal('Importar PGN',`<p>Cole o PGN de uma ou mais partidas: do próprio app, do Lichess, do Chess.com ou de outro programa. A partida entra nas partidas salvas e abre na revisão. As partidas entre amigos guardadas no Firebase voltam pelo Buscar no Firebase.</p>
     <textarea id="impTxt" class="pgnin" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="PGN" placeholder="[Event &quot;…&quot;]&#10;1. e4 e5 2. Nf3 Nc6 …">${escH(txt)}</textarea>
-    <div class="impbtns"><button type="button" class="btn mini" id="impColar">Colar</button><button type="button" class="btn mini" id="impArq">Abrir arquivo .pgn</button><button type="button" class="btn mini" id="impLimpar">Limpar</button>
+    <div class="impbtns"><button type="button" class="btn mini" id="impColar">Colar</button><button type="button" class="btn mini" id="impArq">Abrir arquivo .pgn</button><button type="button" class="btn mini" id="impFb">Buscar no Firebase</button><button type="button" class="btn mini" id="impLimpar">Limpar</button>
     <input type="file" id="impFile" accept=".pgn,.txt,text/plain,application/x-chess-pgn,application/vnd.chess-pgn" hidden></div>`,
     [{label:'Cancelar',fn:()=>{IMP_RASC='';}},{label:'Importar',primary:true,fn:()=>fazerImportacao($('impTxt').value)}]);
   const ta=$('impTxt'),por=v=>{ta.value=v;IMP_RASC=v;};
@@ -2013,9 +2213,46 @@ function abrirImportar(txt=IMP_RASC){
     const manual=()=>{aviso('Toque e segure na caixa para colar');ta.focus();};
     if(navigator.clipboard&&navigator.clipboard.readText)navigator.clipboard.readText().then(t=>{if(t&&t.trim())por(t);else aviso('A área de transferência está vazia');},manual);else manual();};
   $('impArq').onclick=()=>$('impFile').click();
+  $('impFb').onclick=()=>{closeModal();importarDoFirebase();};
   $('impFile').onchange=ev=>{const f=ev.target.files&&ev.target.files[0];if(!f)return;
     if(f.size>5e6){aviso('Arquivo grande demais (máximo 5 MB)');return;}
     const rd=new FileReader();rd.onload=()=>por(String(rd.result||''));rd.onerror=()=>aviso('Não consegui ler o arquivo');rd.readAsText(f);};
+}
+// ---------- Buscar no Firebase: as partidas entre amigos guardadas em partidas/ voltam para as Partidas salvas ----------
+// Serve para quem limpou os dados do app (ou trocou de aparelho). O placar entre amigos volta sozinho, na sincronização.
+async function importarDoFirebase(){
+  if(!normDb(ONL.db)){modal('Buscar no Firebase','<p>Primeiro coloque nas opções, em Jogar online, o endereço do Firebase (o mesmo de antes). Depois toque de novo em Buscar no Firebase.</p>',[{label:'OK',primary:true}]);return;}
+  aviso('Buscando as partidas no Firebase…');
+  let rem;try{rem=await fbAm('GET','partidas')||{};}catch(e){modal('Buscar no Firebase',`<p>${escH(erroFb(e))}.</p>`,[{label:'OK',primary:true}]);return;}
+  const arq=lerArquivo(),aqui=g=>{const l=AM_LOC[g];return !!(l&&l.id&&arq.some(x=>x.id===l.id));};
+  const pares=Object.keys(rem).map(par=>{
+    const r=rem[par]&&typeof rem[par]==='object'?rem[par]:{};
+    const js=Object.keys(r).filter(g=>r[g]&&typeof r[g].pgn==='string'&&r[g].pgn.trim()).map(g=>Object.assign({},r[g],{g,par})).sort((a,b)=>(a.t||0)-(b.t||0));
+    const ult=js[js.length-1]||{},x=AM[par]?contarPar(par):null; // nomes: os do placar; sem placar, os da partida mais recente
+    return {par,js,n1:x?x.n1:ult.w||par.split('~')[0],n2:x?x.n2:ult.b||par.split('~')[1],novas:js.filter(j=>!aqui(j.g)).length};})
+    .filter(p=>p.js.length).sort((a,b)=>(b.js[b.js.length-1].t||0)-(a.js[a.js.length-1].t||0));
+  if(!pares.length){modal('Buscar no Firebase','<p>Ainda não há partidas guardadas no Firebase. O PGN de cada partida entre amigos vai para o banco desde a versão 13.3.</p>',[{label:'OK',primary:true}]);return;}
+  const tot=pares.reduce((a,p)=>a+p.js.length,0),dia=t=>t?dataHora(t).slice(0,10):'?';
+  const lis=pares.map((p,i)=>{const d1=dia(p.js[0].t),d2=dia(p.js[p.js.length-1].t),ja=p.js.length-p.novas;
+    return `<li><label><input type="checkbox" data-i="${i}"${p.novas?' checked':''}><span><strong>${escH(p.n1)} × ${escH(p.n2)}</strong><span class="muted">${p.js.length} ${p.js.length===1?'partida':'partidas'} · ${d1===d2?d1:`${d1} a ${d2}`}${ja?` · ${p.novas?`${ja} já ${ja===1?'está':'estão'} aqui`:'todas já estão aqui'}`:''}</span></span></label></li>`;}).join('');
+  modal('Buscar no Firebase',`<p>${tot} ${tot===1?'partida':'partidas'} entre amigos no Firebase. Escolha as duplas para trazer para as Partidas salvas:</p><ul class="fbpares">${lis}</ul>
+    <p class="muted">As partidas contra o bot não vão para o Firebase: ficam só no aparelho onde foram jogadas.</p>`,
+    [{label:'Cancelar'},{label:'Trazer',primary:true,fn:()=>trazerDoFirebase([...$('mBody').querySelectorAll('.fbpares input:checked')].map(x=>pares[+x.dataset.i]))}],undefined,true);
+}
+function trazerDoFirebase(sel){
+  const itens=sel.flatMap(p=>p.js).sort((a,b)=>(a.t||0)-(b.t||0));
+  if(!itens.length){aviso('Nenhuma dupla escolhida');return;}
+  const antes=new Set(lerArquivo().map(e=>e.id)),r=importarPGN('',ARQ_MAX,itens.map(j=>separarPGN(j.pgn)[0]||{tags:{},mt:''}));
+  itens.forEach((j,i)=>{const id=r.ids[i];if(id)AM_LOC[j.g]={id,par:j.par,up:1};});salvarAmLoc(); // tocar na partida, no placar da dupla, abre a daqui
+  if(r.novos){const a=lerArquivo();for(const e of a)if(!antes.has(e.id))e.fb=1; // na lista aparece "do Firebase"
+    gravarArquivo(a.sort((x,y)=>(x.t0||0)-(y.t0||0)));renderArquivo();} // em ordem de data, junto com as que já estavam aqui
+  sincronizarAmigos(true); // o placar entre amigos também volta do banco
+  const partes=[];
+  if(r.novos)partes.push(r.novos===1?'1 partida trazida':`${r.novos} partidas trazidas`);
+  if(r.repetidos)partes.push(r.repetidos===1?'1 já estava aqui':`${r.repetidos} já estavam aqui`);
+  if(r.falhas.length)partes.push(`${r.falhas.length} com erro`);
+  if(r.cheio+r.mais)partes.push(`${r.cheio+r.mais} ficaram de fora (as Partidas salvas guardam até ${ARQ_MAX})`);
+  modal('Buscar no Firebase',`<p>${partes.join(' · ')||'Nada para trazer'}.</p>${r.novos?'<p class="muted">Estão em Partidas salvas, em ordem de data. O placar entre amigos também volta do Firebase.</p>':''}`,[{label:'OK',primary:true}]);
 }
 function fazerImportacao(txt){
   if(!String(txt).trim()){abrirImportar('');aviso('Cole um PGN ou abra um arquivo .pgn');return;}
@@ -2117,8 +2354,9 @@ function syncSala(){
   const daRodada=x=>!!x&&(x.rd||1)===rd;
   // jogadores
   if(on.waiting&&SALA.brancas&&SALA.pretas){on.waiting=false;G.names={w:SALA.brancas.nome,b:SALA.pretas.nome};G.t0=Date.now();
-    aviso(`${G.names[other(on.me)]} entrou na sala`);sfx('move');}
+    aviso(`${G.names[other(on.me)]} entrou na sala`);if(!daRodada((SALA.lances||{})[0]))iniciarIntro();else sfx('move');}
   if(SALA.brancas&&SALA.pretas)G.names={w:SALA.brancas.nome,b:SALA.pretas.nome};
+  for(const x of[SALA.brancas,SALA.pretas])if(x)setPais(x.nome,x.pais); // a nacionalidade que cada um escolheu
   // lances que ainda não estão no tabuleiro (um lance de outra rodada no lugar: espera chegar o desta)
   const L=SALA.lances||{};
   while(daRodada(L[G.moves.length])&&!G.result){
@@ -2128,6 +2366,9 @@ function syncSala(){
     legalNow=lg;doMove(m,{remote:true});
     if(G.clock.base&&x.wt!=null){G.clock.w=x.wt;G.clock.b=x.bt;G.clock.last=Date.now();G.clock.running=true;}
   }
+  // lance ilegal do adversário: a mesma animação aqui, e os 30 segundos dele vão para o meu relógio
+  const il=SALA.ilegal;
+  if(daRodada(il)&&!G.result&&il.n!==on.ilgVisto&&il.k===G.moves.length){on.ilgVisto=il.n;if(il.de!==on.me)ilegalRemoto(il);}
   // proposta de empate do adversário
   if(daRodada(SALA.oferta)&&SALA.oferta.de!==on.me&&!G.result&&ofertaVista!==SALA.oferta.n){ofertaVista=SALA.oferta.n;
     modal('Proposta de empate',`<p>${escH(nomeDe(SALA.oferta.de))} propõe empate.</p>`,
@@ -2184,11 +2425,11 @@ function convidar(){
   modal('Convidar para a sala',`<p>Mande o link para o seu amigo. Ou ele pode tocar em <strong>Entrar numa sala</strong> nas opções e digitar o código:</p>
     <div class="codigo">${code}</div>`,bts,undefined,true);
 }
-async function criarSala(nome,cor,tc){
+async function criarSala(nome,cor,tc,pais){
   ONL.db=normDb(ONL.db);salvarOnl();
   if(!ONL.db){aviso('Configure o endereço do Firebase nas opções');return;}
-  const code=novoCodigo(),me=cor==='r'?(Math.random()<.5?'w':'b'):cor,eu={nome:nome||'Eu',id:ONL.pid};
-  const sala={criada:{'.sv':'timestamp'},versao:'13.3',rodada:1,tc:{base:tc[0],inc:tc[1]},brancas:me==='w'?eu:null,pretas:me==='b'?eu:null};
+  const code=novoCodigo(),me=cor==='r'?(Math.random()<.5?'w':'b'):cor,eu={nome:nome||'Eu',id:ONL.pid,...(pais?{pais}:{})};
+  const sala={criada:{'.sv':'timestamp'},versao:'14.1',rodada:1,tc:{base:tc[0],inc:tc[1]},brancas:me==='w'?eu:null,pretas:me==='b'?eu:null};
   try{await fb('PUT',`salas/${code}`,sala);}
   catch(e){modal('Não deu para criar a sala',`<p>O Firebase não respondeu (${escH(e.message)}). Confira o endereço do banco e as regras. No link do artefato do claude.ai o jogo online não funciona: use o app do GitHub.</p>`,[{label:'OK',primary:true}]);return;}
   arquivarAbandono();
@@ -2197,22 +2438,25 @@ async function criarSala(nome,cor,tc){
   save();ouvirSala();render();convidar();sincronizarAmigos(true);
   return code;
 }
-async function entrarSala(code,db,nome){
+async function entrarSala(code,db,nome,pais){
   code=String(code||'').trim().toUpperCase();if(db)ONL.db=normDb(db);salvarOnl();
   if(!ONL.db){aviso('Configure o endereço do Firebase nas opções');return;}
   let sala;
   try{sala=await fb('GET',`salas/${code}`);}catch(e){modal('Sem conexão',`<p>Não consegui falar com o Firebase (${escH(e.message)}).</p>`,[{label:'OK',primary:true}]);return;}
   if(!sala){modal('Sala não encontrada',`<p>Não existe sala com o código <strong>${escH(code)}</strong>.</p>`,[{label:'OK',primary:true}]);return;}
   let me=sala.brancas&&sala.brancas.id===ONL.pid?'w':sala.pretas&&sala.pretas.id===ONL.pid?'b':null; // voltando para a mesma sala
-  const eu={nome:nome||'Eu',id:ONL.pid};
+  const eu={nome:nome||'Eu',id:ONL.pid,...(pais?{pais}:{})};
   if(!me){if(!sala.pretas)me='b';else if(!sala.brancas)me='w';
     else{modal('Sala cheia',`<p>A sala ${code} já tem dois jogadores.</p>`,[{label:'OK',primary:true}]);return;}
     try{await fb('PUT',`salas/${code}/${me==='w'?'brancas':'pretas'}`,eu);}catch(e){aviso('Não consegui entrar na sala');return;}
     sala[me==='w'?'brancas':'pretas']=eu;}
+  for(const x of[sala.brancas,sala.pretas])if(x)setPais(x.nome,x.pais); // a bandeira de quem está na sala
   arquivarAbandono();
   const tc=sala.tc||{base:0,inc:0};
   newGame(tc.base||0,tc.inc||0,null,{w:sala.brancas?sala.brancas.nome:'…',b:sala.pretas?sala.pretas.nome:'…'});
   G.online={code,me,db:ONL.db,waiting:!(sala.brancas&&sala.pretas),rodada:sala.rodada||1};G.orient=me;SALA=null;ofertaVista=revancheVista=null;
+  {const rd=sala.rodada||1,daRd=x=>!!x&&(x.rd||1)===rd; // a sala estava completa e a partida não começou: as peças do adversário chegam ao tabuleiro
+   if(!G.online.waiting&&!daRd(sala.lances&&sala.lances[0])&&!daRd(sala.fim))iniciarIntro();}
   save();ouvirSala();render();sincronizarAmigos(true);
 }
 // Revanche na mesma sala: quem pede grava o pedido em revanche; quem aceita passa a sala para a rodada seguinte,
@@ -2228,7 +2472,7 @@ function pedirRevanche(){
 function aceitarRevanche(){
   if(!G||!G.online||!G.result||!SALA||!SALA.brancas||!SALA.pretas)return;
   const on=G.online;if((SALA.rodada||1)!==(on.rodada||1))return; // a sala já passou de rodada
-  mandar(`salas/${on.code}`,{rodada:(on.rodada||1)+1,brancas:SALA.pretas,pretas:SALA.brancas,fim:null,oferta:null,revanche:null},'PATCH');
+  mandar(`salas/${on.code}`,{rodada:(on.rodada||1)+1,brancas:SALA.pretas,pretas:SALA.brancas,fim:null,oferta:null,revanche:null,ilegal:null},'PATCH');
 }
 function recusarRevanche(){if(G&&G.online)mandar(`salas/${G.online.code}/revanche/nao`,true);}
 function novaRodada(rd){ // a sala começou a revanche: partida nova, cores trocadas, mesmo relógio
@@ -2267,18 +2511,20 @@ function revanchePresencial(){ // no mesmo aparelho: partida nova com as cores t
 }
 function abrirEntrar(){
   modal('Entrar numa sala',`<label class="flbl" for="jCode">Código da sala</label><input id="jCode" class="nome1 codein" maxlength="5" autocomplete="off" placeholder="K7Q2M">
-    <label class="flbl" for="jNome">Seu nome</label><input id="jNome" class="nome1" maxlength="30" autocomplete="off">`,
-    [{label:'Cancelar'},{label:'Entrar',primary:true,fn:()=>{const n=$('jNome').value.trim();NOMES.eu=n||NOMES.eu;salvarNomes();entrarSala($('jCode').value,null,n);}}]);
-  $('jNome').value=NOMES.eu||'';
+    <label class="flbl" for="jNome">Seu nome e nacionalidade</label><input id="jNome" class="nome1" maxlength="30" autocomplete="off" data-pais="jPais">${seletorPais('jPais')}`,
+    [{label:'Cancelar'},{label:'Entrar',primary:true,valida:()=>{const c=$('jCode');if(!c.value.trim()){c.classList.add('erro');c.focus();aviso('Digite o código da sala');return false;}return completo([[$('jNome'),$('jPais')]]);},
+      fn:()=>{const n=$('jNome').value.trim(),p=$('jPais').dataset.v;NOMES.eu=n;NOMES.euP=p;salvarNomes();setPais(n,p);entrarSala($('jCode').value,null,n,p);}}]);
+  $('jNome').value=NOMES.eu||'';marcarPais($('jPais'),NOMES.euP||paisDe(NOMES.eu));ligarPaises();
 }
 function conviteNoLink(){ // abriu o app por um link de convite
   const q=new URLSearchParams(location.search),code=q.get('sala'),db=q.get('db');
   if(!code)return;
   try{history.replaceState(null,'',location.pathname);}catch(e){}
   if(G&&G.online&&G.online.code===code.toUpperCase()){ouvirSala();return;}
-  modal('Convite para jogar',`<p>Entrar na sala <strong>${escH(code.toUpperCase())}</strong>?</p><label class="flbl" for="jNome">Seu nome</label><input id="jNome" class="nome1" maxlength="30" autocomplete="off">`,
-    [{label:'Agora não'},{label:'Entrar',primary:true,fn:()=>{const n=$('jNome').value.trim();NOMES.eu=n||NOMES.eu;salvarNomes();entrarSala(code,db,n);}}]);
-  $('jNome').value=NOMES.eu||'';
+  modal('Convite para jogar',`<p>Entrar na sala <strong>${escH(code.toUpperCase())}</strong>?</p><label class="flbl" for="jNome">Seu nome e nacionalidade</label><input id="jNome" class="nome1" maxlength="30" autocomplete="off" data-pais="jPais">${seletorPais('jPais')}`,
+    [{label:'Agora não'},{label:'Entrar',primary:true,valida:()=>completo([[$('jNome'),$('jPais')]]),
+      fn:()=>{const n=$('jNome').value.trim(),p=$('jPais').dataset.v;NOMES.eu=n;NOMES.euP=p;salvarNomes();setPais(n,p);entrarSala(code,db,n,p);}}]);
+  $('jNome').value=NOMES.eu||'';marcarPais($('jPais'),NOMES.euP||paisDe(NOMES.eu));ligarPaises();
 }
 
 // ---------- Placar contra os bots (guardado só neste aparelho) ----------
@@ -2344,7 +2590,7 @@ function contarPar(par,nomes){
 }
 function placarParHTML(p){
   const x=contarPar(p.par,{[p.kw]:p.nw,[p.kb]:p.nb});
-  return `<span class="sc">${escH(x.n1)} ${x.v1} × ${x.v2} ${escH(x.n2)}${x.e?` <i>· ${x.e} ${x.e===1?'empate':'empates'}</i>`:''}</span>`;
+  return `<span class="sc">${comBandeira(x.n1)} ${x.v1} × ${x.v2} ${comBandeira(x.n2)}${x.e?` <i>· ${x.e} ${x.e===1?'empate':'empates'}</i>`:''}</span>`;
 }
 async function fbAm(method,path,val){ // o placar vai sempre para o banco das opções (o mesmo das salas)
   const r=await fetch(`${normDb(ONL.db)}/${path}.json`,{method,body:val===undefined?undefined:JSON.stringify(val)});
@@ -2356,16 +2602,19 @@ async function sincronizarAmigos(forcar){
   if(!forcar&&Date.now()-amSincT<20000)return;
   amSincando=true;amSincT=Date.now();
   try{
-    const rem=await fbAm('GET','placar')||{},up={};
+    const rem=await fbAm('GET','placar')||{},up={};let paisMudou=false;
     for(const par in rem){const r=rem[par]||{},d=AM[par]||(AM[par]={nomes:{},jogos:{},zerado:0});
       for(const k in r.nomes||{})if(!d.nomes[k])d.nomes[k]=r.nomes[k];
+      for(const k in r.paises||{}){const x=r.paises[k],l=PAISES[k];if(x&&PAIS_NOME[x.p]&&(!l||(x.p!==l.p&&(x.t||0)>l.t))){PAISES[k]={p:x.p,t:x.t||0};paisMudou=true;}}
       d.zerado=Math.max(d.zerado||0,r.zerado||0);
       for(const g in r.jogos||{})if(!d.jogos[g])d.jogos[g]=r.jogos[g];}
     for(const par in AM){const d=AM[par],r=rem[par]||{};
       for(const g in d.jogos)if(d.jogos[g].t<(d.zerado||0))delete d.jogos[g]; // zerado: sai daqui também
       for(const k in d.nomes)if(!(r.nomes&&r.nomes[k]))up[`${par}/nomes/${k}`]=d.nomes[k];
+      for(const k of par.split('~')){const l=PAISES[k],x=r.paises&&r.paises[k];if(l&&(!x||(x.p!==l.p&&l.t>(x.t||0))))up[`${par}/paises/${k}`]=l;}
       if((d.zerado||0)>(r.zerado||0))up[`${par}/zerado`]=d.zerado;
       for(const g in d.jogos)if(!(r.jogos&&r.jogos[g]))up[`${par}/jogos/${g}`]=d.jogos[g];}
+    if(paisMudou){salvarPaises();renderArquivo();if(G)render();} // bandeira nova de algum jogador, vinda do outro aparelho
     if(Object.keys(up).length)await fbAm('PATCH','placar',up);
     amEstado='ok';
     // PGN das partidas que ainda não subiram, montado a partir das Partidas salvas deste aparelho
@@ -2387,7 +2636,7 @@ function renderAmigos(){
   let h;
   if(!pares.length)h='<tr><td class="vazio">Nenhuma partida entre amigos ainda. Online (com o nome de cada um na sala) ou no mesmo aparelho (com os dois nomes preenchidos em Nova partida), cada partida terminada entra aqui.</td></tr>';
   else{h='<tr><th>Jogadores</th><th>Vitórias</th><th>Empates</th><th>Jogos</th></tr>';
-    for(const x of pares)h+=`<tr data-par="${x.par}" class="${atual&&atual.par===x.par?'cur':''}"><td>${escH(x.n1)} × ${escH(x.n2)}</td><td class="x">${x.v1} × ${x.v2}</td><td>${x.e}</td><td>${x.n}</td></tr>`;}
+    for(const x of pares)h+=`<tr data-par="${x.par}" class="${atual&&atual.par===x.par?'cur':''}"><td>${comBandeira(x.n1)} × ${comBandeira(x.n2)}</td><td class="x">${x.v1} × ${x.v2}</td><td>${x.e}</td><td>${x.n}</td></tr>`;}
   if(t.innerHTML!==h)t.innerHTML=h;
   $('amNote').textContent=amEstado==='ok'&&amPgn==='negado'?'O placar está no Firebase, mas o banco recusou o PGN das partidas: nas regras do banco, libere também partidas.':{ok:'Guardado também no Firebase, com o PGN de cada partida: os dois veem o mesmo placar.',
     local:'Guardado só neste aparelho. Com o endereço do Firebase nas opções, o placar vai para o banco e os dois veem o mesmo.',
@@ -2398,7 +2647,7 @@ function abrirPar(par){
   const x=contarPar(par);if(!x.n&&!x.zerado)return;
   const lin=x.jogos.slice(0,10).map(j=>{const ven=j.r==='1/2-1/2'?'Empate':`${escH((j.r==='1-0'?j.w:j.b)===x.k1?x.n1:x.n2)} venceu`;
     return `<li data-gid="${escH(j.g)}"><span>${dataHora(j.t)}${j.on?' · online':''}</span><span>${ven}</span></li>`;}).join('');
-  const corpo=x.n?`<p><strong>${escH(x.n1)} ${x.v1} × ${x.v2} ${escH(x.n2)}</strong>${x.e?` · ${x.e} ${x.e===1?'empate':'empates'}`:''} · ${x.n} ${x.n===1?'partida':'partidas'}</p>`+
+  const corpo=x.n?`<p><strong>${comBandeira(x.n1)} ${x.v1} × ${x.v2} ${comBandeira(x.n2)}</strong>${x.e?` · ${x.e} ${x.e===1?'empate':'empates'}`:''} · ${x.n} ${x.n===1?'partida':'partidas'}</p>`+
       `<p class="muted">${x.n>10?'Últimas 10 partidas':'Partidas'} (toque numa delas para ver o PGN e rever):</p><ul class="amjogos">${lin}</ul>`
     :`<p>Placar zerado em ${dataHora(x.zerado)}. Os PGNs das partidas de antes continuam guardados: dá para exportar.</p>`;
   modal(`${x.n1} × ${x.n2}`,corpo,[{label:'Exportar PGN da dupla',fn:()=>exportarPar(par)},...(x.n?[{label:'Zerar este placar',fn:()=>zerarPar(par)}]:[]),{label:'Fechar',primary:true}],undefined,true);
@@ -2874,7 +3123,8 @@ function renderReview(){
 function cancelBot(){botToken++;botBusy=false;pendingReq=null;}
 
 // ---------- Interação ----------
-function select(sq){selected=sq;targets=legalNow.filter(m=>m.from===sq);}
+function select(sq){selected=sq;targets=legalNow.filter(m=>m.from===sq);targets=targets.concat(ilegaisDe(cur(),sq,targets));}
+function jogar(m,opt){if(m.ilg)return tentarIlegal(m,opt);doMove(m,opt);}
 function onSquare(sq){
   if(modalOpen||REV)return;
   if(view!==null)return goTo(G.states.length-1); // tocar no tabuleiro durante o histórico volta para a posição atual
@@ -2885,8 +3135,8 @@ function onSquare(sq){
     if(ms.length){
       // comer a própria peça pede confirmação; não pede se for a única saída, nem em xeque quando a opção estiver desligada
       if(ms[0].self&&!legalNow.every(x=>x.self)&&(CONF_XEQUE||!inCheck(s,s.turn)))return confirmSelf(ms[0]);
-      if(ms[0].promo)return askPromo(ms);
-      return doMove(ms[0]);
+      if(ms[0].promo&&!ms[0].ilg)return askPromo(ms);
+      return jogar(ms[0]);
     }
     if(sq===selected){selected=-1;targets=[];return render();}
   }
@@ -2899,7 +3149,7 @@ function confirmSelf(m){
     `<p>O rei das ${NAME[s.turn]} captura ${OWN[victim]} em ${sqName(m.to)}. A peça sai do jogo.</p>`,
     [{label:'Cancelar'},
      {label:'Selecionar a peça',fn:()=>{select(m.to);render();}},
-     {label:'Capturar',primary:true,fn:()=>doMove(m)}],s.turn);
+     {label:'Capturar',primary:true,fn:()=>jogar(m)}],s.turn);
 }
 const LOCKI=`<svg class="lock" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.6 7.2V5.1a3.4 3.4 0 0 1 6.8 0v2.1" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><rect x="3" y="7" width="10" height="7.6" rx="1.7" fill="currentColor"/></svg>`;
 function askPromo(ms,opt={}){
@@ -2912,13 +3162,13 @@ function askPromo(ms,opt={}){
     [{label:'Cancelar'}],c);
   $('mBody').querySelectorAll('button[data-p]:not([disabled])').forEach(b=>b.onclick=()=>{closeModal();doMove(ms.find(m=>m.promo===b.dataset.p),opt);});
 }
-function modal(title,body,buttons,who,stack){
+function modal(title,body,buttons,who,stack){ // botão com valida(): só fecha a janela quando ela devolve true
   // frente a frente: a janela vira para quem tem de responder (who); sem who, fica para o jogador de baixo
   document.querySelector('#modal .card').classList.toggle('up',frente()&&!!who&&who!==ori());
   $('mTitle').textContent=title;$('mBody').innerHTML=body;
   const bx=$('mBtns');bx.innerHTML='';bx.classList.toggle('stack',!!stack);
   buttons.forEach(b=>{const el=document.createElement('button');el.className='btn'+(b.primary?' primary':'');el.textContent=b.label;
-    el.onclick=()=>{closeModal();b.fn&&b.fn();};bx.appendChild(el);});
+    el.onclick=()=>{if(b.valida&&!b.valida())return;closeModal();b.fn&&b.fn();};bx.appendChild(el);});
   $('modal').hidden=false;modalOpen=true;
   const f=bx.querySelector('.primary')||bx.lastChild;f&&f.focus();
 }
@@ -2943,6 +3193,95 @@ function renderFx(dk,anim,fimEmp){
   const el=$('fx');if(el&&el._h!==fx){el.innerHTML=fx;el._h=fx;}
 }
 const upOf0=p=>modo()==='face'?col(p)!==ori():passUp();
+
+// ---------- Lance ilegal (como no tabuleiro físico): mexer peça cravada no rei ou pôr o rei numa casa atacada ----------
+// Os pontos de lance mostram também esses lances, sem diferença. Jogado, o lance não vale: a peça vai e volta, a cravada ganha
+// uma tachinha, o rei fica furioso (casa em laranja), toca o tilt e, com relógio, o adversário ganha 30 segundos.
+// Vale também para o rei comer peça própria defendida. Mexer outra peça deixando o rei em xeque continua não sendo possível.
+const ILG_MS=3000,ILG_PEN=30000;
+const ilgAtivo=()=>ILG&&G&&view===null&&!G.result&&ILG.ply===G.states.length-1&&Date.now()-ILG.t0<ILG_MS?ILG:null;
+const bonusDe=c=>{const a=ilgAtivo();return !!(a&&a.pen&&c===other(a.by));};
+function ilegaisDe(s,from,L){ // os lances ilegais que dá para tentar com a peça de from (L: os lances legais dela)
+  const p=s.b[from];if(!p||col(p)!==s.turn)return [];
+  const c=s.turn,en=other(c),antes=attackers(s.b,kingSq(s.b,c),en),out=[];
+  for(const m of pseudo(s,from)){
+    if(m.castle||m.conv||L.some(x=>x.to===m.to&&(x.promo||'')===(m.promo||'')))continue;
+    if(typ(p)==='k'){out.push({...m,ilg:'rei'});continue;} // o rei numa casa atacada (ou comendo peça própria defendida)
+    const n=apply(s,m),at=attackers(n.b,kingSq(n.b,c),en);
+    if(at.some(x=>!antes.includes(x)))out.push({...m,ilg:'crava'}); // abriu um ataque ao rei: a peça estava cravada
+  }
+  return out;
+}
+function tentarIlegal(m,opt={}){
+  const s=cur(),c=s.turn,en=other(c),rei=m.ilg==='rei',n=apply(s,m),k0=kingSq(s.b,c),alvo=rei?m.to:kingSq(n.b,c);
+  const antes=attackers(s.b,k0,en);let at=attackers(n.b,alvo,en);if(!rei)at=at.filter(x=>!antes.includes(x));
+  ILG={t0:Date.now(),ply:G.states.length-1,by:c,from:m.from,to:m.to,tipo:rei?'rei':'crava',self:!!m.self,rei:k0,alvo,at,drag:!!opt.drag,pen:!!G.clock.base};
+  if(G.clock.base&&!opt.remote)G.clock[en]+=ILG_PEN; // a punição: 30 segundos para o adversário
+  selected=-1;targets=[];
+  setTimeout(()=>sfx('ilegal'),opt.drag?40:230);
+  if(G.online&&!opt.remote){const on=G.online,nn=Date.now();on.ilgVisto=nn;
+    mandar(`salas/${on.code}/ilegal`,{n:nn,de:c,rd:on.rodada||1,k:G.moves.length,f:m.from,t:m.to,tipo:ILG.tipo,wt:G.clock.w,bt:G.clock.b});}
+  save();render();
+  const t0=ILG.t0;setTimeout(()=>{if(ILG&&ILG.t0===t0&&G)render();},ILG_MS+60);
+}
+function ilegalRemoto(il){ // o adversário tentou um lance ilegal no aparelho dele
+  const me=G.online.me,v=il[me==='w'?'wt':'bt'];
+  if(G.clock.base&&v!=null)G.clock[me]=v; // o meu relógio com os 30 segundos (o valor do outro lado, para os dois ficarem iguais)
+  const s=cur(),m=s.turn===il.de?pseudo(s,il.f).find(x=>x.to===il.t):null;
+  if(m)tentarIlegal({...m,ilg:il.tipo==='rei'?'rei':'crava'},{remote:true});else{save();render();}
+}
+// peça desenhada durante o lance ilegal: a que foi e volta (com a tachinha, se estava cravada) e o rei furioso
+const TACHA_SVG=`<svg viewBox="0 0 40 40" aria-hidden="true"><defs><radialGradient id="tachaG" cx=".38" cy=".3" r=".75"><stop offset="0" stop-color="#ff8f80"/><stop offset=".5" stop-color="#e2332a"/><stop offset="1" stop-color="#8f1414"/></radialGradient></defs><g transform="rotate(45 24 16)"><line class="tn" x1="24" y1="25" x2="24" y2="39"/><rect class="tb" x="16" y="21" width="16" height="4.4" rx="2.2"/><path class="tb" d="M19.6,21.6 L20.6,13.2 L27.4,13.2 L28.4,21.6 Z"/><rect class="tb" x="17.5" y="5.2" width="13" height="8.8" rx="4.4"/><ellipse class="tl" cx="21.4" cy="8.2" rx="2.2" ry="1.3"/></g></svg>`;
+const RAIVA_SVG=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5,9.5 Q8.5,9.5 9.5,2.5 M14.5,2.5 Q15.5,8.5 21.5,9.5 M21.5,14.5 Q15.5,15.5 14.5,21.5 M9.5,21.5 Q8.5,15.5 2.5,14.5"/></svg>`;
+function ilgPeca(a,sq,p,up,dpos,mk){
+  const U=up?' up':'';
+  if(sq===a.from){const[fc,fr]=dpos(a.from),[tc,tr]=dpos(a.to),rei=a.tipo==='rei';
+    return `<span class="ilw ${a.drag?'back':'go'}" style="--dx:${tc-fc};--dy:${tr-fr}">${glyph(p,up,rei?' fury':' wob','',mk)}${rei?`<span class="anger${U}">${RAIVA_SVG}</span>`:''}</span>`
+      +(rei?'':`<span class="tack${U}">${TACHA_SVG}</span>`);}
+  if(sq===a.rei)return glyph(p,up,' fury late','',mk)+`<span class="anger late${U}">${RAIVA_SVG}</span>`;
+  return '';
+}
+function renderIlgLinhas(){ // de onde vem o ataque: da peça que crava até o rei, ou das peças que atacam a casa aonde o rei foi
+  const el=$('ilgl');if(!el)return;
+  const a=ilgAtivo(),k=a?a.t0+ori():0;
+  if(el._k===k)return;el._k=k;
+  if(!a||!a.at.length){el.innerHTML='';return;}
+  const dp=x=>{const d=ori()==='w'?x:63-x;return[(d&7)*100+50,(d>>3)*100+50];};
+  el.innerHTML=a.at.map(fr=>{
+    const[x1,y1]=dp(fr),[x2,y2]=dp(a.alvo),an=Math.atan2(y2-y1,x2-x1),c=Math.cos(an),s=Math.sin(an);
+    const sx=x1+c*30,sy=y1+s*30,ex=x2-c*42,ey=y2-s*42,len=Math.hypot(ex-sx,ey-sy).toFixed(1);
+    const tx=ex+c*15,ty=ey+s*15,bx=ex-c*3,by=ey-s*3;
+    const head=`${tx.toFixed(1)},${ty.toFixed(1)} ${(bx-s*10).toFixed(1)},${(by+c*10).toFixed(1)} ${(bx+s*10).toFixed(1)},${(by-c*10).toFixed(1)}`;
+    return `<line x1="${sx.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" class="il" style="--len:${len}"/><polygon points="${head}" class="ih"/>`;
+  }).join('');
+}
+
+// ---------- Fim de partida: coroa dourada no rei vencedor (numa camada por cima do tabuleiro, que perde a cor) ----------
+const coroaSVG=cls=>`<svg viewBox="0 0 40 40" class="${cls}" aria-hidden="true"><defs><linearGradient id="coroaG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2b3"/><stop offset=".42" stop-color="#f3c640"/><stop offset="1" stop-color="#b47a12"/></linearGradient></defs><g class="crn"><path class="cb" d="M6.5,30 L3.5,12.5 L12.6,20.5 L20,7.5 L27.4,20.5 L36.5,12.5 L33.5,30 Z"/><rect class="cb" x="5.5" y="28.6" width="29" height="7" rx="1.8"/><circle class="cj" cx="3.5" cy="11.6" r="2.5"/><circle class="cj" cx="20" cy="6.2" r="2.7"/><circle class="cj" cx="36.5" cy="11.6" r="2.5"/><circle class="cg r" cx="12.5" cy="32.1" r="1.6"/><ellipse class="cg a" cx="20" cy="32.1" rx="2.3" ry="1.8"/><circle class="cg r" cx="27.5" cy="32.1" r="1.6"/><path class="csh" d="M8.6,27 L7,16.8 L10.4,19.8 Z"/></g><path class="spk s1" d="M37,0 L38,3 L41,4 L38,5 L37,8 L36,5 L33,4 L36,3 Z"/><path class="spk s2" d="M1,19 L1.8,21.2 L4,22 L1.8,22.8 L1,25 L.2,22.8 L-2,22 L.2,21.2 Z"/><path class="spk s3" d="M41,24 L41.8,26.2 L44,27 L41.8,27.8 L41,30 L40.2,27.8 L38,27 L40.2,26.2 Z"/></svg>`;
+function renderCoroa(sq,up,anim){
+  const el=$('over');if(!el)return;
+  const k=sq<0?'':`${sq}|${up?1:0}|${ori()}|${anim?G.result.t0:0}`;
+  if(el._k===k)return;el._k=k;
+  if(sq<0){el.innerHTML='';return;}
+  const d=ori()==='w'?sq:63-sq;
+  el.innerHTML=`<div class="crc" style="left:${(d&7)*12.5}%;top:${(d>>3)*12.5}%"><div class="crw${up?' up':''}">${coroaSVG(anim?'drop':'')}</div></div>`;
+}
+
+// ---------- Online: o adversário entrou na sala. As peças dele chegam ao tabuleiro e aparece "Fulano vs Ciclano" ----------
+// Cada nome do seu lado do tabuleiro: o meu embaixo, o do adversário em cima. Enquanto ele não entra, as peças dele não aparecem.
+const INTRO_MS=3400;
+const introAtiva=()=>INTRO&&G&&G.online&&view===null&&Date.now()-INTRO.t0<INTRO_MS?INTRO:null;
+const introOrd=sq=>((sq>>3)===0||(sq>>3)===7?0:8)+(sq&7); // primeiro a fileira das peças, depois a dos peões
+function iniciarIntro(){INTRO={t0:Date.now()};sfx('vs');const t0=INTRO.t0;setTimeout(()=>{if(INTRO&&INTRO.t0===t0&&G)render();},INTRO_MS+60);}
+function renderVs(){
+  const el=$('vs');if(!el)return;
+  const a=introAtiva(),k=a?a.t0:0;
+  if(el._k===k)return;el._k=k;
+  if(!a){el.className='';el.innerHTML='';return;}
+  const me=G.online.me,op=other(me);
+  el.innerHTML=`<div class="vsbg"></div><div class="vsb top ${op}"><span>${comBandeira(nomeDe(op))}</span></div><div class="vsx">vs</div><div class="vsb bot ${me}"><span>${comBandeira(nomeDe(me))}</span></div>`;
+  el.className='on';
+}
 
 // ---------- Promoção: cada peça nova chega com uma animação que tem a ver com ela ----------
 // Paladino voa e solta penas · Ministro recebe a coroa de louros · Papa: fumaça branca (habemus papam)
@@ -2976,7 +3315,7 @@ function renderPromoFx(){ // raios de luz pelas diagonais do bispo recém-promov
 // ---------- Render ----------
 const board=$('board'),cells=[];
 for(let d=0;d<64;d++){const el=document.createElement('div');el.className='sq';board.appendChild(el);cells.push(el);}
-board.insertAdjacentHTML('beforeend','<svg id="arrows" viewBox="0 0 800 800" aria-hidden="true"></svg><svg id="disc" viewBox="0 0 800 800" aria-hidden="true"></svg><svg id="pfx" viewBox="0 0 800 800" aria-hidden="true"></svg><div id="fx" aria-hidden="true"></div>');
+board.insertAdjacentHTML('beforeend','<svg id="arrows" viewBox="0 0 800 800" aria-hidden="true"></svg><svg id="disc" viewBox="0 0 800 800" aria-hidden="true"></svg><svg id="pfx" viewBox="0 0 800 800" aria-hidden="true"></svg><div id="fx" aria-hidden="true"></div><svg id="ilgl" viewBox="0 0 800 800" aria-hidden="true"></svg><div id="vs" aria-hidden="true"></div>');
 board.addEventListener('click',e=>{if(suppressClick)return;const el=e.target.closest('.sq');if(!el)return;
   if(MOVE_MODE==='drag'&&view===null)return; // só arrastar: o toque serve apenas para voltar da revisão de lances
   onSquare(+el.dataset.sq);});
@@ -3028,8 +3367,8 @@ board.addEventListener('pointerup',e=>{
   endDrag();dragCells();
   const ms=targets.filter(m=>m.from===d.from&&m.to===to);
   if(!ms.length){render();return;} // soltou fora de uma casa válida: a peça volta e continua selecionada
-  if(ms[0].promo)return askPromo(ms,{drag:true});
-  doMove(ms[0],{drag:true}); // arrastando, comer a própria peça com o rei não pede confirmação
+  if(ms[0].promo&&!ms[0].ilg)return askPromo(ms,{drag:true});
+  jogar(ms[0],{drag:true}); // arrastando, comer a própria peça com o rei não pede confirmação
 });
 board.addEventListener('pointercancel',e=>{if(DRAG&&e.pointerId===DRAG.pid){DRAG=null;endDrag();dragCells();}});
 
@@ -3044,6 +3383,8 @@ function render(){
   const dpos=x=>{const d=O==='w'?x:63-x;return[d&7,d>>3];};
   const upOf=p=>modo()==='face'?col(p)!==O:passUp();
   const capSq=last&&last.captured?(last.capSq??last.to):-1;
+  const esp=!!(G.online&&G.online.waiting&&!G.result); // esperando o adversário entrar: as peças dele ainda não estão no tabuleiro
+  const intro=introAtiva(),ilg=ilgAtivo();
   // fim de partida na posição final: rei tombado (mate) ou bandeira branca (resignação)
   const fimTipo=G.result&&G.result.winner&&P===G.states.length-1?(G.result.kind||(/^Xeque-mate/.test(G.result.text)?'mate':/resignaram/.test(G.result.text)?'resign':'')):'';
   const fimAnim=fimTipo&&G.result.t0&&Date.now()-G.result.t0<1800;
@@ -3056,6 +3397,8 @@ function render(){
   const staleK=dk==='stale'?kingSq(s.b,s.turn):-1,staleN=new Map();
   if(staleK>=0&&empAnim){let i=0;const[r0,f0]=rc(staleK);for(const[dr,df]of K_OFF){const rr=r0+dr,ff=f0+df;if(inB(rr,ff))staleN.set(idx(rr,ff),i++);}}
   board.classList.toggle('dk-fifty',dk==='fifty'||dk==='fifty75');board.classList.toggle('dk-75',dk==='fifty75');
+  board.classList.toggle('semcor',!!(G.result&&G.result.dk!=='open'&&P===G.states.length-1)); // fim de partida, qualquer que seja: o tabuleiro perde a cor
+  const crSq=G.result&&G.result.winner&&G.result.dk!=='open'&&P===G.states.length-1?kingSq(s.b,G.result.winner):-1; // e o rei vencedor ganha a coroa
   renderFx(dk,empAnim,fimEmp);
   // selo no tabuleiro: o seu último lance (até a posição na tela), fica até você jogar de novo
   let myK=0;if(REV)myK=P;else if(clsOn())for(let k=P;k>=1;k--)if(G.moves[k-1].by!==G.bot.color){myK=k;break;}
@@ -3071,7 +3414,7 @@ function render(){
     const t=tset.get(sq);if(t)cls+=t.self?' self':t.conv?' convt':t.dem?' demt':(s.b[sq]?' cap':' dot');
     if(s.link&&(sq===s.link.to||sq===s.link.papa))cls+=' linked'; // vínculo ativo: se a convertida for capturada agora, o Papa morre junto
     el.className=cls;el.dataset.sq=sq;
-    const p=s.b[sq];let extra='',style='',promoHere=false,pdx=0,pdy=0;
+    const p=esp&&s.b[sq]&&col(s.b[sq])!==G.online.me?'':s.b[sq];let extra='',style='',promoHere=false,pdx=0,pdy=0;
     if(anim&&anim.dem==='p'&&p&&sq===anim.to){extra=' demote';} // carimbo: a peça vira peão
     else if(anim&&anim.dem&&p&&sq===anim.from){extra=' preach';} // o Ministro fica no lugar
     else if(anim&&anim.conv&&p&&sq===anim.to){extra=' conv';} // a peça convertida brilha e troca de cor
@@ -3089,7 +3432,10 @@ function render(){
         const o=sq===kW?kB:kW,[c1]=dpos(sq),[c2]=dpos(o);extra+=' bow';style=(style?style+';':'')+`--bowdir:${c2>=c1?1:-1}`;}
       if(dk==='stale'&&sq===staleK)extra+=' shake'; // "não tenho para onde ir"
     }
-    let h=(anim&&anim.ep&&sq===capSq?'<span class="fr"></span>':'')+(p?glyph(p,upOf(p),extra,style,marcada(p,OP[sq])):''); // en passant: bandeira da França na casa do peão capturado
+    if(p&&intro&&col(p)!==G.online.me){extra+=' placein';style=(style?style+';':'')+`--pi:${introOrd(sq)}`;} // o adversário entrou: as peças dele chegam
+    let pc=p?glyph(p,upOf(p),extra,style,marcada(p,OP[sq])):'';
+    if(p&&ilg)pc=ilgPeca(ilg,sq,p,upOf(p),dpos,marcada(p,OP[sq]))||pc; // lance ilegal: a peça vai e volta, tachinha, rei furioso
+    let h=(ilg&&sq===ilg.rei?`<span class="ilgg${ilg.tipo==='crava'?' late':''}"></span>`:'')+(anim&&anim.ep&&sq===capSq?'<span class="fr"></span>':'')+pc; // en passant: bandeira da França na casa do peão capturado
     if(promoHere)h+=`<span class="ppawn" style="--dx:${pdx};--dy:${pdy}">${glyph(last.by==='w'?'P':'p',upOf(p))}</span>`+promoFxHTML(anim.promo,col(p),upOf(p)?' up':'');
     if(fimEmp&&p&&(sq===kW||sq===kB))h+=`<span class="half${upOf(p)?' up':''}"><i class="${empAnim?'pop':''}">½</i></span>`;
     if(dk==='fifty'&&empAnim&&p&&(sq===kW||sq===kB))h+=`<span class="hglass"><svg viewBox="0 0 24 32"><path class="hgf" d="M3,2 H21 M3,30 H21"/><path class="hgb" d="M5,2 C5,10 11,13 12,16 C11,19 5,22 5,30 H19 C19,22 13,19 12,16 C13,13 19,10 19,2 Z"/><path class="hgs" d="M8,27 H16 L12,21 Z M9,7 H15 L12,11 Z"/></svg></span>`;
@@ -3124,6 +3470,8 @@ function render(){
   if(view!==null){st.className='review';st.textContent=P===0?'Revendo: posição inicial':`Revendo o lance ${Math.ceil(P/2)}${P%2?'.':'...'} ${G.moves[P-1].san}`;}
   else if(G.result){st.className='over';st.textContent=G.result.text;}
   else if(G.online&&G.online.waiting){st.className='';st.innerHTML=`Esperando o adversário entrar na sala <strong>${G.online.code}</strong>…`;}
+  else if(ilg){st.className='ilegal';const quem=G.online&&ilg.by!==G.online.me?`${escH(nomeDe(ilg.by))}: `:'';
+    st.innerHTML=`<b>Lance ilegal!</b> ${quem}${ilg.tipo==='crava'?'a peça está cravada no rei':ilg.self?'o rei não pode comer peça própria defendida':'o rei não pode ir para uma casa atacada'}${ilg.pen?` · +0:30 para ${escH(nomeDe(other(ilg.by)))}`:''}`;}
   else if(G.online&&cur().turn!==G.online.me){st.className='';st.innerHTML=`Vez de ${escH(nomeDe(s.turn))} (${NAME[s.turn]})`+(chk>=0?' · <b>Xeque!</b>':'');}
   else if(botTurn()){st.className='';st.innerHTML=`Bot pensando…`+(chk>=0?' · <b>Xeque!</b>':'');}
   else{st.className='';st.innerHTML=`Vez das ${NAME[s.turn]}`+(chk>=0?' · <b>Xeque!</b>':'')+(G.claim?' · <span style="color:var(--gold)">reivindicação declarada, faça o lance</span>':'');}
@@ -3141,7 +3489,8 @@ function render(){
   document.documentElement.classList.toggle('locked',!!G.lock);
   $('bSound').textContent=muted?'🔇':'🔊';
   $('bLock').textContent=G.lock?'🔒':'🔓';$('bLock').classList.toggle('on',!!G.lock);
-  renderMoves();renderClocks();renderPlacar();renderAmigos();renderDisc();renderPromoFx();renderOnline();
+  renderMoves();renderClocks();renderPlacar();renderAmigos();renderDisc();renderPromoFx();renderOnline();renderIlgLinhas();renderVs();
+  renderCoroa(crSq,crSq>=0&&upOf(s.b[crSq]),crSq>=0&&!!G.result.t0&&Date.now()-G.result.t0<4000);
   const eo=$('evOpt');eo.checked=barOn();eo.disabled=!G.bot;$('evOptRow').style.opacity=G.bot?1:.5;
   const co=$('clsOpt');co.checked=clsOn();co.disabled=!G.bot;$('clsOptRow').style.opacity=G.bot?1:.5;
   renderEval();renderClsSummary();renderReview();pump();
@@ -3169,8 +3518,9 @@ function renderBar(el,c){
   if(diff>0)caps+=`<span class="adv">+${diff}</span>`;
   if(lost.length)caps+=`<span class="sep" title="Peças capturadas pelo próprio rei">⊗</span>`+lost.map(x=>`<span class="lost${x.last?' lastcap':''}">${fig(x.t)}</span>`).join('');
   el.className='bar'+(!G.result&&s.turn===c?' turn':'');
-  el.innerHTML=`<span class="sw ${c}"></span><span class="who">${NAME[c]}${G.bot?`<span class="tag">${c===G.bot.color?'Bot · '+BOT_NIV[G.bot.level].nome:escH(G.names&&G.names[c]||'Você')}</span>`:G.names&&G.names[c]?`<span class="tag">${escH(G.names[c])}</span>`:''}</span><span class="caps">${caps}</span>`+
-    (G.clock.base?`<span class="clock" id="clk-${c}"></span>`:'');
+  const h=`<span class="sw ${c}"></span><span class="who">${NAME[c]}${G.bot?`<span class="tag">${c===G.bot.color?'Bot · '+BOT_NIV[G.bot.level].nome:comBandeira(G.names&&G.names[c]||'Você')}</span>`:G.names&&G.names[c]?`<span class="tag">${comBandeira(G.names[c])}</span>`:''}</span><span class="caps">${caps}</span>`+
+    (G.clock.base?`<span class="clkw"><span class="clock" id="clk-${c}"></span>${bonusDe(c)?'<span class="bonus">+0:30</span>':''}</span>`:'');
+  if(el._h!==h){el.innerHTML=h;el._h=h;}
 }
 function fmt(ms){
   ms=Math.max(0,ms);
@@ -3183,7 +3533,7 @@ function renderClocks(){
   if(!G.clock.base)return;
   for(const c of['w','b']){const el=$('clk-'+c);if(!el)continue;const v=liveTime(c);
     el.textContent=fmt(v);
-    el.className='clock'+(!G.result&&cur().turn===c&&G.clock.running?' on':'')+(v<20000?' low':'');}
+    el.className='clock'+(!G.result&&cur().turn===c&&G.clock.running?' on':'')+(v<20000?' low':'')+(bonusDe(c)?' plus':'');}
 }
 function resultDk(){ // tipo do empate (também deduz pelo texto em partidas salvas antes de existir o campo)
   if(!G.result||G.result.winner)return '';if(G.result.dk)return G.result.dk;const tx=G.result.text;
@@ -3373,21 +3723,21 @@ $('bNew').onclick=()=>{
     <label for="opp" class="flbl">Adversário</label>
     <select id="opp"><option value="friend">Um amigo, no mesmo aparelho</option><option value="online">Um amigo online, pela internet</option><option value="bot">Bot</option></select>
     <div id="onlineOpts">
-      <label for="nOn" class="flbl">Seu nome</label><input id="nOn" class="nome1" maxlength="30" autocomplete="off">
+      <label for="nOn" class="flbl">Seu nome e nacionalidade</label><input id="nOn" class="nome1" maxlength="30" autocomplete="off" data-pais="pOn">${seletorPais('pOn')}
       <label for="oCor" class="flbl">Você joga com</label>
       <select id="oCor"><option value="w">Brancas</option><option value="b">Pretas</option><option value="r">Sorteio</option></select>
       <p class="muted">Cria uma sala e gera um link para o seu amigo entrar.</p>
     </div>
     <div id="friendOpts">
       <label class="flbl">Jogadores</label>
-      <div class="nomes"><span class="sw w"></span><input id="nW" maxlength="30" placeholder="Brancas" autocomplete="off">
+      <div class="nomes"><span class="sw w"></span><input id="nW" maxlength="30" placeholder="Nome de quem joga de brancas" autocomplete="off" data-pais="pW">${seletorPais('pW')}
         <button type="button" class="btn mini" id="nSwap" title="Trocar as cores" aria-label="Trocar as cores">⇅</button>
-        <span class="sw b"></span><input id="nB" maxlength="30" placeholder="Pretas" autocomplete="off"></div>
-      <p class="muted" style="margin:6px 0 0;font-size:.82rem">Com os dois nomes preenchidos, a partida entra no placar entre amigos.</p>
+        <span class="sw b"></span><input id="nB" maxlength="30" placeholder="Nome de quem joga de pretas" autocomplete="off" data-pais="pB">${seletorPais('pB')}</div>
+      <p class="muted" style="margin:6px 0 0;font-size:.82rem">Nome e nacionalidade dos dois. A partida entra no placar entre amigos.</p>
     </div>
     <div id="botOpts">
-      <label for="nEu" class="flbl">Seu nome</label>
-      <input id="nEu" class="nome1" maxlength="30" placeholder="Você" autocomplete="off">
+      <label for="nEu" class="flbl">Seu nome e nacionalidade</label>
+      <input id="nEu" class="nome1" maxlength="30" autocomplete="off" data-pais="pEu">${seletorPais('pEu')}
       <label for="lvl" class="flbl">Nível do bot</label>
       <select id="lvl">${BOT_NIV.slice(1).map((l,i)=>`<option value="${i+1}">${i+1} · ${l.nome}</option>`).join('')}</select>
       <label for="myc" class="flbl">Você joga com</label>
@@ -3404,19 +3754,29 @@ $('bNew').onclick=()=>{
       <option value="15,10">15 min + 10 s</option>
       <option value="30,0">30 min</option>
     </select>`,
-    [{label:'Cancelar'},{label:'Começar',primary:true,fn:()=>{const[a,b]=$('tc').value.split(',').map(Number);
+    [{label:'Cancelar'},{label:'Começar',primary:true,valida:()=>{const o=$('opp').value; // sem nome e nacionalidade não começa
+      if(o==='online')return completo([[$('nOn'),$('pOn')]]);
+      if(o==='bot')return completo([[$('nEu'),$('pEu')]]);
+      if(!completo([[$('nW'),$('pW')],[$('nB'),$('pB')]]))return false;
+      if(chaveNome($('nW').value)!==chaveNome($('nB').value))return true;
+      $('nB').classList.add('erro');$('nB').focus();aviso('Os dois jogadores precisam de nomes diferentes');return false;},
+      fn:()=>{const[a,b]=$('tc').value.split(',').map(Number);
       if(contaDerrota)registrarPlacar(G.bot.color);
-      if($('opp').value==='online'){const n=$('nOn').value.trim();NOMES.eu=n||NOMES.eu;salvarNomes();criarSala(n||'Eu',$('oCor').value,[a,b]);return;}
+      if($('opp').value==='online'){const n=$('nOn').value.trim(),p=$('pOn').dataset.v;NOMES.eu=n;NOMES.euP=p;salvarNomes();setPais(n,p);criarSala(n,$('oCor').value,[a,b],p);return;}
       arquivarAbandono(); // a partida deixada no meio também fica salva
       let bot=null,names,am=false;
       if($('opp').value==='bot'){let me=$('myc').value;if(me==='r')me=Math.random()<.5?'w':'b';bot={color:other(me),level:+$('lvl').value,myPick:$('myc').value,evalBar:$('evNew').checked,classify:$('clsNew').checked};
-        const eu=$('nEu').value.trim();NOMES.eu=eu;names={[me]:eu||'Você',[other(me)]:`Bot nível ${bot.level} (${BOT_NIV[bot.level].nome})`};}
-      else{const w=$('nW').value.trim(),bk=$('nB').value.trim();NOMES.w=w;NOMES.b=bk;if(w&&!NOMES.eu)NOMES.eu=w;names={w:w||'Brancas',b:bk||'Pretas'};
+        const eu=$('nEu').value.trim();NOMES.eu=eu;NOMES.euP=$('pEu').dataset.v;setPais(eu,NOMES.euP);names={[me]:eu,[other(me)]:`Bot nível ${bot.level} (${BOT_NIV[bot.level].nome})`};}
+      else{const w=$('nW').value.trim(),bk=$('nB').value.trim(),pw=$('pW').dataset.v,pb=$('pB').dataset.v;NOMES.w=w;NOMES.b=bk;setPais(w,pw);setPais(bk,pb);
+        if(!NOMES.eu)NOMES.eu=w;const ke=chaveNome(NOMES.eu);if(ke===chaveNome(w))NOMES.euP=pw;else if(ke===chaveNome(bk))NOMES.euP=pb;
+        names={w,b:bk};
         am=!!(chaveNome(w)&&chaveNome(bk)&&chaveNome(w)!==chaveNome(bk));}
       salvarNomes();newGame(a,b,bot,names);if(am){G.placarAm=true;save();render();}}}],cmdUp()?other(ori()):undefined); // tocou em Nova no painel virado: a janela vira junto
   $('nOn').value=NOMES.eu??'';
   $('nW').value=NOMES.w??NOMES.eu??'';$('nB').value=NOMES.b??'';$('nEu').value=NOMES.eu??NOMES.w??'';
-  $('nSwap').onclick=()=>{const t=$('nW').value;$('nW').value=$('nB').value;$('nB').value=t;};
+  const euP=NOMES.euP||paisDe(NOMES.eu); // o que foi escolhido da última vez já vem marcado
+  marcarPais($('pOn'),euP);marcarPais($('pEu'),euP);marcarPais($('pW'),paisDe($('nW').value));marcarPais($('pB'),paisDe($('nB').value));ligarPaises();
+  $('nSwap').onclick=()=>{const t=$('nW').value,pw=$('pW').dataset.v;$('nW').value=$('nB').value;$('nB').value=t;marcarPais($('pW'),$('pB').dataset.v);marcarPais($('pB'),pw);};
   const lastBot=G.bot||G.lastBot;
   if(lastBot){$('opp').value=G.bot?'bot':'friend';$('lvl').value=lastBot.level;$('myc').value=lastBot.myPick||other(lastBot.color);$('evNew').checked=!!lastBot.evalBar;$('clsNew').checked=!!lastBot.classify;}
   else{$('lvl').value='3';}
