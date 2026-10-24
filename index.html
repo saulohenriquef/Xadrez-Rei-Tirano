@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- index.html · Xadrez Rei Tirano · versão 14.1 -->
+<!-- index.html · Xadrez Rei Tirano · versão 15 -->
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -25,7 +25,7 @@
 @font-face{font-family:"Pecas Rei Tirano";src:url(data:font/woff;base64,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) format("woff");font-display:block}
 :root{
   --bg:#e4e9ee; --surface:#f6f8fa; --ink:#18212c; --muted:#5b6878; --line:#c9d2dc;
-  --light:#d8dfe7; --dark:#62778f; --coord-l:#62778f; --coord-d:#d8dfe7;
+  --light:#e8edf2; --dark:#62778f; --coord-l:#62778f; --coord-d:#e8edf2;
   --gold:#c3921f; --gold-soft:rgba(195,146,31,.22); --conv:#8a55d4; --conv-soft:rgba(138,85,212,.2); --dem:#1f8a8a; --dem-soft:rgba(31,138,138,.18);
   --sel:rgba(214,170,60,.55); --last:rgba(214,190,90,.36); --dot:rgba(20,30,45,.30);
   --check:210,55,40; --checkc:255,196,0; --win:#2a7a40; --loss:#c4372a; --ilg:#d85f00; --btn:#e9eef3; --btn-ink:#18212c; --primary:#18212c; --primary-ink:#f6f8fa;
@@ -33,14 +33,14 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#10161e; --surface:#18212c; --ink:#e4eaf1; --muted:#95a3b3; --line:#2a3644;
-    --light:#b7c3cf; --dark:#4b5f76; --coord-l:#4b5f76; --coord-d:#b7c3cf;
+    --light:#cbd5de; --dark:#4b5f76; --coord-l:#4b5f76; --coord-d:#cbd5de;
     --gold:#e0b04a; --gold-soft:rgba(224,176,74,.18); --conv:#b48cf0; --conv-soft:rgba(180,140,240,.2); --dem:#4cc4c4; --dem-soft:rgba(76,196,196,.18);
     --btn:#223040; --btn-ink:#e4eaf1; --primary:#e4eaf1; --primary-ink:#10161e; --win:#6cc785; --loss:#f07b67; --ilg:#ff9a3d;
   }
 }
 :root[data-theme="dark"]{
   --bg:#10161e; --surface:#18212c; --ink:#e4eaf1; --muted:#95a3b3; --line:#2a3644;
-  --light:#b7c3cf; --dark:#4b5f76; --coord-l:#4b5f76; --coord-d:#b7c3cf;
+  --light:#cbd5de; --dark:#4b5f76; --coord-l:#4b5f76; --coord-d:#cbd5de;
   --gold:#e0b04a; --gold-soft:rgba(224,176,74,.18); --conv:#b48cf0; --conv-soft:rgba(180,140,240,.2); --dem:#4cc4c4; --dem-soft:rgba(76,196,196,.18);
   --btn:#223040; --btn-ink:#e4eaf1; --primary:#e4eaf1; --primary-ink:#10161e; --win:#6cc785; --loss:#f07b67; --ilg:#ff9a3d;
 }
@@ -737,6 +737,29 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
 .anm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.anm .bdr{margin:0}
 .vsb .bdr{width:1.3em;height:.87em;margin-right:.4em}
 .onlinebar .sc .bdr,.placar .bdr,.card strong .bdr{margin-left:.12em}
+/* temas do tabuleiro (escolhidos nas opções): só as cores das casas e das coordenadas; no tema escuro do app, um pouco mais apagados */
+:root[data-tab="v14"]{--light:#d8dfe7;--dark:#62778f;--coord-l:#62778f;--coord-d:#d8dfe7}
+:root[data-tab="roxo"]{--light:#ece4f5;--dark:#8466aa;--coord-l:#8466aa;--coord-d:#ece4f5}
+:root[data-tab="verde"]{--light:#eeeed2;--dark:#769656;--coord-l:#769656;--coord-d:#eeeed2}
+:root[data-tab="madeira"]{--light:#f0d9b5;--dark:#b58863;--coord-l:#b58863;--coord-d:#f0d9b5}
+:root[data-tab="cinza"]{--light:#e6e6e6;--dark:#8b8b8b;--coord-l:#8b8b8b;--coord-d:#e6e6e6}
+@media (prefers-color-scheme: dark){
+  :root[data-tab="v14"]:not([data-theme="light"]){--light:#b7c3cf;--dark:#4b5f76;--coord-l:#4b5f76;--coord-d:#b7c3cf}
+  :root[data-tab="roxo"]:not([data-theme="light"]){--light:#d6cae6;--dark:#6c5291;--coord-l:#6c5291;--coord-d:#d6cae6}
+  :root[data-tab="verde"]:not([data-theme="light"]){--light:#d9d9bd;--dark:#62804a;--coord-l:#62804a;--coord-d:#d9d9bd}
+  :root[data-tab="madeira"]:not([data-theme="light"]){--light:#dcc5a1;--dark:#9c7454;--coord-l:#9c7454;--coord-d:#dcc5a1}
+  :root[data-tab="cinza"]:not([data-theme="light"]){--light:#cfcfcf;--dark:#707070;--coord-l:#707070;--coord-d:#cfcfcf}
+}
+:root[data-tab="v14"][data-theme="dark"]{--light:#b7c3cf;--dark:#4b5f76;--coord-l:#4b5f76;--coord-d:#b7c3cf}
+:root[data-tab="roxo"][data-theme="dark"]{--light:#d6cae6;--dark:#6c5291;--coord-l:#6c5291;--coord-d:#d6cae6}
+:root[data-tab="verde"][data-theme="dark"]{--light:#d9d9bd;--dark:#62804a;--coord-l:#62804a;--coord-d:#d9d9bd}
+:root[data-tab="madeira"][data-theme="dark"]{--light:#dcc5a1;--dark:#9c7454;--coord-l:#9c7454;--coord-d:#dcc5a1}
+:root[data-tab="cinza"][data-theme="dark"]{--light:#cfcfcf;--dark:#707070;--coord-l:#707070;--coord-d:#cfcfcf}
+.temas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.temas button{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:600 .8rem/1.15 Figtree,system-ui,sans-serif;cursor:pointer;text-align:left;min-width:0}
+.temas button.on{border-color:var(--gold);background:var(--gold-soft);box-shadow:inset 0 0 0 1px var(--gold)}
+.temas .tm{flex:none;display:grid;grid-template-columns:repeat(2,11px);grid-template-rows:repeat(2,11px);border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(120,120,120,.45)}
+.paises button span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -822,6 +845,8 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
     <label class="opt" id="clsOptRow"><input type="checkbox" id="clsOpt"> Avaliação dos lances (contra o bot)</label>
     <label class="optlbl" for="dbUrl" style="margin-top:12px">Jogar online (Firebase)</label>
     <div class="opt online"><input id="dbUrl" placeholder="https://seu-projeto-default-rtdb.firebaseio.com" autocomplete="off" spellcheck="false"><button class="btn mini" id="bJoin">Entrar numa sala</button></div>
+    <label class="optlbl" style="margin-top:12px">Cores do tabuleiro</label>
+    <div class="temas" id="temas" role="radiogroup" aria-label="Cores do tabuleiro"></div>
     <label class="optlbl" for="moveMode" style="margin-top:12px">Mover as peças</label>
     <div class="opt"><select id="moveMode">
       <option value="both">Tocar ou arrastar</option>
@@ -836,7 +861,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <option value="face">Frente a frente: peças de cima invertidas</option>
       <option value="pass">Frente a frente: todas as peças giram</option>
     </select></div>
-    <div class="ver">Versão 14.1</div>
+    <div class="ver">Versão 15</div>
     <div class="ver" id="verMarcas"></div>
   </div>
 
@@ -870,7 +895,8 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
       <p><strong>Ministro</strong> (coluna romana do Senado com a coroa de louros no alto, o primeiro-ministro do reino): mais uma peça que só aparece por promoção. Anda e captura como torre e também pode dar um passo na diagonal, como o rei.</p>
       <p><strong>Papa e Ministro são únicos:</strong> cada lado pode promover no máximo um Papa e um Ministro na partida inteira. Se ele morrer, for rebaixado ou convertido, não se promove outro. E um lado nunca tem dois ao mesmo tempo: o Papa não converte o Papa adversário, nem converte o Ministro adversário se o seu lado já tiver um.</p>
       <p><strong>Jogo online:</strong> com o endereço do Firebase configurado nas opções, crie a partida em Nova partida → Um amigo online e mande o link. Cada um joga no seu aparelho; não dá para voltar lance, e propostas de empate, reivindicações e resignação vão para o outro lado. <strong>Revanche:</strong> terminada a partida, toque em Revanche; o amigo recebe o pedido e, se aceitar, a partida nova começa na mesma sala, com as cores trocadas e o mesmo relógio. Se os dois pedirem juntos, começa direto. Quem fechou o app recebe o pedido quando abrir de novo. Enquanto o amigo não entra na sala, as peças dele não aparecem; quando ele entra, elas chegam ao tabuleiro e aparece quem joga contra quem. Funciona no app do GitHub (o link do artefato do claude.ai bloqueia a conexão).</p>
-      <p><strong>Nome e nacionalidade:</strong> para começar uma partida (contra o bot, no mesmo aparelho, criando ou entrando numa sala online), o nome e a nacionalidade de cada jogador são obrigatórios. Por enquanto: EUA, Portugal, Argentina e Brasil. O app lembra o que foi escolhido da última vez, e digitar o nome de alguém conhecido já marca a nacionalidade dele. A bandeirinha aparece junto do nome no tabuleiro, na entrada da partida online, nos placares e nas partidas salvas. Com o Firebase, a nacionalidade vai junto com o placar entre amigos e os dois aparelhos mostram a mesma bandeira.</p>
+      <p><strong>Cores do tabuleiro:</strong> nas opções dá para escolher o tema do tabuleiro: Padrão v15 (o padrão, com as casas claras mais claras), Padrão v14 (o de antes), Roxo, Verde, Madeira e Cinza. Fica guardado neste aparelho.</p>
+      <p><strong>Nome e nacionalidade:</strong> para começar uma partida (contra o bot, no mesmo aparelho, criando ou entrando numa sala online), o nome e a nacionalidade de cada jogador são obrigatórios. Por enquanto: EUA, Portugal, Argentina, Brasil e, em homenagem a grandes jogadores, Índia, Noruega e Uzbequistão. O app lembra o que foi escolhido da última vez, e digitar o nome de alguém conhecido já marca a nacionalidade dele. A bandeirinha aparece junto do nome no tabuleiro, na entrada da partida online, nos placares e nas partidas salvas. Com o Firebase, a nacionalidade vai junto com o placar entre amigos e os dois aparelhos mostram a mesma bandeira.</p>
       <p><strong>Placar entre amigos:</strong> cada partida terminada entre duas pessoas entra no placar da dupla, pelo nome de cada um (maiúsculas e acentos não fazem diferença, mas o nome tem de ser o mesmo). No mesmo aparelho, conta quando os dois nomes estão preenchidos em Nova partida; online, quando cada um põe o seu nome ao criar ou entrar na sala. O placar da dupla aparece embaixo do tabuleiro durante a partida, com o botão de revanche no fim. Com o Firebase configurado, o placar fica também no banco e os dois veem o mesmo, de qualquer aparelho; sem ele, fica neste aparelho e sobe para o banco quando o endereço for configurado. A mesma partida online nunca conta duas vezes. O PGN de cada uma dessas partidas também fica guardado (no Firebase, em partidas): toque numa dupla para ver as últimas partidas (tocando numa delas, o PGN abre e dá para rever a partida, de qualquer aparelho), exportar todas em PGN ou zerar o placar (zera para os dois; os PGNs continuam guardados). Partida interrompida não conta. Se as regras do banco liberam só as salas, libere também o placar e as partidas: <code>"placar": {".read": true, ".write": true}, "partidas": {".read": true, ".write": true}</code>.</p>
       <p><strong>Torres e cavalos:</strong> cada torre tem os dentes lá do alto, e cada cavalo as orelhas, da cor da casa onde começou a partida. A torre branca de a1 (casa escura) tem os dentes pretos e a torre preta de a8 (casa clara), os dentes brancos. O cavalo branco de g1 tem as orelhas pretas e o cavalo preto de g8, as orelhas brancas. A marca acompanha a peça a partida toda. É só visual: não muda nenhuma regra, nem a notação, nem a contagem de repetições para o empate.</p>
       <p>Notação em português: R rei, D dama, P paladino, M ministro, S papa (Santo Padre), T torre, B bispo, C cavalo.</p>
@@ -890,6 +916,18 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none;height:100
 
 <script>
 (()=>{
+// ---------- Temas do tabuleiro: Padrão v15 (o padrão), Padrão v14 (o de antes), Roxo, Verde, Madeira e Cinza ----------
+const TEMAS=[['v15','Padrão v15','#e8edf2','#62778f'],['v14','Padrão v14','#d8dfe7','#62778f'],['roxo','Roxo','#ece4f5','#8466aa'],
+  ['verde','Verde','#eeeed2','#769656'],['madeira','Madeira','#f0d9b5','#b58863'],['cinza','Cinza','#e6e6e6','#8b8b8b']];
+let TEMA='v15';
+try{const t=localStorage.getItem('xadrez-rei-tirano-v1-tabuleiro');if(TEMAS.some(x=>x[0]===t))TEMA=t;}catch(e){}
+function aplicarTema(){
+  if(TEMA==='v15')delete document.documentElement.dataset.tab;else document.documentElement.dataset.tab=TEMA;
+  const el=document.getElementById('temas');if(!el)return;
+  el.innerHTML=TEMAS.map(([id,nome,c,e])=>`<button type="button" role="radio" aria-checked="${id===TEMA}" data-t="${id}"${id===TEMA?' class="on"':''}><span class="tm"><i style="background:${c}"></i><i style="background:${e}"></i><i style="background:${e}"></i><i style="background:${c}"></i></span>${nome}</button>`).join('');
+  el.querySelectorAll('button').forEach(b=>b.onclick=()=>{TEMA=b.dataset.t;try{localStorage.setItem('xadrez-rei-tirano-v1-tabuleiro',TEMA);}catch(e){}aplicarTema();});
+}
+aplicarTema();
 const FILES='abcdefgh';
 const NAME={w:'Brancas',b:'Pretas'};
 const GLYPH={k:'♚',q:'♛',l:'♞',m:'♜',a:'♝',r:'♜',b:'♝',n:'♞',p:'♟'};
@@ -1889,12 +1927,15 @@ const escH=t=>String(t).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;
 // ---------- Nacionalidade (por enquanto EUA, Portugal, Argentina e Brasil): a bandeirinha aparece junto do nome ----------
 // Fica por jogador, pelo nome (como no placar entre amigos): neste aparelho e, com o Firebase, em placar/DUPLA/paises,
 // onde vale a escolha mais recente. Nome e nacionalidade são obrigatórios para começar uma partida.
-const PAIS_LISTA=[['us','EUA'],['pt','Portugal'],['ar','Argentina'],['br','Brasil']],PAIS_NOME=Object.fromEntries(PAIS_LISTA);
+const PAIS_LISTA=[['us','EUA'],['pt','Portugal'],['ar','Argentina'],['br','Brasil'],['in','Índia'],['no','Noruega'],['uz','Uzbequistão']],PAIS_NOME=Object.fromEntries(PAIS_LISTA);
 const BANDEIRA={ // desenho simples, em 3:2, para todas ficarem do mesmo tamanho
   us:'<rect width="30" height="20" fill="#fff"/><path fill="#b22234" d="M0 0h30v1.54H0zM0 3.08h30v1.54H0zM0 6.15h30v1.54H0zM0 9.23h30v1.54H0zM0 12.31h30v1.54H0zM0 15.38h30v1.54H0zM0 18.46h30v1.54H0z"/><rect width="12.5" height="10.77" fill="#3c3b6e"/><g fill="#fff">'
     +[0,1,2,3,4].map(r=>[...Array(r%2?5:6)].map((_,c)=>`<circle cx="${((r%2?2.1:1.1)+c*2.05).toFixed(2)}" cy="${(1.15+r*2.1).toFixed(2)}" r=".42"/>`).join('')).join('')+'</g>',
   pt:'<rect width="30" height="20" fill="#da291c"/><rect width="12" height="20" fill="#046a38"/><circle cx="12" cy="10" r="4.3" fill="none" stroke="#ffe000" stroke-width="1.5"/><path d="M9.8 7.4h4.4v3.6a2.2 2.2 0 0 1-4.4 0z" fill="#fff" stroke="#da291c" stroke-width=".8"/>',
   ar:'<rect width="30" height="20" fill="#74acdf"/><rect y="6.67" width="30" height="6.67" fill="#fff"/><circle cx="15" cy="10" r="2.9" fill="none" stroke="#f6b40e" stroke-width="1.1" stroke-dasharray=".9 .62"/><circle cx="15" cy="10" r="1.85" fill="#f6b40e" stroke="#85340a" stroke-width=".3"/>',
+  in:'<rect width="30" height="20" fill="#fff"/><rect width="30" height="6.67" fill="#ff9933"/><rect y="13.33" width="30" height="6.67" fill="#138808"/><circle cx="15" cy="10" r="2.6" fill="none" stroke="#000080" stroke-width=".55"/><circle cx="15" cy="10" r=".6" fill="#000080"/><path d="M15 7.4v5.2M12.4 10h5.2M13.16 8.16l3.68 3.68M16.84 8.16l-3.68 3.68" stroke="#000080" stroke-width=".3"/>',
+  no:'<rect width="30" height="20" fill="#ba0c2f"/><path d="M8.2 0h3.6v20H8.2zM0 8.2h30v3.6H0z" fill="#fff"/><path d="M9.1 0h1.8v20H9.1zM0 9.1h30v1.8H0z" fill="#00205b"/>',
+  uz:'<rect width="30" height="20" fill="#fff"/><rect width="30" height="6.4" fill="#0099b5"/><rect y="13.6" width="30" height="6.4" fill="#1eb53a"/><path d="M0 6.4h30v.45H0zM0 13.15h30v.45H0z" fill="#ce1126"/><circle cx="4.6" cy="3.2" r="2.3" fill="#fff"/><circle cx="5.5" cy="3.2" r="2" fill="#0099b5"/><g fill="#fff"><circle cx="8.6" cy="1.5" r=".42"/><circle cx="10.2" cy="1.5" r=".42"/><circle cx="11.8" cy="1.5" r=".42"/><circle cx="8.6" cy="3.2" r=".42"/><circle cx="10.2" cy="3.2" r=".42"/><circle cx="11.8" cy="3.2" r=".42"/><circle cx="10.2" cy="4.9" r=".42"/><circle cx="11.8" cy="4.9" r=".42"/></g>',
   br:'<rect width="30" height="20" fill="#009b3a"/><path d="M15 2.2 27.6 10 15 17.8 2.4 10z" fill="#fedf00"/><circle cx="15" cy="10" r="4.7" fill="#002776"/><path d="M10.4 9.1c3-.9 6.3-.5 9.1 1.2" fill="none" stroke="#fff" stroke-width=".9"/>'};
 const bandeira=p=>BANDEIRA[p]?`<svg class="bdr" viewBox="0 0 30 20" role="img" aria-label="${PAIS_NOME[p]}">${BANDEIRA[p]}</svg>`:'';
 const PAISES_KEY=STORE+'-paises';
@@ -2429,7 +2470,7 @@ async function criarSala(nome,cor,tc,pais){
   ONL.db=normDb(ONL.db);salvarOnl();
   if(!ONL.db){aviso('Configure o endereço do Firebase nas opções');return;}
   const code=novoCodigo(),me=cor==='r'?(Math.random()<.5?'w':'b'):cor,eu={nome:nome||'Eu',id:ONL.pid,...(pais?{pais}:{})};
-  const sala={criada:{'.sv':'timestamp'},versao:'14.1',rodada:1,tc:{base:tc[0],inc:tc[1]},brancas:me==='w'?eu:null,pretas:me==='b'?eu:null};
+  const sala={criada:{'.sv':'timestamp'},versao:'15',rodada:1,tc:{base:tc[0],inc:tc[1]},brancas:me==='w'?eu:null,pretas:me==='b'?eu:null};
   try{await fb('PUT',`salas/${code}`,sala);}
   catch(e){modal('Não deu para criar a sala',`<p>O Firebase não respondeu (${escH(e.message)}). Confira o endereço do banco e as regras. No link do artefato do claude.ai o jogo online não funciona: use o app do GitHub.</p>`,[{label:'OK',primary:true}]);return;}
   arquivarAbandono();
